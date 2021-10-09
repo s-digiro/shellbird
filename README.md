@@ -19,25 +19,25 @@ of development. Eventually, it will have a vim-like configuration file, and a
 layout file that defines the interface of the program in json format.
 
 ## Usage
-Now Playing Screen: 1
-Queue Screen: 2
-Playlists Screen: 3
-Library Screen: 4
-Genre Tree Screen: 5
-Menu Next: j
-Menu Prev: k
-Go to top of menu: gg
-Go to bottom of menu: G
-Search: /
-Focus Next: l
-Focus Prev: h
-Toggle Pause: p
-Clear Queue: c
-Select Highlighted: Space
-* What this actually does depends on the context.
-* In a queue menu, it will play from the queue
-* In most other menus, such as tag menus, it will add all tracks under that option to the queue
-Enter command: : (Currently the only command is :pause)
+* Now Playing Screen: 1
+* Queue Screen: 2
+* Playlists Screen: 3
+* Library Screen: 4
+* Genre Tree Screen: 5
+* Menu Next: j
+* Menu Prev: k
+* Go to top of menu: gg
+* Go to bottom of menu: G
+* Search: /
+* Focus Next: l
+* Focus Prev: h
+* Toggle Pause: p
+* Clear Queue: c
+* Select Highlighted: Space
+	- What this actually does depends on the context.
+	- In a queue menu, it will play from the queue
+	- In most other menus, such as tag menus, it will add all tracks under that option to the queue
+	- Enter command: : (Currently the only command is :pause)
 
 Note: These are all temporary controls. Eventually controls will be fully configurable in a vim-like rc file
 
