@@ -59,25 +59,79 @@ impl CommandLine {
         self.contents = String::new();
     }
 
-    pub fn parse(&self) -> Option<Event> {
+    pub fn parse(&mut self) -> Option<Event> {
         match self.mode {
             Mode::Command => {
-                let args: Vec<&str> = self.contents.split(" ").collect();
+                let contents = self.contents.clone();
+                let args: Vec<&str> = contents.split(" ").collect();
 
-                let invalid = Event::ToApp(AppEvent::InvalidCommand(self.contents.clone()));
+                let invalid = Some(self.invalid());
 
-                Some(
-                    match args.get(0) {
-                        Some(arg) => match *arg {
-                            "pause" => Event::ToMpd(MpdEvent::TogglePause),
-                            _ => invalid
-                        },
+                match args.get(0) {
+                    Some(arg) => match *arg {
+                        "q" => Some(Event::ToApp(AppEvent::Quit)),
+                        "pause" => Some(Event::ToMpd(MpdEvent::TogglePause)),
+                        "bind" =>Some(self.parse_bind(&args)),
                         _ => invalid
-                    }
-                )
+                    },
+                    _ => invalid
+                }
             },
             Mode::Search => Some(Event::ToFocus(FocusEvent::Search(self.contents.clone()))),
             _ => None,
+        }
+    }
+
+    fn invalid(&self) -> Event {
+        Event::ToApp(AppEvent::InvalidCommand(self.contents.clone()))
+    }
+
+    fn respond(&self, s: String) -> Event {
+        Event::ToApp(AppEvent::CommandResponse(s))
+    }
+
+    fn parse_bind(&mut self, args: &Vec<&str>) -> Event {
+        match args.get(1) {
+            Some(s) => {
+                eprintln!("Got {}", s);
+                match args.get(2) {
+                    Some(a) => match a.to_string().to_lowercase().as_str() {
+                        "toapp" => self.parse_bind_app(s, args),
+                        //"toscreen" => self.parse_bind_screen(args),
+                        //"toglobal" => self.parse_bind_global(args),
+                        //"tofocus" => self.parse_bind_focus(args),
+                        //"tompd" => self.parse_bind_mpd(args),
+                        _ => self.invalid()
+                    },
+                    _ => self.invalid()
+                }
+            }
+            _ => self.invalid()
+        }
+    }
+
+    fn parse_bind_app(&mut self, seq: &str, args: &Vec<&str>) -> Event {
+        eprintln!("Bind app");
+        eprintln!("{:?}", args.get(3));
+        match args.get(3) {
+            Some(a) => match a.to_string().to_lowercase().as_str() {
+                "switchscreen" => match args.get(4) {
+                    Some(a) => match a.parse::<usize>() {
+                        Ok(num) => {
+                            self.keybinds.insert(seq.to_string(), Event::ToApp(AppEvent::SwitchScreen(num)));
+                            self.respond(format!("Bound {} to switchscreen {}", seq, num))
+                        },
+                        _ => self.invalid(),
+                    },
+                    _ => self.invalid(),
+                },
+                "quit" => {
+                    self.keybinds.insert(seq.to_string(), Event::ToApp(AppEvent::Quit));
+                    self.respond(format!("Bound {} to quit", seq))
+                },
+                _ => self.invalid(),
+            },
+            _ => self.invalid(),
         }
     }
 }

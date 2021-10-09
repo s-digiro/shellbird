@@ -1,4 +1,5 @@
 extern crate termion;
+extern crate clap_v3 as clap;
 extern crate signal_hook;
 extern crate mpd;
 
@@ -6,7 +7,6 @@ use std::collections::HashMap;
 use std::io::{self, Write};
 use std::sync::mpsc;
 use std::thread;
-use std::env;
 
 use shellbird::event::*;
 use shellbird::music::{mpd_sender, mpd_listener};
@@ -22,14 +22,19 @@ use termion::event::Key;
 use termion::{clear, cursor};
 use termion::input::TermRead;
 
+use clap::{AppSettings, Clap};
+
+#[derive(Clap)]
+#[clap(version = "0.1.0", author = "Sean D. <s.digirolamo218@gmail.com>")]
+#[clap(setting = AppSettings::ColoredHelp)]
+struct Opts {
+    genres: String,
+    #[clap(short)]
+    debug: bool
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let genre_path = match parse_args() {
-        Some(path) => path,
-        None => {
-            println!("usage: shellbird <path/to/genres.txt>");
-            return Ok(())
-        }
-    };
+    let opts = Opts::parse();
 
     let mut stdout = io::stdout().into_raw_mode().unwrap();
 
@@ -48,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_stdin_thread(tx.clone());
     mpd_listener::init_mpd_listener_thread("127.0.0.1", "6600", tx.clone());
     signals::init_listener(tx.clone());
-    styles::load_style_tree_async(&genre_path, tx.clone());
+    styles::load_style_tree_async(&opts.genres, tx.clone());
 
     loop {
         write!(stdout, "{}", clear::All)?;
@@ -61,7 +66,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         stdout.flush().unwrap();
 
-        match rx.recv()? {
+        let e = rx.recv()?;
+
+        if opts.debug {
+            eprintln!("{:?}", e);
+        }
+
+        match e {
             Event::ToApp(e) => match e {
                 AppEvent::Input(key) => match key {
                     Key::Char(':') => tx.send(Event::ToApp(AppEvent::Mode(Mode::Command))).unwrap(),
@@ -143,16 +154,6 @@ fn init_screens() -> Vec<Screen> {
         screen::new_library_view_screen(),
         screen::new_style_view_screen(),
     ]
-}
-
-fn parse_args() -> Option<String> {
-    let args: Vec<String> = env::args().collect();
-
-    if args.len() != 2 {
-        None
-    } else {
-        Some(args[1].clone())
-    }
 }
 
 fn init_stdin_thread(tx: mpsc::Sender<Event>) {

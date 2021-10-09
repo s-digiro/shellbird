@@ -32,6 +32,7 @@ pub enum AppEvent {
     Resize,
     StyleTreeLoaded(Option<Style>),
     InvalidCommand(String),
+    CommandResponse(String),
     SwitchScreen(usize),
     Quit,
     Mode(Mode),
