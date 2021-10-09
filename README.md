@@ -46,16 +46,16 @@ Genres are read from a file. An example is in the root of the project, genres.tx
 
 
 ## To Do:
-[x] Rework Event Enum
-[ ] Commandline
-[ ] keybinds
-[ ] splitter alignment
-[ ] statusline
-[ ] RC
-[ ] Json Reading
+- [x] Rework Event Enum
+- [ ] Commandline
+- [ ] keybinds
+- [ ] splitter alignment
+- [ ] statusline
+- [ ] RC
+- [ ] Json Reading
 
 ### To Do Components
-[ ] SearchResultsMenu
-[ ] TextBox
-[ ] Button
-[ ] Text
+- [ ] SearchResultsMenu
+- [ ] TextBox
+- [ ] Button
+- [ ] Text
