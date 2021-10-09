@@ -1,7 +1,7 @@
 # shellbird
 Powerful and customizable mpd client with support for genre-subgenre tree
 
-	usage: shellbird
+	usage: shellbird <path/to/genres.txt>
 
 Note: An mpd server must be installed and running for this project to work. This
 is not a full blown music player. It is a client for interacting with mpd.
@@ -43,7 +43,6 @@ Note: These are all temporary controls. Eventually controls will be fully config
 
 ## Genre Tree
 Genres are read from a file. An example is in the root of the project, genres.txt.
-Right now the path to the file is hardcoded, on my machine, but soon it will be configurable
 
 
 ## To Do:
