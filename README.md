@@ -47,15 +47,15 @@ Right now the path to the file is hardcoded, on my machine, but soon it will be 
 
 
 ## To Do:
-Commandline
-keybinds
-splitter alignment
-statusline
-RC
-Json Reading
+* Commandline
+* keybinds
+* splitter alignment
+* statusline
+* RC
+* Json Reading
 
 ### To Do Components
-SearchResultsMenu
-TextBox
-Button
-Text
+* SearchResultsMenu
+* TextBox
+* Button
+* Text
