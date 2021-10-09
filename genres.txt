@@ -1,0 +1,488 @@
+Electronic
+	Breakbeat
+		Breakbeat
+			Breakbeat
+				Breakbeat
+	Downtempo
+		Ambient
+			Ambient
+				Ambient
+				Illbient
+				Instrumental Ambient
+			Ambient Vaporwave
+				Ambient Vaporwave
+		Chillout
+			Downbeat
+				Dark Downbeat
+				Downbeat
+				Experimental Downbeat
+			Nu Jazz
+				Nu Jazz
+			Trip-Hop
+				Ambient Trip-Hop
+				Trip-Hop
+		New Age
+			New Age
+				Experimental New Age
+			Worldbeat
+				Worldbeat
+		ZZZ Fusion
+			Ambient Breakbeat
+				Ambient Breakbeat
+			Ambient Dubstep
+				Ambient Dubstep
+			Ambient Techno
+				Ambient Techno
+			Ambient Trance
+				Ambient Trance
+			Psybient
+				Psybient
+			Lo-Fi Hip-Hop
+				Lo-Fi Hip-Hop
+	Drum & Bass
+		Braindance
+			Glitch
+				Glitch
+			Intelligent Dance Music
+				Breakcore
+				Drill & Bass
+				Intelligent Dance Music
+		Drum & Bass
+			Drum & Bass
+				Drum & Bass
+			Jump Up
+				Jump Up
+				Pop Jump Up
+			Liquid Drum & Bass
+				Liquid Drum & Bass
+			Trancestep
+				Trancestep
+			Neurostep
+				Neurostep
+		ZZZ Fusion
+			Ambient Breakbeat
+				Ambient Breakbeat
+			Drumstep
+				Drumstep
+			Glitch-Hop
+				Glitch-Hop
+	Dubstep
+		Brostep
+			Brostep
+				Brostep
+			Chillstep
+				Chillstep
+		Dubstep
+			Dubstep
+				Classic Dubstep
+				Dubstep
+				Reggaestep
+			Experimental Dubstep
+				Experimental Dubstep
+		Post Dubstep
+			Post Dubstep
+				Post Dubstep
+		ZZZ Fusion
+			Ambient Dubstep
+				Ambient Dubstep
+			Bubblegum Bass
+				Bubblegum Bass
+			Drumstep
+				Drumstep
+	Hardcore
+		Electronic Body Music
+			Electronic Body Music
+				Electronic Body Music
+		Hardcore
+			Gabber
+				Gabber
+		Noise
+			Ambient Noise
+				Ambient Noise
+			Harsh Noise
+				Harsh Noise
+	Hip-Hop
+		Alternative Hip-Hop
+			Alternative Hip-Hop
+				Alternative Hip-Hop
+				Conscious Hip-Hop
+				Gangsta Alternative Hip-Hop
+				Hipster-Hop
+				Jazz-Hop
+				Thesaurus Rap
+			Industrial Hip-Hop
+				Industrial Hip-Hop
+			Underground Hip-Hop
+				Darkwave
+				Underground Hip-Hop
+				Cloud Rap
+		Modern Hip-Hop
+			Meme Rap
+				Meme Rap
+			Modern Hip-Hop
+				Modern Hip-Hop
+			Pop Rap
+				Pop Rap
+			Trap
+				EDM Trap
+				Trap
+		Old Hip-Hop
+			East Coast
+				East Coast
+				Gangsta Rap
+			West Coast
+				G-Funk
+				West Coast
+		Turntablism
+			Turntablism
+				Turntablism
+		ZZZ Fusion
+			Glitch-Hop
+				Glitch-Hop
+			Lo-Fi Hip-Hop
+				Lo-Fi Hip-Hop
+			Plunderphonics
+				Plunderphonics
+	House
+		Bass House
+			Bass House
+				Bass House
+				Future House
+			Electro House
+				Big Room House
+				Complextro
+				Electro House
+				Moombahcore
+			Progressive House
+				Progressive House
+				"Progressive" House
+		Funk House
+			Deep House
+				Deep House
+			Disco House
+				Disco House
+				French House
+				Nu Disco
+		Garage
+			2-Step
+				2-Step
+			Garage
+				Garage
+		Synth House
+			Electroclash
+				Electroclash
+			Electronic Pop
+				Art Pop
+				Electronic Pop
+				Indie Pop
+				Noise Pop
+			Electropop
+				Electropop
+			Synthpop
+				Experimental Synthpop
+				Synthpop
+				Synthpop II
+		Vaporwave
+			Future Funk
+				Future Funk
+			Vaportrap
+				Vaportrap
+			Vaporwave
+				Vaporwave
+		Witch House
+			Witch House
+				Witch House
+		ZZZ Fusion
+			Bubblegum Bass
+				Bubblegum Bass
+			Plunderphonics
+				Plunderphonics
+			Tech House
+				Tech House
+	Techno
+		Detroit Techno
+			Dub Techno
+				Dub Techno
+			Gloomcore
+				Gloomcore
+		Experimental Techno
+			Experimental Techno
+				Experimental Techno
+		Techno
+			Acid Techno
+				Acid Techno
+			Techno
+				Techno
+		ZZZ Fusion
+			Ambient Techno
+				Ambient Techno
+			Tech House
+				Tech House
+	Trance
+		Classic Trance
+			German Trance
+				German Trance
+			Psy Trance
+				Acid Trance
+				Psychadelic Trance
+				Goa Trance
+		Progressive Trance
+			Progressive Trance
+				Progressive Tranc
+				Vocal Trance
+			Pop Trance
+				Pop Trance
+		ZZZ Fusion
+			Ambient Trance
+				Ambient Trance
+		Psybient
+			Psybient
+				Psybient
+Other
+	Folk
+		Bluegrass
+			Bluegrass
+				Bluegrass
+		Folk
+			Folk
+				Folk
+	Indian Devotional Music
+		Indian Devotional Music
+			Indian Devotional Music
+				Indian Devotional Music
+	Masshup
+		Masshup
+			Masshup
+				Masshup
+	Other
+		Memes
+			Memes
+				Memes
+		Other
+			Other
+				Other
+	Pop
+		American Pop
+			Dance Pop
+				Dance Pop
+			Emo Pop
+				Emo Pop
+			Psychadelic Pop
+				Psychadelic Pop
+		Baroque Pop
+			Baroque Pop
+				Baroque Pop
+		Classic Pop
+			Classic Pop
+				Classic Pop
+		J-Pop
+			J-Pop
+				J-Pop
+		K-Pop
+			K-Pop
+				K-Pop
+		Latin Pop
+			Latin Pop
+				Latin Pop
+				Mambo
+			Reggaeton
+				Reggaeton
+		Progressive Pop
+			Progressive Pop
+				Progressive Pop
+	Reggae
+		Pop Reggae
+			Pop Reggae
+				Pop Reggae
+		Reggae
+			Reggae
+				Reggae
+		Reggae Rap
+			Reggae Rap
+				Reggae Rap
+	Classical
+		Chorus
+			Chorus
+				Chorus
+		Classical
+			Classical
+				Classical
+Rock
+	Alternative Rock
+		Alternative Rock
+			Alternative Rock
+				Alternative Rock
+			Indie Rock
+				Indie Rock
+			Dream Pop
+				Dream Pop
+		Art Rock
+			Art Rock
+				Art Rock
+		Emo
+			Emo Pop Rock
+				Emo Pop Rock
+			Grunge
+				Grunge
+				Post Grunge
+			Math Rock
+				Math Rock
+			Post Rock
+				Post Rock
+		Industrial Rock
+			Industrial Rock
+				Industrial Rock
+		Noise Rock
+			Noise Rock
+				Noise Rock
+			Shoegaze
+				Shoegaze
+	Classic Rock
+		Blues Rock
+			Blues Rock
+				Blues Rock
+			Southern Rock
+				Roots Rock
+				Southern Rock
+		Folk Rock
+			Celtic Rock
+				Celtic Rock
+			Folk Rock
+				Folk Rock
+				Psychadelic Folk Rock
+			Latin Rock
+				Latin Rock
+		Pop Rock
+			Pop Rock
+				Pop Rock
+			Skiffle
+				Skiffle
+	Hard Rock
+		Glam Metal
+			Glam Metal
+				Glam Metal
+		Heartland Rock
+			Heartland Rock
+				Heartland Rock
+		Hard Rock
+			Desert Rock
+				Desert Rock
+			Hard Rock
+				Hard Rock
+		Heavy Metal
+			Heavy Metal
+				Heavy Metal
+		Nu Metal
+			Nu Metal
+				Nu Metal
+			Rap Rock
+				Rap Rock
+	New Wave
+		Experimental New Wave
+			Experimental New Wave
+				Experimental New Wave
+		New Wave
+			New Wave
+				New Wave
+		Pop New Wave
+			Dance New Wave
+				Dance New Wave
+			Pop New Wave
+				Pop New Wave
+		Rock New Wave
+			Rock New Wave
+				Rock New Wave
+	Progressive Rock
+		Glam Rock
+			Glam Rock
+				Glam Rock
+		Progressive Rock
+			Progressive Rock
+				Progressive Rock
+			Soft Progressive Rock
+				Soft Progressive Rock
+		Psychadelic Rock
+			Acid Rock
+				Acid Rock
+			Psychadelic Rock
+				Psychadelic Rock
+	Punk
+		Funk Rock
+			Funk Rock
+				Funk Rock
+		Pop Punk
+			Pop Punk
+				Pop Punk
+		Ska Punk
+			Ska Punk
+				Ska Punk
+	Soft Rock
+		80s Pop Rock
+			80s Pop Rock
+				80s Pop Rock
+		Mature Rock
+			Mature Rock
+				Mature Rock
+		Soft Rock
+			Soft Rock
+				Soft Rock
+		Arena Rock
+			Arena Rock
+				Arena Rock
+Soul
+	Disco
+		Disco
+			Disco
+				Disco
+			Eurodance
+				Eurodance
+				Italo Disco
+				Eurobeat
+		Post Disco
+			Post Disco
+				Post Disco
+	Funk
+		Funk
+			Funk
+				Funk
+	Jazz
+		Smooth Jazz
+			Smooth Jazz
+				Smooth Jazz
+	Rhythm & Blues
+		Rhythm & Blues
+			Rhythm & Blues
+				Rhythm & Blues
+	Soul
+		Blue Eyed Soul
+			Blue Eyed Soul
+				Blue Eyed Soul
+		Pop Soul
+			Pop Soul
+				Pop Soul
+		Soul
+			Soul
+				Soul
+		Psychadelic Soul
+			Psychadelic Soul
+				Psychadelic Soul
+Z Soundtrack
+	Television Soundtrack
+		Anime Soundtrack
+			Anime Soundtrack
+				Anime Soundtrack
+		Movie Soundtrack
+			Movie Soundtrack
+				Movie Soundtrack
+	Video Game Soundtrack
+		8-Bit Video Game Soundtrack
+			8-Bit Video Game Soundtrack
+				8-Bit Video Game Soundtrack
+		Video Game Soundtrack
+			Video Game Soundtrack
+				Video Game Soundtrack
+ZZZ RESET
+	ZZZ RESET
+		ZZZ RESET
+			ZZZ RESET
+				ZZZ RESET
