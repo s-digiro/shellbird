@@ -1,7 +1,6 @@
 use super::*;
 use std::sync::mpsc;
 use termion::{cursor, color};
-use crate::event::Event;
 use crate::color::Color;
 
 pub struct TagDisplay {
@@ -25,9 +24,9 @@ impl TagDisplay {
 impl Component for TagDisplay {
     fn name(&self) -> &str { &self.name }
 
-    fn update(&mut self, event: &Event, _tx: mpsc::Sender<Event>) {
-        match event {
-            Event::NowPlaying(song) => {
+    fn handle_global(&mut self, e: &GlobalEvent, _tx: mpsc::Sender<Event>) {
+        match e {
+            GlobalEvent::NowPlaying(song) => {
                 self.contents = match song {
                     Some(song) => match song.tags.get(&self.tag) {
                         Some(title) => title.to_string(),

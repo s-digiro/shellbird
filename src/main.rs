@@ -5,11 +5,11 @@ extern crate mpd;
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::sync::mpsc;
+use std::thread;
 use std::env;
 
-use shellbird::event::{MpdRequest, Event, ScreenRequest, ComponentRequest};
+use shellbird::event::*;
 use shellbird::music::{mpd_sender, mpd_listener};
-use shellbird::init_stdin_thread;
 use shellbird::screen;
 use shellbird::signals;
 use shellbird::styles;
@@ -20,6 +20,7 @@ use shellbird::screen::Screen;
 use termion::raw::IntoRawMode;
 use termion::event::Key;
 use termion::{clear, cursor};
+use termion::input::TermRead;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let genre_path = match parse_args() {
@@ -61,36 +62,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         stdout.flush().unwrap();
 
         match rx.recv()? {
-            Event::Quit => break,
-            Event::Mode(m) => {
-                mode = m;
-                command_line.clear();
-                command_line.mode(mode.clone());
-            },
-            Event::SwitchScreen(i) => sel = i,
-            Event::MpdRequest(r) => {
-                mpd_tx.send(r).unwrap();
-            },
-            Event::ScreenRequest(r) => screens[sel].handle_request(&r, tx.clone()),
-            Event::StyleTreeLoaded(style) => if let Some(style) = style {
-                    tx.send(Event::UpdateRootStyleMenu(style.children())).unwrap();
-            },
-            Event::Input(key) => match key {
-                Key::Char(':') => tx.send(Event::Mode(Mode::Command)).unwrap(),
-                Key::Char('/') => tx.send(Event::Mode(Mode::Search)).unwrap(),
-                Key::Esc => tx.send(Event::Mode(Mode::TUI)).unwrap(),
-                Key::Backspace => if let Some(event) = command_line.back() {
-                    tx.send(event).unwrap();
+            Event::ToApp(e) => match e {
+                AppEvent::Input(key) => match key {
+                    Key::Char(':') => tx.send(Event::ToApp(AppEvent::Mode(Mode::Command))).unwrap(),
+                    Key::Char('/') => tx.send(Event::ToApp(AppEvent::Mode(Mode::Search))).unwrap(),
+                    Key::Esc => tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap(),
+                    Key::Backspace => if let Some(event) = command_line.back() {
+                        tx.send(event).unwrap();
+                    },
+                    Key::Char(c) => if let Some(event) = command_line.add(c) {
+                        tx.send(event).unwrap();
+                        tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
+                    },
+                    _ => (),
                 },
-                Key::Char(c) => if let Some(event) = command_line.add(c) {
-                    tx.send(event).unwrap();
-                    tx.send(Event::Mode(Mode::TUI)).unwrap();
+                AppEvent::Mode(m) => {
+                    mode = m;
+                    command_line.clear();
+                    command_line.mode(mode.clone());
+                },
+                AppEvent::Quit => break,
+                AppEvent::SwitchScreen(i) => sel = i,
+                AppEvent::StyleTreeLoaded(style) => {
+                    if let Some(style) = style {
+                        tx.send(
+                            Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu(
+                                    style.children()
+                            ))
+                        ).unwrap();
+                    }
                 },
                 _ => (),
             },
-            event => for screen in screens.iter_mut() {
-                screen.update(&event, tx.clone())
+            Event::ToScreen(e) => screens[sel].handle_screen(&e, tx.clone()),
+            Event::ToGlobal(e) => {
+                for screen in screens.iter_mut() {
+                    screen.handle_global(&e, tx.clone())
+                }
             },
+            Event::ToFocus(e) => screens[sel].handle_focus(&e, tx.clone()),
+            Event::ToMpd(e) => mpd_tx.send(e).unwrap(),
+            _ => (),
         }
     }
 
@@ -102,23 +114,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn keybinds() -> HashMap<String, Event> {
     let mut keybinds: HashMap<String, Event> = HashMap::new();
 
-    keybinds.insert(String::from("j"), Event::ScreenRequest(ScreenRequest::ComponentRequest(ComponentRequest::Next)));
-    keybinds.insert(String::from("k"), Event::ScreenRequest(ScreenRequest::ComponentRequest(ComponentRequest::Prev)));
-    keybinds.insert(String::from("h"), Event::ScreenRequest(ScreenRequest::FocusPrev));
-    keybinds.insert(String::from("l"), Event::ScreenRequest(ScreenRequest::FocusNext));
-    keybinds.insert(String::from(" "), Event::ScreenRequest(ScreenRequest::ComponentRequest(ComponentRequest::Select)));
-    keybinds.insert(String::from("p"), Event::MpdRequest(MpdRequest::TogglePause));
-    keybinds.insert(String::from("1"), Event::SwitchScreen(0));
-    keybinds.insert(String::from("2"), Event::SwitchScreen(1));
-    keybinds.insert(String::from("3"), Event::SwitchScreen(2));
-    keybinds.insert(String::from("4"), Event::SwitchScreen(3));
-    keybinds.insert(String::from("5"), Event::SwitchScreen(4));
-    keybinds.insert(String::from("q"), Event::Quit);
-    keybinds.insert(String::from("c"), Event::MpdRequest(MpdRequest::ClearQueue));
-    keybinds.insert(String::from(":"), Event::Mode(Mode::Command));
-    keybinds.insert(String::from("/"), Event::Mode(Mode::Search));
-    keybinds.insert(String::from("gg"), Event::ScreenRequest(ScreenRequest::ComponentRequest(ComponentRequest::GoToTop)));
-    keybinds.insert(String::from("G"), Event::ScreenRequest(ScreenRequest::ComponentRequest(ComponentRequest::GoToBottom)));
+    keybinds.insert(String::from(" "), Event::ToFocus(FocusEvent::Select));
+    keybinds.insert(String::from("j"), Event::ToFocus(FocusEvent::Next));
+    keybinds.insert(String::from("k"), Event::ToFocus(FocusEvent::Prev));
+    keybinds.insert(String::from("gg"), Event::ToFocus(FocusEvent::GoToTop));
+    keybinds.insert(String::from("G"), Event::ToFocus(FocusEvent::GoToBottom));
+    keybinds.insert(String::from("h"), Event::ToScreen(ScreenEvent::FocusPrev));
+    keybinds.insert(String::from("l"), Event::ToScreen(ScreenEvent::FocusNext));
+    keybinds.insert(String::from("p"), Event::ToMpd(MpdEvent::TogglePause));
+    keybinds.insert(String::from("c"), Event::ToMpd(MpdEvent::ClearQueue));
+    keybinds.insert(String::from("1"), Event::ToApp(AppEvent::SwitchScreen(0)));
+    keybinds.insert(String::from("2"), Event::ToApp(AppEvent::SwitchScreen(1)));
+    keybinds.insert(String::from("3"), Event::ToApp(AppEvent::SwitchScreen(2)));
+    keybinds.insert(String::from("4"), Event::ToApp(AppEvent::SwitchScreen(3)));
+    keybinds.insert(String::from("5"), Event::ToApp(AppEvent::SwitchScreen(4)));
+    keybinds.insert(String::from("q"), Event::ToApp(AppEvent::Quit));
+    keybinds.insert(String::from(":"), Event::ToApp(AppEvent::Mode(Mode::Command)));
+    keybinds.insert(String::from("/"), Event::ToApp(AppEvent::Mode(Mode::Search)));
 
     keybinds
 }
@@ -141,4 +153,15 @@ fn parse_args() -> Option<String> {
     } else {
         Some(args[1].clone())
     }
+}
+
+fn init_stdin_thread(tx: mpsc::Sender<Event>) {
+    thread::spawn(move || {
+        let stdin = io::stdin();
+        for key in stdin.keys() {
+            if let Ok(key) = key {
+                tx.send(Event::ToApp(AppEvent::Input(key))).unwrap();
+            }
+        }
+    });
 }

@@ -2,7 +2,7 @@ use mpd::Song;
 use std::sync::mpsc;
 
 use termion::{color, cursor, style};
-use crate::event::{ComponentRequest, Event, MpdRequest};
+use crate::event::*;
 use crate::color::Color;
 use crate::components::{Component, menu::Menu};
 
@@ -52,23 +52,23 @@ impl Queue {
 impl Component for Queue {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_request(&mut self, request: &ComponentRequest, tx: mpsc::Sender<Event>) {
-        match request {
-            ComponentRequest::Select => {
+    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            FocusEvent::Select => {
                 if let Some(song) = self.tracks.get(self.menu.selection) {
-                    tx.send(Event::MpdRequest(
-                        MpdRequest::PlayAt(song.clone())
+                    tx.send(Event::ToMpd(
+                        MpdEvent::PlayAt(song.clone())
                     )).unwrap()
                 }
             },
-            request => self.menu.handle_request(request, tx.clone()),
+            e => self.menu.handle_focus(e, tx.clone()),
         }
     }
 
-    fn update(&mut self, event: &Event, _tx: mpsc::Sender<Event>) {
-        match event {
-            Event::NowPlaying(song) => self.set_now_playing(&song),
-            Event::Queue(q) => self.update_items(q),
+    fn handle_global(&mut self, e: &GlobalEvent, _tx: mpsc::Sender<Event>) {
+        match e {
+            GlobalEvent::NowPlaying(song) => self.set_now_playing(&song),
+            GlobalEvent::Queue(q) => self.update_items(q),
             _ => (),
         }
     }

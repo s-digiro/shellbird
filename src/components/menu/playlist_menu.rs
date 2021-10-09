@@ -1,5 +1,5 @@
 use std::sync::mpsc;
-use crate::event::{ComponentRequest, Event, MpdRequest};
+use crate::event::*;
 use crate::playlist::Playlist;
 use crate::components::{Component, menu::Menu};
 
@@ -27,42 +27,40 @@ impl PlaylistMenu {
     }
 
     fn spawn_update_event(&self) -> Event {
-        Event::PlaylistMenuUpdated(
+        Event::ToGlobal(GlobalEvent::PlaylistMenuUpdated(
             self.name.clone(),
             match self.playlists.get(self.menu.selection) {
                 Some(pl) => Some(pl.clone()),
                 None => None,
             },
-        )
+        ))
     }
 }
 
 impl Component for PlaylistMenu {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_request(&mut self, request: &ComponentRequest, tx: mpsc::Sender<Event>) {
-        match request {
-            ComponentRequest::Select => {
+    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            FocusEvent::Select => {
                 let playlists = self.playlists.get(self.menu.selection).unwrap()
                     .tracks.clone();
 
-                let event = Event::MpdRequest(
-                    MpdRequest::AddToQueue(playlists)
-                );
+                let event = Event::ToMpd(MpdEvent::AddToQueue(playlists));
 
                 tx.send(event).unwrap()
             },
-            request => {
-                self.menu.handle_request(request, tx.clone());
+            e => {
+                self.menu.handle_focus(e, tx.clone());
                 tx.send(self.spawn_update_event()).unwrap()
             },
         }
 
     }
 
-    fn update(&mut self, event: &Event, tx: mpsc::Sender<Event>) {
-        match event {
-            Event::Playlist(playlists) => {
+    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            GlobalEvent::Playlist(playlists) => {
                 self.playlists = playlists.clone();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();

@@ -2,13 +2,13 @@ use std::sync::mpsc;
 use std::borrow::Cow;
 use std::thread;
 
-use crate::event::MpdRequest;
+use crate::event::*;
 use crate::music;
 
 use mpd::Query;
 use mpd::Term;
 
-pub fn init_mpd_sender_thread(ip: &str, port: &str) -> mpsc::Sender<MpdRequest> {
+pub fn init_mpd_sender_thread(ip: &str, port: &str) -> mpsc::Sender<MpdEvent> {
     let (tx, rx) = mpsc::channel();
 
     let ip = ip.to_string();
@@ -30,12 +30,12 @@ pub fn init_mpd_sender_thread(ip: &str, port: &str) -> mpsc::Sender<MpdRequest> 
             }
 
             match request {
-                MpdRequest::TogglePause => conn.toggle_pause().unwrap(),
-                MpdRequest::ClearQueue => conn.clear().unwrap(),
-                MpdRequest::AddToQueue(songs) => for song in songs {
+                MpdEvent::TogglePause => conn.toggle_pause().unwrap(),
+                MpdEvent::ClearQueue => conn.clear().unwrap(),
+                MpdEvent::AddToQueue(songs) => for song in songs {
                     conn.push(song).unwrap();
                 },
-                MpdRequest::PlayAt(song) => match song.place {
+                MpdEvent::PlayAt(song) => match song.place {
                     Some(place) => conn.switch(place.pos).unwrap(),
                     None => {
                         conn.push(song).unwrap();
@@ -43,7 +43,7 @@ pub fn init_mpd_sender_thread(ip: &str, port: &str) -> mpsc::Sender<MpdRequest> 
                         conn.switch(q.last().unwrap().place.unwrap().pos).unwrap();
                     },
                 },
-                MpdRequest::AddStyleToQueue(genres) => {
+                MpdEvent::AddStyleToQueue(genres) => {
                     for genre in genres {
                         if let Ok(songs) = conn.search(
                             Query::new()

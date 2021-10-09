@@ -1,7 +1,7 @@
 use std::{fs, thread, sync::mpsc};
 use std::io::{self, BufReader, BufRead};
 
-use crate::event::Event;
+use crate::event::*;
 
 pub fn load_style_tree_async(path: &str, tx: mpsc::Sender<Event>) {
     let path = path.to_string();
@@ -11,7 +11,7 @@ pub fn load_style_tree_async(path: &str, tx: mpsc::Sender<Event>) {
             Ok(tree) => Some(tree),
             _ => None,
         };
-        tx.send(Event::StyleTreeLoaded(tree)).unwrap();
+        tx.send(Event::ToApp(AppEvent::StyleTreeLoaded(tree))).unwrap();
     });
 }
 

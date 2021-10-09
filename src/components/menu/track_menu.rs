@@ -1,6 +1,6 @@
 use std::sync::mpsc;
 use mpd::Song;
-use crate::event::{ComponentRequest, Event};
+use crate::event::*;
 use crate::components::{Component, menu::{Menu, Parent}};
 
 pub struct TrackMenu {
@@ -35,22 +35,20 @@ impl TrackMenu {
 impl Component for TrackMenu {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_request(&mut self, request: &ComponentRequest, tx: mpsc::Sender<Event>) {
-        match request {
-            request => self.menu.handle_request(request, tx.clone()),
-        }
+    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+        self.menu.handle_focus(e, tx.clone());
     }
 
-    fn update(&mut self, event: &Event, _tx: mpsc::Sender<Event>) {
-        match event {
-            Event::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
+    fn handle_global(&mut self, e: &GlobalEvent, _tx: mpsc::Sender<Event>) {
+        match e {
+            GlobalEvent::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
                 Some(pl) => {
                     self.tracks = pl.tracks.clone();
                     self.update_menu_items();
                 },
                 None => (),
             },
-            Event::TagMenuUpdated(name, tracks) if self.parent.is(name) => {
+            GlobalEvent::TagMenuUpdated(name, tracks) if self.parent.is(name) => {
                 self.tracks = tracks.clone();
                 self.update_menu_items();
             },

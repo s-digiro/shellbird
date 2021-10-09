@@ -46,6 +46,7 @@ Genres are read from a file. An example is in the root of the project, genres.tx
 
 
 ## To Do:
+* Rework Event Enum
 * Commandline
 * keybinds
 * splitter alignment

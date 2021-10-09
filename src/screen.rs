@@ -1,7 +1,7 @@
 use super::*;
 use std::sync::mpsc;
 use components::*;
-use event::ScreenRequest;
+use event::*;
 
 pub struct Screen {
     base: Box<dyn Component>,
@@ -25,30 +25,27 @@ impl Screen {
         self.base.draw(1, 1, w, h);
     }
 
-    pub fn update(&mut self, event: &Event, tx: mpsc::Sender<Event>) {
-        self.base.update(event, tx)
+    pub fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+        self.base.handle_global(e, tx)
     }
 
-    pub fn handle_request(
-        &mut self,
-        request: &ScreenRequest,
-        tx: mpsc::Sender<Event>,
-    ) {
-        match request {
-            ScreenRequest::FocusNext => {
+    pub fn handle_screen(&mut self, e: &ScreenEvent, _tx: mpsc::Sender<Event>) {
+        match e {
+            ScreenEvent::FocusNext => {
                 if let Some(splitter) = self.base.as_splitter_mut() {
                     splitter.next();
                 }
             },
-            ScreenRequest::FocusPrev => {
+            ScreenEvent::FocusPrev => {
                 if let Some(splitter) = self.base.as_splitter_mut() {
                     splitter.prev();
                 }
             },
-            ScreenRequest::ComponentRequest(request) => {
-                self.base.handle_request(request, tx)
-            },
         }
+    }
+
+    pub fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+        self.base.handle_focus(e, tx)
     }
 }
 

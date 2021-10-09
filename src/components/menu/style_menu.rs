@@ -1,5 +1,5 @@
 use std::sync::mpsc;
-use crate::event::{Event, ComponentRequest, MpdRequest};
+use crate::event::*;
 use crate::components::{Component, menu::{Parent, Menu}};
 use crate::styles::{Style};
 
@@ -35,13 +35,13 @@ impl StyleMenu {
     }
 
     fn spawn_update_event(&self) -> Event {
-        Event::StyleMenuUpdated(
+        Event::ToGlobal(GlobalEvent::StyleMenuUpdated(
             self.name.clone(),
             match self.styles.get(self.menu.selection) {
                 Some(style) => style.children(),
                 None => Vec::new(),
             },
-        )
+        ))
     }
 }
 
@@ -50,28 +50,28 @@ impl Component for StyleMenu {
         &self.name
     }
 
-    fn handle_request(&mut self, request: &ComponentRequest, tx: mpsc::Sender<Event>) {
-        match request {
-            ComponentRequest::Select => match self.styles.get(self.menu.selection) {
-                Some(style) => tx.send(Event::MpdRequest(
-                    MpdRequest::AddStyleToQueue(style.leaves())
+    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            FocusEvent::Select => match self.styles.get(self.menu.selection) {
+                Some(style) => tx.send(Event::ToMpd(
+                    MpdEvent::AddStyleToQueue(style.leaves())
                 )).unwrap(),
                 None => (),
             }
-            request => {
-                self.menu.handle_request(request, tx.clone());
+            e => {
+                self.menu.handle_focus(e, tx.clone());
                 tx.send(self.spawn_update_event()).unwrap()
             }
         }
     }
 
-    fn update(&mut self, event: &Event, tx: mpsc::Sender<Event>) {
-        match event {
-            Event::UpdateRootStyleMenu(styles) if self.parent.is_none() => {
+    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            GlobalEvent::UpdateRootStyleMenu(styles) if self.parent.is_none() => {
                 self.set_items(styles);
                 tx.send(self.spawn_update_event()).unwrap();
             },
-            Event::StyleMenuUpdated(menu, styles) if self.parent.is(menu) => {
+            GlobalEvent::StyleMenuUpdated(menu, styles) if self.parent.is(menu) => {
                 self.set_items(styles);
                 tx.send(self.spawn_update_event()).unwrap();
             },

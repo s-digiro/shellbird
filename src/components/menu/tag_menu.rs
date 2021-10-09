@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use mpd::Song;
 use crate::components::{Component, menu::{Menu, Parent}};
-use crate::event::{ComponentRequest, MpdRequest, Event};
+use crate::event::*;
 
 pub struct TagMenu {
     name: String,
@@ -28,7 +28,7 @@ impl TagMenu {
     pub fn spawn_update_event(&self) -> Event {
         let event_tracks = self.selected_tracks();
 
-        Event::TagMenuUpdated(self.name.clone(), event_tracks)
+        Event::ToGlobal(GlobalEvent::TagMenuUpdated(self.name.clone(), event_tracks))
     }
 
     pub fn selected_tracks(&self) -> Vec<Song> {
@@ -42,25 +42,25 @@ impl TagMenu {
 impl Component for TagMenu {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_request(&mut self, request: &ComponentRequest, tx: mpsc::Sender<Event>) {
-        match request {
-            ComponentRequest::Select => {
+    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            FocusEvent::Select => {
                 tx.send(
-                    Event::MpdRequest(MpdRequest::AddToQueue(
+                    Event::ToMpd(MpdEvent::AddToQueue(
                             self.selected_tracks()
                     ))
                 ).unwrap()
             },
-            request => {
-                self.menu.handle_request(request, tx.clone());
+            e => {
+                self.menu.handle_focus(e, tx.clone());
                 tx.send(self.spawn_update_event()).unwrap();
             },
         }
     }
 
-    fn update(&mut self, event: &Event, tx: mpsc::Sender<Event>) {
-        match event {
-            Event::TagMenuUpdated(origin, tracks) if self.parent.is(origin) => {
+    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            GlobalEvent::TagMenuUpdated(origin, tracks) if self.parent.is(origin) => {
                 self.tracks = tracks.clone();
 
                 self.menu.items = tracks.clone().iter()
@@ -74,7 +74,7 @@ impl Component for TagMenu {
 
                 tx.send(self.spawn_update_event()).unwrap();
             },
-            Event::Database(tracks) if self.parent.is_none() => {
+            GlobalEvent::Database(tracks) if self.parent.is_none() => {
                 self.tracks = tracks.clone();
 
                 self.menu.items = tracks.clone().iter()

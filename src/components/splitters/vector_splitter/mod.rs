@@ -1,6 +1,6 @@
 use std::sync::mpsc;
 use crate::components::{Component, ErrorBox};
-use crate::event::{Event, ComponentRequest};
+use crate::event::*;
 use super::{Panel, Splitter, Size, MoveFocusResult};
 
 mod horizontal_splitter;
@@ -138,15 +138,15 @@ impl Component for VectorSplitter {
 
     fn name(&self) -> &str { &self.name }
 
-    fn update(&mut self, event: &Event, tx: mpsc::Sender<Event>) {
+    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
         for panel in self.panels.iter_mut() {
-            panel.component.update(event, tx.clone())
+            panel.component.handle_global(e, tx.clone())
         }
     }
 
-    fn handle_request(&mut self, request: &ComponentRequest, tx: mpsc::Sender<Event>) {
+    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
         if let Some(sel) = self.sel_mut() {
-            sel.handle_request(request, tx);
+            sel.handle_focus(e, tx);
         }
     }
 

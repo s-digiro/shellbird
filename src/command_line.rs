@@ -1,7 +1,7 @@
 use std::fmt;
 use std::collections::HashMap;
 use termion::{cursor, clear};
-use crate::event::{Event, MpdRequest, ComponentRequest, ScreenRequest};
+use crate::event::*;
 use crate::mode::Mode;
 
 pub struct CommandLine {
@@ -25,7 +25,7 @@ impl CommandLine {
 
     pub fn back(&mut self) -> Option<Event> {
         if self.contents.is_empty() {
-            Some(Event::Mode(Mode::TUI))
+            Some(Event::ToApp(AppEvent::Mode(Mode::TUI)))
         } else {
             self.contents.pop();
             None
@@ -42,7 +42,7 @@ impl CommandLine {
                 } else if self.keybinds.keys().any(|s| s.starts_with(&self.contents)) {
                     None
                 } else {
-                    Some(Event::InvalidCommand(self.contents.clone()))
+                    Some(Event::ToApp(AppEvent::InvalidCommand(self.contents.clone())))
                 }
             },
             _ => match c {
@@ -64,23 +64,19 @@ impl CommandLine {
             Mode::Command => {
                 let args: Vec<&str> = self.contents.split(" ").collect();
 
-                let invalid = Event::InvalidCommand(self.contents.clone());
+                let invalid = Event::ToApp(AppEvent::InvalidCommand(self.contents.clone()));
 
                 Some(
                     match args.get(0) {
                         Some(arg) => match *arg {
-                            "pause" => Event::MpdRequest(MpdRequest::TogglePause),
+                            "pause" => Event::ToMpd(MpdEvent::TogglePause),
                             _ => invalid
-                        }
+                        },
                         _ => invalid
                     }
                 )
             },
-            Mode::Search => {
-                Some(Event::ScreenRequest(ScreenRequest::ComponentRequest(
-                        ComponentRequest::Search(self.contents.clone())
-                )))
-            },
+            Mode::Search => Some(Event::ToFocus(FocusEvent::Search(self.contents.clone()))),
             _ => None,
         }
     }

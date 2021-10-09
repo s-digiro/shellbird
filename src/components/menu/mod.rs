@@ -6,7 +6,7 @@ pub mod style_menu;
 
 use std::sync::mpsc;
 use crate::components::Component;
-use crate::event::{Event, ComponentRequest};
+use crate::event::*;
 use termion::{cursor, style};
 
 pub struct Menu {
@@ -17,14 +17,14 @@ pub struct Menu {
 impl Component for Menu {
     fn name(&self) -> &str { "Menu" }
 
-    fn handle_request(&mut self, request: &ComponentRequest, _tx: mpsc::Sender<Event>) {
+    fn handle_focus(&mut self, request: &FocusEvent, _tx: mpsc::Sender<Event>) {
         match request {
-            ComponentRequest::Next => self.next(),
-            ComponentRequest::Prev => self.prev(),
-            ComponentRequest::GoToTop => self.selection = 0,
-            ComponentRequest::GoToBottom => self.selection = std::cmp::max(0, self.items.len() - 1),
-            ComponentRequest::GoTo(i) if *i < self.items.len() => self.selection = *i,
-            ComponentRequest::Search(s) =>
+            FocusEvent::Next => self.next(),
+            FocusEvent::Prev => self.prev(),
+            FocusEvent::GoToTop => self.selection = 0,
+            FocusEvent::GoToBottom => self.selection = std::cmp::max(0, self.items.len() - 1),
+            FocusEvent::GoTo(i) if *i < self.items.len() => self.selection = *i,
+            FocusEvent::Search(s) =>
                 self.selection = *self.items.iter().enumerate()
                     .skip(self.selection + 1)
                     .filter(|(_, item)| item.to_lowercase().contains(&s.to_lowercase()))

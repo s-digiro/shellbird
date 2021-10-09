@@ -5,7 +5,7 @@ use mpd::idle::{Idle, Subsystem};
 use mpd::{Query, Client, Term};
 
 use super::*;
-use crate::event::Event;
+use crate::event::*;
 use crate::playlist::Playlist;
 
 pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
@@ -36,22 +36,22 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
 
 fn send_now_playing(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.currentsong() {
-        Ok(song) => tx.send(Event::NowPlaying(song)).unwrap(),
-        _ => tx.send(Event::NowPlaying(None)).unwrap(),
+        Ok(song) => tx.send(Event::ToGlobal(GlobalEvent::NowPlaying(song))).unwrap(),
+        _ => tx.send(Event::ToGlobal(GlobalEvent::NowPlaying(None))).unwrap(),
     }
 }
 
 fn send_queue(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.queue() {
-        Ok(q) => tx.send(Event::Queue(q)).unwrap(),
-        _ => tx.send(Event::Queue(Vec::new())).unwrap(),
+        Ok(q) => tx.send(Event::ToGlobal(GlobalEvent::Queue(q))).unwrap(),
+        _ => tx.send(Event::ToGlobal(GlobalEvent::Queue(Vec::new()))).unwrap(),
     }
 }
 
 fn send_playlists(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.playlists() {
         Ok(pl) => tx.send(
-            Event::Playlist(
+            Event::ToGlobal(GlobalEvent::Playlist(
                 pl.iter()
                     .map(|pl| Playlist {
                         name: pl.name.clone(),
@@ -60,9 +60,9 @@ fn send_playlists(conn: &mut Client, tx: &mpsc::Sender<Event>) {
                             _ => Vec::new(),
                         },
                     }).collect()
-            )
+            ))
         ).unwrap(),
-        _ => tx.send(Event::Playlist(Vec::new())).unwrap(),
+        _ => tx.send(Event::ToGlobal(GlobalEvent::Playlist(Vec::new()))).unwrap(),
     }
 }
 
@@ -73,7 +73,7 @@ fn send_database(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     );
 
     match results {
-        Ok(results) => tx.send(Event::Database(results)).unwrap(),
+        Ok(results) => tx.send(Event::ToGlobal(GlobalEvent::Database(results))).unwrap(),
         _ => (),
     }
 }

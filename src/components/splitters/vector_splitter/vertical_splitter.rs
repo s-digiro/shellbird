@@ -51,12 +51,12 @@ impl Component for VerticalSplitter {
 
     fn name(&self) -> &str { self.splitter.name() }
 
-    fn update(&mut self, event: &Event, tx: mpsc::Sender<Event>) {
-        self.splitter.update(event, tx);
+    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+        self.splitter.handle_global(e, tx);
     }
 
-    fn handle_request(&mut self, request: &ComponentRequest, tx: mpsc::Sender<Event>) {
-        self.splitter.handle_request(request, tx)
+    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+        self.splitter.handle_focus(e, tx)
     }
 
     fn draw(&self,x: u16, y: u16, w: u16, h: u16) {
