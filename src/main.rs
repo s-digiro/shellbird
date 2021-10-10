@@ -2,18 +2,21 @@ extern crate termion;
 extern crate clap_v3 as clap;
 extern crate signal_hook;
 extern crate mpd;
+extern crate home;
 
 use std::collections::HashMap;
-use std::io::{self, Write};
+use std::io::{self, Write, BufRead, BufReader};
 use std::sync::mpsc;
 use std::thread;
+use std::path::Path;
+use std::fs::File;
 
 use shellbird::event::*;
 use shellbird::music::{mpd_sender, mpd_listener};
 use shellbird::screen;
 use shellbird::signals;
 use shellbird::styles;
-use shellbird::command_line::CommandLine;
+use shellbird::command_line::{self, CommandLine};
 use shellbird::mode::Mode;
 use shellbird::screen::Screen;
 
@@ -29,6 +32,7 @@ use clap::{AppSettings, Clap};
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
     genres: String,
+    sbrc: Option<String>,
     #[clap(short)]
     debug: bool
 }
@@ -49,6 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mpd_tx =  mpd_sender::init_mpd_sender_thread("127.0.0.1", "6600");
 
     init_stdin_thread(tx.clone());
+    run_sbrc(opts.sbrc, tx.clone());
     mpd_listener::init_mpd_listener_thread("127.0.0.1", "6600", tx.clone());
     signals::init_listener(tx.clone());
     styles::load_style_tree_async(&opts.genres, tx.clone());
@@ -71,6 +76,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match e {
             Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
             Event::ToApp(e) => match e {
+                AppEvent::SbrcError(line, msg) => command_line.put_text(
+                    format!("Sbrc: Invalid command at line {} '{}'", line, msg)
+                ),
+                AppEvent::SbrcNotFound => command_line.put_text(
+                    format!("Sbrc not found. :q to quit.")
+                ),
                 AppEvent::Echo(msg) => command_line.put_text(msg),
                 AppEvent::CommandResponse(msg) => command_line.put_text(msg),
                 AppEvent::InvalidCommand(msg) => command_line.put_text(format!("Error: Invalid Command '{}'", msg)),
@@ -118,21 +129,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn keybinds() -> HashMap<String, Event> {
     let mut keybinds: HashMap<String, Event> = HashMap::new();
 
-    keybinds.insert(String::from(" "), Event::ToFocus(FocusEvent::Select));
-    keybinds.insert(String::from("j"), Event::ToFocus(FocusEvent::Next));
-    keybinds.insert(String::from("k"), Event::ToFocus(FocusEvent::Prev));
-    keybinds.insert(String::from("gg"), Event::ToFocus(FocusEvent::GoToTop));
-    keybinds.insert(String::from("G"), Event::ToFocus(FocusEvent::GoToBottom));
-    keybinds.insert(String::from("h"), Event::ToScreen(ScreenEvent::FocusPrev));
-    keybinds.insert(String::from("l"), Event::ToScreen(ScreenEvent::FocusNext));
-    keybinds.insert(String::from("p"), Event::ToMpd(MpdEvent::TogglePause));
-    keybinds.insert(String::from("c"), Event::ToMpd(MpdEvent::ClearQueue));
-    keybinds.insert(String::from("1"), Event::ToApp(AppEvent::SwitchScreen(0)));
-    keybinds.insert(String::from("2"), Event::ToApp(AppEvent::SwitchScreen(1)));
-    keybinds.insert(String::from("3"), Event::ToApp(AppEvent::SwitchScreen(2)));
-    keybinds.insert(String::from("4"), Event::ToApp(AppEvent::SwitchScreen(3)));
-    keybinds.insert(String::from("5"), Event::ToApp(AppEvent::SwitchScreen(4)));
-    keybinds.insert(String::from("q"), Event::ToApp(AppEvent::Quit));
+//    keybinds.insert(String::from(" "), Event::ToFocus(FocusEvent::Select));
+//    keybinds.insert(String::from("j"), Event::ToFocus(FocusEvent::Next));
+//    keybinds.insert(String::from("k"), Event::ToFocus(FocusEvent::Prev));
+//    keybinds.insert(String::from("gg"), Event::ToFocus(FocusEvent::GoToTop));
+//    keybinds.insert(String::from("G"), Event::ToFocus(FocusEvent::GoToBottom));
+//    keybinds.insert(String::from("h"), Event::ToScreen(ScreenEvent::FocusPrev));
+//    keybinds.insert(String::from("l"), Event::ToScreen(ScreenEvent::FocusNext));
+//    keybinds.insert(String::from("p"), Event::ToMpd(MpdEvent::TogglePause));
+//    keybinds.insert(String::from("c"), Event::ToMpd(MpdEvent::ClearQueue));
+//    keybinds.insert(String::from("1"), Event::ToApp(AppEvent::SwitchScreen(0)));
+//    keybinds.insert(String::from("2"), Event::ToApp(AppEvent::SwitchScreen(1)));
+//    keybinds.insert(String::from("3"), Event::ToApp(AppEvent::SwitchScreen(2)));
+//    keybinds.insert(String::from("4"), Event::ToApp(AppEvent::SwitchScreen(3)));
+//    keybinds.insert(String::from("5"), Event::ToApp(AppEvent::SwitchScreen(4)));
+//    keybinds.insert(String::from("q"), Event::ToApp(AppEvent::Quit));
     keybinds.insert(String::from(":"), Event::ToApp(AppEvent::Mode(Mode::Command)));
     keybinds.insert(String::from("/"), Event::ToApp(AppEvent::Mode(Mode::Search)));
 
@@ -158,4 +169,56 @@ fn init_stdin_thread(tx: mpsc::Sender<Event>) {
             }
         }
     });
+}
+
+fn run_sbrc(path_override: Option<String>, tx: mpsc::Sender<Event>) {
+    if let Some(path) = get_sbrc(path_override) {
+        let sbrc = File::open(path).unwrap();
+        let reader = BufReader::new(sbrc);
+
+        for (i, line) in reader.lines().enumerate() {
+            let line = line.unwrap();
+            match command_line::run_headless(&line, tx.clone()) {
+                Ok(_) => (),
+                _ => tx.send(
+                    Event::ToApp(AppEvent::SbrcError(i + 1, line.to_string()))
+                ).unwrap(),
+            }
+        }
+    } else {
+        tx.send(Event::ToApp(AppEvent::SbrcNotFound)).unwrap();
+    }
+}
+
+fn get_sbrc(path_override: Option<String>) -> Option<String> {
+    if let Some(path) = path_override {
+        return Some(path)
+    }
+
+    if let Some(mut home) = home::home_dir() {
+        let free_desktop = {
+            let mut home = home.clone();
+            home.push(".config/shellbird/sbrc");
+            home
+        };
+
+        let homedir = {
+            home.push(".sbrc");
+            home
+        };
+
+        if free_desktop.as_path().exists() {
+            return Some(free_desktop.to_str().unwrap().to_string())
+        } else if homedir.as_path().exists() {
+            return Some(homedir.to_str().unwrap().to_string())
+        }
+    }
+
+    let default = Path::new("/etc/shellbird/sbrc");
+
+    if default.exists() {
+        return Some(default.to_str().unwrap().to_string())
+    }
+
+    None
 }

@@ -1,0 +1,15 @@
+bind <space> select
+bind j next
+bind k prev
+bind gg top
+bind G bot
+bind h focusprev
+bind l focusnext
+bind p pause
+bind c clear
+bind 1 switchscreen 0
+bind 2 switchscreen 1
+bind 3 switchscreen 2
+bind 4 switchscreen 3
+bind 5 switchscreen 4
+bind q quit

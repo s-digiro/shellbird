@@ -69,7 +69,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Rework Event Enum
 - [x] Commandline
 - [x] keybinds
-- [ ] splitter alignment
+- [ ] component alignment
 - [ ] Track display formatting in menus
 - [ ] statusline
 - [ ] RC

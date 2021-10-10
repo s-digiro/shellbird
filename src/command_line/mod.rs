@@ -161,5 +161,15 @@ impl CommandLine {
             ),
         }
     }
+}
 
+pub fn run_headless(cmd: &str, tx: mpsc::Sender<Event>) -> Result<(), ()> {
+    let cmd = cmd.split(" ").collect();
+    match command::parse(&cmd) {
+        Some(event) => {
+            tx.send(event).unwrap();
+            Ok(())
+        },
+        None => Err(())
+    }
 }

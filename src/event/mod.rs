@@ -44,6 +44,8 @@ pub enum AppEvent {
     Quit,
     Mode(Mode),
     Input(Key),
+    SbrcError(usize, String),
+    SbrcNotFound,
 }
 
 #[derive(Debug)]
