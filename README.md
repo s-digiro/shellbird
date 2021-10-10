@@ -49,7 +49,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 * `invalid <message>`: Sends an InvalidCommand event to the event queue. Not that useful.
 * `echo <message>`: Sends a CommandResponse event to the event queue. Not very useful
 * `q`: Quit application
-* `switchscreen <number>`: Switch screens to the one indexed by <number>
+* `switchscreen <number>`: Switch screens to the one indexed by \<number\>
 	* Note`: In the future, screens will probably be named rather than numbered
 * `focusnext`: switch focus to the next component on the current screen
 * `focusprev`: switch focus to the previous component on the current screen
@@ -58,11 +58,11 @@ A commandline can be brought up with the ':' key. Some available commands are:
 * `select`: send a select even to the focused component. On a menu, this usually means adding selected items to the queue. On a queue menu, this means play from the currently selected item.
 * `top`: Go to top of focused menu
 * `bot`: Go to bottom of focused menu
-* `search <term>`: search for given <term> and go to it in focused menu. Always case insensitive.
-* `goto <number>`: Go to line number <number> in focused menu
+* `search <term>`: search for given \<term\> and go to it in focused menu. Always case insensitive.
+* `goto <number>`: Go to line number \<number\> in focused menu
 * `pause`: toggles music pause/playing state
 * `clear`: clears playback queue
-* `bind <key sequence> <command>`: binds <key sequence> to send off <command>
+* `bind <key sequence> <command>`: binds \<key sequence\> to send off \<command\>
 	* Example: `bind ss goto 3` will cause inputing 'ss' in normal mode to go to the 4th item in a menu
 
 ## To Do:
