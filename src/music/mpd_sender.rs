@@ -7,6 +7,7 @@ use crate::music;
 
 use mpd::Query;
 use mpd::Term;
+use mpd::Client;
 
 pub fn init_mpd_sender_thread(ip: &str, port: &str) -> mpsc::Sender<MpdEvent> {
     let (tx, rx) = mpsc::channel();
@@ -31,6 +32,7 @@ pub fn init_mpd_sender_thread(ip: &str, port: &str) -> mpsc::Sender<MpdEvent> {
 
             match request {
                 MpdEvent::TogglePause => conn.toggle_pause().unwrap(),
+                MpdEvent::Random => toggle_random(&mut conn),
                 MpdEvent::ClearQueue => conn.clear().unwrap(),
                 MpdEvent::AddToQueue(songs) => for song in songs {
                     conn.push(song).unwrap();
@@ -64,4 +66,10 @@ pub fn init_mpd_sender_thread(ip: &str, port: &str) -> mpsc::Sender<MpdEvent> {
     });
 
     tx
+}
+
+fn toggle_random(conn: &mut Client) {
+    let stats = conn.status().unwrap();
+
+    conn.random(!stats.random).unwrap();
 }

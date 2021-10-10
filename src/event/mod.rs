@@ -39,6 +39,7 @@ pub enum AppEvent {
     StyleTreeLoaded(Option<Style>),
     InvalidCommand(String),
     CommandResponse(String),
+    Echo(String),
     SwitchScreen(usize),
     Quit,
     Mode(Mode),
@@ -85,4 +86,5 @@ pub enum MpdEvent {
     AddToQueue(Vec<Song>),
     AddStyleToQueue(Vec<String>),
     PlayAt(Song),
+    Random,
 }

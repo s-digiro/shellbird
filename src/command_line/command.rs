@@ -8,8 +8,12 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
                 None => Some(Event::ToApp(AppEvent::InvalidCommand(String::new()))),
             },
 
-            "echo"
-            | "respond"
+            "echo" => match cmd.get(1) {
+                Some(s) => Some(Event::ToApp(AppEvent::Echo(s.to_string()))),
+                None => None,
+            },
+
+            "respond"
             | "response"
             | "commandresponse"
             | "commandrespond" => match cmd.get(1) {
@@ -67,6 +71,8 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
 
             "clear"
             | "clearqueue" => Some(Event::ToMpd(MpdEvent::ClearQueue)),
+
+            "random" => Some(Event::ToMpd(MpdEvent::Random)),
 
             "bind"
             | "bindkey" => match cmd.get(1) {

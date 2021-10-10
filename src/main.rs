@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         write!(stdout, "{}", clear::All)?;
 
         screens[sel].draw();
-        write!(stdout, "{}", command_line).unwrap();
+        command_line.draw();
 
         stdout.flush().unwrap();
 
@@ -71,6 +71,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match e {
             Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
             Event::ToApp(e) => match e {
+                AppEvent::Echo(msg) => command_line.put_text(msg),
+                AppEvent::CommandResponse(msg) => command_line.put_text(msg),
+                AppEvent::InvalidCommand(msg) => command_line.put_text(format!("Error: Invalid Command '{}'", msg)),
                 AppEvent::Input(key) => match key {
                     Key::Char(':') => tx.send(Event::ToApp(AppEvent::Mode(Mode::Command))).unwrap(),
                     Key::Char('/') => tx.send(Event::ToApp(AppEvent::Mode(Mode::Search))).unwrap(),

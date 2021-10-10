@@ -1,6 +1,5 @@
 mod command;
 
-use std::fmt;
 use std::collections::HashMap;
 use std::sync::mpsc;
 use termion::{cursor, clear};
@@ -10,6 +9,8 @@ use crate::mode::Mode;
 
 pub struct CommandLine {
     contents: String,
+    statusline: String,
+    text: String,
     mode: Mode,
     keybinds: HashMap<String, Event>,
     tx: mpsc::Sender<Event>,
@@ -19,15 +20,20 @@ impl CommandLine {
     pub fn new(keybinds: HashMap<String, Event>, tx: mpsc::Sender<Event>) -> CommandLine {
         CommandLine {
             contents: String::new(),
+            statusline: String::new(),
+            text: String::new(),
             mode: Mode::TUI,
             keybinds,
             tx,
         }
     }
 
-    pub fn mode(&mut self, mode: Mode) {
-        self.clear();
-        self.mode = mode;
+    pub fn put_text(&mut self, text: String) {
+        self.text = text;
+    }
+
+    pub fn clear_text(&mut self) {
+        self.text = "".to_string();
     }
 
     pub fn back(&mut self) -> Option<Event> {
@@ -39,10 +45,18 @@ impl CommandLine {
         }
     }
 
+    pub fn mode(&mut self, m: Mode) {
+        self.clear();
+        self.mode = m;
+    }
+
     pub fn add(&mut self, c: char) {
+        self.clear_text();
         match self.mode {
             Mode::TUI => {
-                self.contents.push(c);
+                if c != '\n' {
+                    self.contents.push(c);
+                }
 
                 if let Some(event) = self.keybinds.get(&self.contents) {
                     self.tx.send(event.clone()).unwrap();
@@ -66,7 +80,7 @@ impl CommandLine {
     }
 
     pub fn clear(&mut self) {
-        self.contents = String::new();
+        self.contents = "".to_string();
     }
 
     pub fn bind(&mut self, key: String, e: Event) {
@@ -80,23 +94,30 @@ impl CommandLine {
                 let args: Vec<&str> = contents.split(" ").collect();
 
                 match command::parse(&args) {
-                    Some(e) => {
-                        let msg = format!("Ran: {:?}", e);
-                        self.tx.send(e).unwrap();
-                        self.tx.send(self.respond(msg)).unwrap();
+                    Some(e) => match e {
+                        Event::ToApp(AppEvent::Echo(_)) => {
+                            self.tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
+                            self.tx.send(e).unwrap();
+                        },
+                        e =>{
+                            let msg = format!("Ran: {:?}", e);
+                            self.tx.send(e).unwrap();
+                            self.tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
+                            self.tx.send(self.respond(msg)).unwrap();
+                        }
                     },
-                    None => self.tx.send(self.invalid()).unwrap(),
+                    None => {
+                        self.tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
+                        self.tx.send(self.invalid()).unwrap();
+                    },
                 }
 
-                self.clear();
-                self.tx.send(self.reset()).unwrap();
             },
             Mode::Search => {
                 self.tx.send(
                     Event::ToFocus(FocusEvent::Search(self.contents.clone()))
                 ).unwrap();
-                self.clear();
-                self.tx.send(self.reset()).unwrap();
+                self.tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
             },
             _ => (),
         }
@@ -110,15 +131,8 @@ impl CommandLine {
         Event::ToApp(AppEvent::CommandResponse(s))
     }
 
-    fn reset(&self) -> Event {
-        Event::ToApp(AppEvent::Mode(Mode::TUI))
-    }
-
-}
-
-impl fmt::Display for CommandLine {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let (_, h) = termion::terminal_size().unwrap();
+    pub fn draw(&self) {
+        let (w, h) = termion::terminal_size().unwrap();
 
         let prefix = match self.mode {
             Mode::Command => ":",
@@ -126,11 +140,31 @@ impl fmt::Display for CommandLine {
             _ => "",
         };
 
-        write!(f, "{}{}{}{}",
-               cursor::Goto(0, h),
+        match self.mode {
+            Mode::Command | Mode::Search => print!(
+                "{}{}{}{}",
+               cursor::Goto(1, h),
                clear::CurrentLine,
                prefix,
-               self.contents,
-        )
+               self.contents
+            ),
+            Mode::TUI if self.text.is_empty() => print!(
+                "{}{}{}{}{}",
+                cursor::Goto(1, h),
+                clear::CurrentLine,
+                self.statusline,
+                cursor::Goto(w - self.contents.len() as u16, h),
+                self.contents,
+            ),
+            Mode::TUI => print!(
+                "{}{}{}{}{}",
+                cursor::Goto(1, h),
+                clear::CurrentLine,
+                self.text,
+                cursor::Goto(w - self.contents.len() as u16, h),
+                self.contents,
+            ),
+        }
     }
+
 }
