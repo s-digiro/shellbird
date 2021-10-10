@@ -70,6 +70,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Commandline
 - [x] keybinds
 - [ ] splitter alignment
+- [ ] Track display formatting in menus
 - [ ] statusline
 - [ ] RC
 - [ ] Json Reading
@@ -81,3 +82,4 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [ ] TextBox
 - [ ] Button
 - [ ] Text
+- [ ] Seekbar

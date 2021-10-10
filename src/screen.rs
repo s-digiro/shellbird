@@ -22,7 +22,8 @@ impl Screen {
 
     pub fn draw(&self) {
         let (w, h) = termion::terminal_size().unwrap();
-        self.base.draw(1, 1, w, h);
+        // h - 1 so we have room for statusline
+        self.base.draw(1, 1, w, h - 1);
     }
 
     pub fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
