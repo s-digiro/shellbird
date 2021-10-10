@@ -64,11 +64,6 @@ impl CommandLine {
                 } else if !self.keybinds.keys()
                     .any(|s| s.starts_with(&self.contents)) 
                 {
-                    self.tx.send(
-                        Event::ToApp(
-                            AppEvent::InvalidCommand(self.contents.clone())
-                        )
-                    ).unwrap();
                     self.clear();
                 }
             },
