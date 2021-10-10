@@ -1,3 +1,7 @@
+mod bindable_event;
+
+pub use bindable_event::BindableEvent;
+
 use mpd::Song;
 use termion::event::Key;
 
@@ -18,6 +22,8 @@ use crate::mode::Mode;
 #[derive(Clone)]
 pub enum Event {
     Dummy,
+
+    BindKey(String, BindableEvent),
 
     ToApp(AppEvent),
     ToScreen(ScreenEvent),

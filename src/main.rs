@@ -38,9 +38,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut stdout = io::stdout().into_raw_mode().unwrap();
 
-    let mut mode = Mode::TUI;
-    let mut command_line = CommandLine::new(keybinds());
-
     let mut sel = 0;
     let mut screens = init_screens();
 
@@ -48,6 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (tx, rx) = mpsc::channel();
 
+    let mut command_line = CommandLine::new(keybinds(), tx.clone());
     let mpd_tx =  mpd_sender::init_mpd_sender_thread("127.0.0.1", "6600");
 
     init_stdin_thread(tx.clone());
@@ -55,14 +53,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     signals::init_listener(tx.clone());
     styles::load_style_tree_async(&opts.genres, tx.clone());
 
+
     loop {
         write!(stdout, "{}", clear::All)?;
 
         screens[sel].draw();
-
-        if matches!(mode, Mode::Command) || matches!(mode, Mode::Search) {
-            write!(stdout, "{}", command_line).unwrap();
-        }
+        write!(stdout, "{}", command_line).unwrap();
 
         stdout.flush().unwrap();
 
@@ -73,6 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         match e {
+            Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
             Event::ToApp(e) => match e {
                 AppEvent::Input(key) => match key {
                     Key::Char(':') => tx.send(Event::ToApp(AppEvent::Mode(Mode::Command))).unwrap(),
@@ -81,17 +78,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Key::Backspace => if let Some(event) = command_line.back() {
                         tx.send(event).unwrap();
                     },
-                    Key::Char(c) => if let Some(event) = command_line.add(c) {
-                        tx.send(event).unwrap();
-                        tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
-                    },
+                    Key::Char(c) => command_line.add(c),
                     _ => (),
                 },
-                AppEvent::Mode(m) => {
-                    mode = m;
-                    command_line.clear();
-                    command_line.mode(mode.clone());
-                },
+                AppEvent::Mode(m) => command_line.mode(m),
                 AppEvent::Quit => break,
                 AppEvent::SwitchScreen(i) => sel = i,
                 AppEvent::StyleTreeLoaded(style) => {
