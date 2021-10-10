@@ -68,7 +68,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 ## To Do:
 - [x] Rework Event Enum
 - [x] Commandline
-- [ ] keybinds
+- [x] keybinds
 - [ ] splitter alignment
 - [ ] statusline
 - [ ] RC
