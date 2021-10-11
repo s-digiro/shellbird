@@ -23,8 +23,12 @@ impl StyleMenu {
         }
     }
 
-    fn set_items(&mut self, styles: &Vec<Style>) {
-        self.styles = styles.clone();
+    fn set_items(&mut self, style: &Option<Style>) {
+        if let Some(style) = style {
+            self.styles = style.children();
+        } else {
+            self.styles = Vec::new()
+        }
         self.update_menu_items();
     }
 
@@ -38,8 +42,8 @@ impl StyleMenu {
         Event::ToGlobal(GlobalEvent::StyleMenuUpdated(
             self.name.clone(),
             match self.styles.get(self.menu.selection) {
-                Some(style) => style.children(),
-                None => Vec::new(),
+                Some(style) => Some(style.clone()),
+                None => None,
             },
         ))
     }
@@ -67,12 +71,12 @@ impl Component for StyleMenu {
 
     fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
         match e {
-            GlobalEvent::UpdateRootStyleMenu(styles) if self.parent.is_none() => {
-                self.set_items(styles);
+            GlobalEvent::UpdateRootStyleMenu(style) if self.parent.is_none() => {
+                self.set_items(style);
                 tx.send(self.spawn_update_event()).unwrap();
             },
-            GlobalEvent::StyleMenuUpdated(menu, styles) if self.parent.is(menu) => {
-                self.set_items(styles);
+            GlobalEvent::StyleMenuUpdated(menu, style) if self.parent.is(menu) => {
+                self.set_items(style);
                 tx.send(self.spawn_update_event()).unwrap();
             },
             _ => (),

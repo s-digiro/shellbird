@@ -68,8 +68,9 @@ pub enum GlobalEvent {
     Database(Vec<Song>),
     PlaylistMenuUpdated(String, Option<Playlist>),
     TagMenuUpdated(String, Vec<Song>),
-    UpdateRootStyleMenu(Vec<Style>),
-    StyleMenuUpdated(String, Vec<Style>),
+    UpdateRootStyleMenu(Option<Style>),
+    StyleMenuUpdated(String, Option<Style>),
+    ReturnTracksTo(String, Vec<Song>),
 }
 
 #[derive(Debug)]
@@ -92,5 +93,6 @@ pub enum MpdEvent {
     AddToQueue(Vec<Song>),
     AddStyleToQueue(Vec<String>),
     PlayAt(Song),
+    GetTracksFromGenres(String, Vec<String>),
     Random,
 }

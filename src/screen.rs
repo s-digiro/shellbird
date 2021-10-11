@@ -151,9 +151,10 @@ pub fn new_library_view_screen() -> Screen {
 }
 
 pub fn new_style_view_screen() -> Screen {
-    let mut base = HorizontalSplitter::new("StyleViewScreen-Base", true);
+    let mut base = VerticalSplitter::new("StyleViewScreen-Base", true);
+    let mut filters = HorizontalSplitter::new("StyleViewScreen-Base", true);
 
-    base.add(
+    filters.add(
         Box::new(StyleMenu::new(
             "StyleViewScreen-StyleMenu1",
             None,
@@ -161,7 +162,7 @@ pub fn new_style_view_screen() -> Screen {
         Size::Percent(20),
     );
 
-    base.add(
+    filters.add(
         Box::new(StyleMenu::new(
             "StyleViewScreen-StyleMenu2",
             Some(String::from("StyleViewScreen-StyleMenu1")),
@@ -170,7 +171,7 @@ pub fn new_style_view_screen() -> Screen {
     );
 
 
-    base.add(
+    filters.add(
         Box::new(StyleMenu::new(
             "StyleViewScreen-StyleMenu3",
             Some(String::from("StyleViewScreen-StyleMenu2")),
@@ -179,7 +180,7 @@ pub fn new_style_view_screen() -> Screen {
     );
 
 
-    base.add(
+    filters.add(
         Box::new(StyleMenu::new(
             "StyleViewScreen-StyleMenu4",
             Some(String::from("StyleViewScreen-StyleMenu3")),
@@ -188,12 +189,21 @@ pub fn new_style_view_screen() -> Screen {
     );
 
 
-    base.add(
+    filters.add(
         Box::new(StyleMenu::new(
             "StyleViewScreen-StyleMenu5",
             Some(String::from("StyleViewScreen-StyleMenu4")),
         )),
         Size::Percent(20),
+    );
+
+    base.add(Box::new(filters), Size::Percent(40));
+    base.add(
+        Box::new(TrackMenu::new(
+            "StyleViewScreen-Tracks",
+            Some(String::from("StyleViewScreen-StyleMenu5")),
+        )),
+        Size::Percent(60),
     );
 
     Screen::new("StyleViewScreen", Box::new(base))

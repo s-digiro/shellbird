@@ -69,6 +69,8 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Commandline
 - [x] keybinds
 - [x] CommandLineEvent
+- [x] Track Menu with Style Menu parent
+- [ ] All entry in certain menus
 - [ ] component alignment
 - [ ] Track display formatting in menus
 - [ ] statusline

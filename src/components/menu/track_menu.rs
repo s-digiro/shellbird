@@ -30,16 +30,33 @@ impl TrackMenu {
                 None => "<Empty>".to_string(),
             }).collect();
     }
+
+    fn selected_tracks(&self) -> Vec<Song> {
+        if let Some(track) = self.tracks.get(self.menu.selection) {
+            vec![track.clone()]
+        } else {
+            Vec::new()
+        }
+    }
 }
 
 impl Component for TrackMenu {
     fn name(&self) -> &str { &self.name }
 
     fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
-        self.menu.handle_focus(e, tx.clone());
+        match e {
+            FocusEvent::Select => {
+                tx.send(
+                    Event::ToMpd(MpdEvent::AddToQueue(
+                        self.selected_tracks()
+                    ))
+                ).unwrap();
+            },
+            e => self.menu.handle_focus(e, tx.clone()),
+        }
     }
 
-    fn handle_global(&mut self, e: &GlobalEvent, _tx: mpsc::Sender<Event>) {
+    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
         match e {
             GlobalEvent::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
                 Some(pl) => {
@@ -49,6 +66,23 @@ impl Component for TrackMenu {
                 None => (),
             },
             GlobalEvent::TagMenuUpdated(name, tracks) if self.parent.is(name) => {
+                self.tracks = tracks.clone();
+                self.update_menu_items();
+            },
+            GlobalEvent::StyleMenuUpdated(name, styles) if self.parent.is(name) => {
+                let mut genres = Vec::new();
+                for style in styles {
+                    for genre in style.leaves() {
+                        genres.push(genre);
+                    }
+                }
+
+                tx.send(Event::ToMpd(MpdEvent::GetTracksFromGenres(
+                    self.name.to_string(),
+                    genres,
+                ))).unwrap();
+            },
+            GlobalEvent::ReturnTracksTo(name, tracks) if self.name == name.to_string() => {
                 self.tracks = tracks.clone();
                 self.update_menu_items();
             },

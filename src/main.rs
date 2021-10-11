@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (tx, rx) = mpsc::channel();
 
     let mut command_line = CommandLine::new(tx.clone());
-    let mpd_tx =  mpd_sender::init_mpd_sender_thread("127.0.0.1", "6600");
+    let mpd_tx =  mpd_sender::init_mpd_sender_thread("127.0.0.1", "6600", tx.clone());
 
     init_stdin_thread(tx.clone());
     run_sbrc(opts.sbrc, tx.clone());
@@ -76,13 +76,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 AppEvent::Quit => break,
                 AppEvent::SwitchScreen(i) => sel = i,
                 AppEvent::StyleTreeLoaded(style) => {
-                    if let Some(style) = style {
-                        tx.send(
-                            Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu(
-                                    style.children()
-                            ))
-                        ).unwrap();
-                    }
+                    tx.send(
+                        Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu(
+                                style
+                        ))
+                    ).unwrap();
                 },
                 _ => (),
             },
