@@ -19,22 +19,9 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
 
     match get_lowercase(&cmd, 0) {
         Some(s) => match s.as_str() {
-            "invalid" => match cmd.get(1) {
-                Some(s) => Some(Event::ToApp(AppEvent::InvalidCommand(s.to_string()))),
-                None => Some(Event::ToApp(AppEvent::InvalidCommand(String::new()))),
-            },
-
             "echo" => match cmd.get(1) {
-                Some(s) => Some(Event::ToApp(AppEvent::Echo(s.to_string()))),
+                Some(s) => Some(Event::ToCommandLine(CommandLineEvent::Echo(s.to_string()))),
                 None => None,
-            },
-
-            "respond"
-            | "response"
-            | "commandresponse"
-            | "commandrespond" => match cmd.get(1) {
-                Some(s) => Some(Event::ToApp(AppEvent::CommandResponse(s.to_string()))),
-                None => Some(Event::ToApp(AppEvent::CommandResponse(String::new()))),
             },
 
             "quit"

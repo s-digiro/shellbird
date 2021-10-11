@@ -2,7 +2,7 @@ mod command;
 
 use std::collections::HashMap;
 use std::sync::mpsc;
-use termion::{cursor, clear};
+use termion::{cursor, clear, event::Key};
 
 use crate::event::*;
 use crate::mode::Mode;
@@ -17,13 +17,13 @@ pub struct CommandLine {
 }
 
 impl CommandLine {
-    pub fn new(keybinds: HashMap<String, Event>, tx: mpsc::Sender<Event>) -> CommandLine {
+    pub fn new(tx: mpsc::Sender<Event>) -> CommandLine {
         CommandLine {
             contents: String::new(),
             statusline: String::new(),
             text: String::new(),
             mode: Mode::TUI,
-            keybinds,
+            keybinds: HashMap::new(),
             tx,
         }
     }
@@ -38,7 +38,7 @@ impl CommandLine {
 
     pub fn back(&mut self) -> Option<Event> {
         if self.contents.is_empty() {
-            Some(Event::ToApp(AppEvent::Mode(Mode::TUI)))
+            Some(spawn_mode_event(Mode::TUI))
         } else {
             self.contents.pop();
             None
@@ -49,6 +49,7 @@ impl CommandLine {
         self.clear();
         self.mode = m;
     }
+
 
     pub fn add(&mut self, c: char) {
         self.clear_text();
@@ -88,23 +89,24 @@ impl CommandLine {
                 let contents = self.contents.clone();
                 let args: Vec<&str> = contents.split(" ").collect();
 
-                match command::parse(&args) {
+                let events = match command::parse(&args) {
                     Some(e) => match e {
-                        Event::ToApp(AppEvent::Echo(_)) => {
-                            self.tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
-                            self.tx.send(e).unwrap();
-                        },
-                        e =>{
-                            let msg = format!("Ran: {:?}", e);
-                            self.tx.send(e).unwrap();
-                            self.tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
-                            self.tx.send(self.respond(msg)).unwrap();
-                        }
+                        Event::ToCommandLine(CommandLineEvent::Echo(_)) =>
+                            vec![e],
+                        e => vec![
+                            spawn_mode_event(Mode::TUI),
+                            e.clone(),
+                            spawn_respond_event(&e),
+                        ],
                     },
-                    None => {
-                        self.tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
-                        self.tx.send(self.invalid()).unwrap();
-                    },
+                    None => vec![
+                        spawn_mode_event(Mode::TUI),
+                        spawn_invalid_event(&self.contents),
+                    ],
+                };
+
+                for event in events {
+                    self.tx.send(event).unwrap();
                 }
 
             },
@@ -112,19 +114,12 @@ impl CommandLine {
                 self.tx.send(
                     Event::ToFocus(FocusEvent::Search(self.contents.clone()))
                 ).unwrap();
-                self.tx.send(Event::ToApp(AppEvent::Mode(Mode::TUI))).unwrap();
+                self.tx.send(Event::ToCommandLine(CommandLineEvent::Mode(Mode::TUI))).unwrap();
             },
             _ => (),
         }
     }
 
-    fn invalid(&self) -> Event {
-        Event::ToApp(AppEvent::InvalidCommand(self.contents.clone()))
-    }
-
-    fn respond(&self, s: String) -> Event {
-        Event::ToApp(AppEvent::CommandResponse(s))
-    }
 
     pub fn draw(&self) {
         let (w, h) = termion::terminal_size().unwrap();
@@ -161,6 +156,39 @@ impl CommandLine {
             ),
         }
     }
+
+    pub fn handle(&mut self, e: &CommandLineEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            CommandLineEvent::Echo(s) => self.put_text(s.to_string()),
+            CommandLineEvent::Mode(m) => self.mode(*m),
+            CommandLineEvent::SbrcError(line, msg) => self.put_text(
+                format!(
+                    "sbrc: Invalid command at line {} '{}'",
+                    line,
+                    msg.to_string()
+                )
+            ),
+            CommandLineEvent::Input(key) => match key {
+                Key::Char(':') => tx.send(
+                    Event::ToCommandLine(CommandLineEvent::Mode(Mode::Command))
+                ).unwrap(),
+                Key::Char('/') => tx.send(
+                    Event::ToCommandLine(CommandLineEvent::Mode(Mode::Search))
+                ).unwrap(),
+                Key::Esc => tx.send(
+                    Event::ToCommandLine(CommandLineEvent::Mode(Mode::TUI))
+                ).unwrap(),
+                Key::Backspace => if let Some(event) = self.back() {
+                    tx.send(event).unwrap();
+                },
+                Key::Char(c) => self.add(*c),
+                _ => (),
+            },
+            CommandLineEvent::SbrcNotFound => self.put_text(
+                "Sbrc not found. :q to quit.".to_string()
+            ),
+        }
+    }
 }
 
 pub fn run_headless(cmd: &str, tx: mpsc::Sender<Event>) -> Result<(), ()> {
@@ -172,4 +200,18 @@ pub fn run_headless(cmd: &str, tx: mpsc::Sender<Event>) -> Result<(), ()> {
         },
         None => Err(())
     }
+}
+
+fn spawn_invalid_event(cmd: &str) -> Event {
+    Event::ToCommandLine(CommandLineEvent::Echo(
+        format!("Invalid Command '{}'", cmd)
+    ))
+}
+
+fn spawn_respond_event(e: &Event) -> Event {
+    Event::ToCommandLine(CommandLineEvent::Echo(format!("Ran: {:?}", e)))
+}
+
+fn spawn_mode_event(mode: Mode) -> Event {
+    Event::ToCommandLine(CommandLineEvent::Mode(mode))
 }

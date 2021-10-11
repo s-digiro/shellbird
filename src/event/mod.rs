@@ -26,6 +26,7 @@ pub enum Event {
     BindKey(String, BindableEvent),
 
     ToApp(AppEvent),
+    ToCommandLine(CommandLineEvent),
     ToScreen(ScreenEvent),
     ToGlobal(GlobalEvent),
     ToFocus(FocusEvent),
@@ -37,11 +38,14 @@ pub enum Event {
 pub enum AppEvent {
     Resize,
     StyleTreeLoaded(Option<Style>),
-    InvalidCommand(String),
-    CommandResponse(String),
-    Echo(String),
     SwitchScreen(usize),
     Quit,
+}
+
+#[derive(Debug)]
+#[derive(Clone)]
+pub enum CommandLineEvent {
+    Echo(String),
     Mode(Mode),
     Input(Key),
     SbrcError(usize, String),

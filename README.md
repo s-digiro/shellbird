@@ -46,8 +46,7 @@ Genres are read from a file. An example is in the root of the project, genres.tx
 
 ## Commands
 A commandline can be brought up with the ':' key. Some available commands are:
-* `invalid <message>`: Sends an InvalidCommand event to the event queue. Not that useful.
-* `echo <message>`: Sends a CommandResponse event to the event queue. Not very useful
+* `echo <message>`: Prints /<message/> in status bar
 * `q`: Quit application
 * `switchscreen <number>`: Switch screens to the one indexed by \<number\>
 	* Note`: In the future, screens will probably be named rather than numbered
@@ -69,6 +68,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Rework Event Enum
 - [x] Commandline
 - [x] keybinds
+- [x] CommandLineEvent
 - [ ] component alignment
 - [ ] Track display formatting in menus
 - [ ] statusline
@@ -76,6 +76,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [ ] Json Reading
 - [ ] Restore cursor after application exits. Termion seems to be bugged and isn't doing it right.
 - [ ] Screen Map
+- [ ] Redraw Event
 
 ### To Do Components
 - [ ] SearchResultsMenu
