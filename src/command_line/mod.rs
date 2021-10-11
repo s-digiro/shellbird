@@ -91,8 +91,10 @@ impl CommandLine {
 
                 let events = match command::parse(&args) {
                     Some(e) => match e {
-                        Event::ToCommandLine(CommandLineEvent::Echo(_)) =>
-                            vec![e],
+                        Event::ToCommandLine(CommandLineEvent::Echo(_)) => vec![
+                            spawn_mode_event(Mode::TUI),
+                            e
+                        ],
                         e => vec![
                             spawn_mode_event(Mode::TUI),
                             e.clone(),
