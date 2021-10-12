@@ -55,14 +55,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     signals::init_listener(tx.clone());
     styles::load_style_tree_async(&opts.genres, tx.clone());
 
+    let mut redraw = true;
 
     loop {
-        write!(stdout, "{}", clear::All)?;
+        if redraw {
+            write!(stdout, "{}", clear::All)?;
 
-        screens[sel].draw();
-        command_line.draw();
+            screens[sel].draw();
+            command_line.draw();
 
-        stdout.flush().unwrap();
+            stdout.flush().unwrap();
+        }
+
+        redraw = true;
 
         let e = rx.recv()?;
 
@@ -75,10 +80,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::ToApp(e) => match e {
                 AppEvent::Quit => break,
                 AppEvent::SwitchScreen(i) => sel = i,
-                AppEvent::StyleTreeLoaded(style) => {
+                AppEvent::StyleTreeLoaded(base_style) => {
                     tx.send(
                         Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu(
-                                style
+                                base_style
                         ))
                     ).unwrap();
                 },
@@ -86,10 +91,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
             Event::ToCommandLine(e) => command_line.handle(&e, tx.clone()),
             Event::ToScreen(e) => screens[sel].handle_screen(&e, tx.clone()),
-            Event::ToGlobal(e) => {
-                for screen in screens.iter_mut() {
-                    screen.handle_global(&e, tx.clone())
-                }
+            Event::ToGlobal(e) => match e {
+                GlobalEvent::PostponeMpd(_, _, _, _) => {
+                    for screen in screens.iter_mut() {
+                        screen.handle_global(&e, tx.clone())
+                    }
+
+                    redraw = false;
+                },
+                e => {
+                    for screen in screens.iter_mut() {
+                        screen.handle_global(&e, tx.clone())
+                    }
+                },
             },
             Event::ToFocus(e) => screens[sel].handle_focus(&e, tx.clone()),
             Event::ToMpd(e) => mpd_tx.send(e).unwrap(),

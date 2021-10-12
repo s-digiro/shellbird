@@ -4,6 +4,8 @@ pub use nestable_event::NestableEvent;
 
 use mpd::Song;
 use termion::event::Key;
+use std::time::{Duration, SystemTime};
+use std::fmt;
 
 use crate::playlist::Playlist;
 use crate::styles::Style;
@@ -24,7 +26,6 @@ pub enum Event {
     Dummy,
 
     BindKey(String, NestableEvent),
-    PostPone(String, NestableEvent),
 
     ToApp(AppEvent),
     ToCommandLine(CommandLineEvent),
@@ -60,7 +61,6 @@ pub enum ScreenEvent {
     FocusPrev,
 }
 
-#[derive(Debug)]
 #[derive(Clone)]
 pub enum GlobalEvent {
     NowPlaying(Option<Song>),
@@ -70,8 +70,9 @@ pub enum GlobalEvent {
     PlaylistMenuUpdated(String, Option<Playlist>),
     TagMenuUpdated(String, Vec<Song>),
     UpdateRootStyleMenu(Option<Style>),
-    StyleMenuUpdated(String, Option<Style>),
+    StyleMenuUpdated(String, Vec<Style>),
     ReturnTracksTo(String, Vec<Song>),
+    PostponeMpd(String, Duration, SystemTime, MpdEvent),
 }
 
 #[derive(Debug)]
@@ -86,7 +87,6 @@ pub enum FocusEvent {
     Search(String),
 }
 
-#[derive(Debug)]
 #[derive(Clone)]
 pub enum MpdEvent {
     TogglePause,
@@ -96,4 +96,35 @@ pub enum MpdEvent {
     PlayAt(Song),
     GetTracksFromGenres(String, Vec<String>),
     Random,
+}
+
+impl fmt::Debug for GlobalEvent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            GlobalEvent::NowPlaying(i) => write!(f, "GlobalEvent::NowPlaying({:?})", i),
+            GlobalEvent::Queue(s) => write!(f, "GlobalEvent::Queue({} songs)", s.len()),
+            GlobalEvent::Playlist(pl) => write!(f, "GlobalEvent::Playlist({} playlists)", pl.len()),
+            GlobalEvent::Database(s) => write!(f, "GlobalEvent::Database({} songs)", s.len()),
+            GlobalEvent::PlaylistMenuUpdated(t, pl) => write!(f, "GlobalEvent::PlaylistMenuUpdated({}, {} songs)", t, match pl { Some(_) => "Some", None => "None", }),
+            GlobalEvent::TagMenuUpdated(t, s) => write!(f, "GlobalEvent::TagMenuUpdated({}, {} songs)", t, s.len()),
+            GlobalEvent::UpdateRootStyleMenu(s) => write!(f, "GlobalEvent::UpdateRootStyleMenu({})", match s { Some(_) => "Some", None => "None", }),
+            GlobalEvent::StyleMenuUpdated(t, s) => write!(f, "GlobalEvent::StyleMenuUpdated({}, {})", t, s.len()),
+            GlobalEvent::ReturnTracksTo(t, s) => write!(f, "GlobalEvent::ReturnTracksTo({}, {})", t, s.len()),
+            GlobalEvent::PostponeMpd(t, dur, ts, e) => write!(f, "GlobalEvent::PostponeMpd({}, {:?}, {:?}, {:?})", t, dur, ts, e),
+        }
+    }
+}
+
+impl fmt::Debug for MpdEvent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            MpdEvent::TogglePause => write!(f, "MpdEvent::TogglePause"),
+            MpdEvent::ClearQueue => write!(f, "MpdEvent::ClearQueue"),
+            MpdEvent::AddToQueue(songs) => write!(f, "MpdEvent::AddToQueue({} songs)", songs.len()),
+            MpdEvent::AddStyleToQueue(genres) => write!(f, "MpdEvent::({} genres)", genres.len()),
+            MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
+            MpdEvent::GetTracksFromGenres(target, genres) => write!(f, "MpdEvent::({}, {} genres)", target, genres.len()),
+            MpdEvent::Random => write!(f, "MpdEvent::Random"),
+        }
+    }
 }

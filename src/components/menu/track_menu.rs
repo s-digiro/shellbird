@@ -3,7 +3,7 @@ use mpd::Song;
 use crate::event::*;
 use crate::components::{Component, menu::{Menu, Parent}};
 
-const STYLE_MENU_UPDATE_DELAY: u64 = 0;
+const STYLE_MENU_UPDATE_DELAY: u64 = 500;
 
 pub struct TrackMenu {
     name: String,
