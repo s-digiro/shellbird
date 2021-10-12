@@ -17,55 +17,63 @@ pub fn load_style_tree_async(path: &str, tx: mpsc::Sender<Event>) {
 
 #[derive(Clone)]
 #[derive(Debug)]
-pub struct Style {
+struct Style {
     name: String,
     depth: usize,
-    children: Vec<Style>,
+    children: Vec<usize>,
 }
 
 impl Style {
-    pub fn new(name: &str) -> Style {
+    fn new(name: &str, depth: usize) -> Style {
         Style {
             name: name.to_string(),
-            depth: 0,
+            depth,
             children: Vec::new(),
         }
     }
+}
 
-    pub fn name(&self) -> &str {
-        &self.name
-    }
+#[derive(Clone)]
+#[derive(Debug)]
+pub struct StyleTree {
+    styles: Vec<Style>,
+}
 
-    pub fn add_child(&mut self, mut child: Style) {
-        child.depth = self.depth + 1;
-        self.children.push(child)
-    }
-
-    pub fn children(&self) -> Vec<Style> {
-        self.children.clone()
-    }
-
-    pub fn name_depth(&mut self, name: &str, depth: usize) -> Option<&mut Style> {
-        if self.depth == depth && self.name == name {
-            return Some(self)
+impl StyleTree {
+    fn new() -> StyleTree {
+        StyleTree {
+            styles: vec![
+                Style {
+                    name: "Base".to_string(),
+                    depth: 0,
+                    children: Vec::new(),
+                }
+            ],
         }
-
-        for child in self.children.iter_mut() {
-            if let Some(child) = child.name_depth(name, depth) {
-                return Some(child)
-            }
-        }
-
-        None
     }
 
-    pub fn leaves(&self) -> Vec<String> {
-        if self.children.is_empty() {
-            vec![self.name.clone()]
+    pub fn name(&self, id: usize) -> &str {
+        &self.styles[id].name
+    }
+
+    pub fn depth(&self, id: usize) -> usize {
+        self.styles[id].depth
+    }
+
+    pub fn children(&self, id: usize) -> Vec<usize> {
+        self.styles[id].children.clone()
+    }
+
+    pub fn leaf_names(&self, id: usize) -> Vec<&str> {
+        let children = self.children(id);
+
+        if children.is_empty() {
+            vec![self.name(id)]
         } else {
             let mut ret = Vec::new();
-            for child in self.children.iter() {
-                ret.append(&mut child.leaves());
+
+            for child in self.children(id) {
+                ret.append(&mut self.leaf_names(child));
             }
 
             ret
@@ -73,13 +81,13 @@ impl Style {
     }
 }
 
-pub fn load_tree_from_file(path: &str) -> Result<Style, io::Error> {
-    let mut base = Style::new("root");
+pub fn load_tree_from_file(path: &str) -> Result<StyleTree, io::Error> {
+    let mut tree = StyleTree::new();
 
     let file = fs::File::open(path)?;
     let reader = BufReader::new(file);
 
-    let mut stack: Vec<(String, usize)> = Vec::new();
+    let mut stack: Vec<usize> = Vec::new();
 
     for (_index, line) in reader.lines().enumerate() {
         let line = line?;
@@ -103,19 +111,21 @@ pub fn load_tree_from_file(path: &str) -> Result<Style, io::Error> {
             stack.pop();
         }
 
-        let (parent_name, parent_depth) = match stack.last() {
-            Some(parent) => parent.clone(),
-            None => (base.name.clone(), base.depth),
+        let parent_id = match stack.last() {
+            Some(parent) => *parent,
+            None => 0,
         };
 
-        let new_style = Style::new(name);
+        let parent_depth = tree.depth(parent_id);
 
-        stack.push((new_style.name.to_string(), parent_depth + 1));
+        let new_id = tree.styles.len();
+        let new_style = Style::new(name, parent_depth + 1);
 
-        if let Some(parent) = base.name_depth(&parent_name, parent_depth) {
-            parent.add_child(new_style);
-        }
+        stack.push(new_id);
+        tree.styles[parent_id].children.push(new_id);
+
+        tree.styles.push(new_style);
     }
 
-    Ok(base)
+    Ok(tree)
 }

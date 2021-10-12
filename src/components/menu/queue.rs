@@ -3,6 +3,7 @@ use std::sync::mpsc;
 
 use termion::{color, cursor, style};
 use crate::event::*;
+use crate::styles::StyleTree;
 use crate::color::Color;
 use crate::components::{Component, menu::Menu};
 
@@ -52,7 +53,12 @@ impl Queue {
 impl Component for Queue {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+    fn handle_focus(
+        &mut self,
+        style_tree: &Option<StyleTree>,
+        e: &FocusEvent,
+        tx: mpsc::Sender<Event>
+    ) {
         match e {
             FocusEvent::Select => {
                 if let Some(song) = self.tracks.get(self.menu.selection) {
@@ -61,11 +67,16 @@ impl Component for Queue {
                     )).unwrap()
                 }
             },
-            e => self.menu.handle_focus(e, tx.clone()),
+            e => self.menu.handle_focus(style_tree, e, tx.clone()),
         }
     }
 
-    fn handle_global(&mut self, e: &GlobalEvent, _tx: mpsc::Sender<Event>) {
+    fn handle_global(
+        &mut self,
+        _style_tree: &Option<StyleTree>,
+        e: &GlobalEvent,
+        _tx: mpsc::Sender<Event>
+    ) {
         match e {
             GlobalEvent::NowPlaying(song) => self.set_now_playing(&song),
             GlobalEvent::Queue(q) => self.update_items(q),

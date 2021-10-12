@@ -2,6 +2,7 @@ use std::sync::mpsc;
 use mpd::Song;
 use crate::components::{Component, menu::{Menu, Parent}};
 use crate::event::*;
+use crate::styles::StyleTree;
 
 pub struct TagMenu {
     name: String,
@@ -42,7 +43,12 @@ impl TagMenu {
 impl Component for TagMenu {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+    fn handle_focus(
+        &mut self,
+        style_tree: &Option<StyleTree>,
+        e: &FocusEvent,
+        tx: mpsc::Sender<Event>
+    ) {
         match e {
             FocusEvent::Select => {
                 tx.send(
@@ -52,13 +58,18 @@ impl Component for TagMenu {
                 ).unwrap()
             },
             e => {
-                self.menu.handle_focus(e, tx.clone());
+                self.menu.handle_focus(style_tree, e, tx.clone());
                 tx.send(self.spawn_update_event()).unwrap();
             },
         }
     }
 
-    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+    fn handle_global(
+        &mut self,
+        _style_tree: &Option<StyleTree>,
+        e: &GlobalEvent,
+        tx: mpsc::Sender<Event>
+    ) {
         match e {
             GlobalEvent::TagMenuUpdated(origin, tracks) if self.parent.is(origin) => {
                 self.tracks = tracks.clone();

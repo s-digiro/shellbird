@@ -1,4 +1,5 @@
 use std::sync::mpsc;
+use crate::styles::StyleTree;
 use crate::components::{Component, ErrorBox};
 use crate::event::*;
 use super::{Panel, Splitter, Size, MoveFocusResult};
@@ -138,15 +139,25 @@ impl Component for VectorSplitter {
 
     fn name(&self) -> &str { &self.name }
 
-    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+    fn handle_global(
+        &mut self,
+        style_tree: &Option<StyleTree>,
+        e: &GlobalEvent,
+        tx: mpsc::Sender<Event>
+    ) {
         for panel in self.panels.iter_mut() {
-            panel.component.handle_global(e, tx.clone())
+            panel.component.handle_global(style_tree, e, tx.clone())
         }
     }
 
-    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+    fn handle_focus(
+        &mut self,
+        style_tree: &Option<StyleTree>,
+        e: &FocusEvent,
+        tx: mpsc::Sender<Event>
+    ) {
         if let Some(sel) = self.sel_mut() {
-            sel.handle_focus(e, tx);
+            sel.handle_focus(style_tree, e, tx);
         }
     }
 

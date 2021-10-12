@@ -8,7 +8,7 @@ use std::time::{Duration, SystemTime};
 use std::fmt;
 
 use crate::playlist::Playlist;
-use crate::styles::Style;
+use crate::styles::StyleTree;
 use crate::mode::Mode;
 
 /* Events are sorted into different enums based on their destination
@@ -39,7 +39,7 @@ pub enum Event {
 #[derive(Clone)]
 pub enum AppEvent {
     Resize,
-    StyleTreeLoaded(Option<Style>),
+    StyleTreeLoaded(Option<StyleTree>),
     SwitchScreen(usize),
     Quit,
 }
@@ -69,10 +69,10 @@ pub enum GlobalEvent {
     Database(Vec<Song>),
     PlaylistMenuUpdated(String, Option<Playlist>),
     TagMenuUpdated(String, Vec<Song>),
-    UpdateRootStyleMenu(Option<Style>),
-    StyleMenuUpdated(String, Vec<Style>),
+    StyleMenuUpdated(String, Vec<usize>),
     ReturnTracksTo(String, Vec<Song>),
     PostponeMpd(String, Duration, SystemTime, MpdEvent),
+    UpdateRootStyleMenu,
 }
 
 #[derive(Debug)]
@@ -107,7 +107,7 @@ impl fmt::Debug for GlobalEvent {
             GlobalEvent::Database(s) => write!(f, "GlobalEvent::Database({} songs)", s.len()),
             GlobalEvent::PlaylistMenuUpdated(t, pl) => write!(f, "GlobalEvent::PlaylistMenuUpdated({}, {} songs)", t, match pl { Some(_) => "Some", None => "None", }),
             GlobalEvent::TagMenuUpdated(t, s) => write!(f, "GlobalEvent::TagMenuUpdated({}, {} songs)", t, s.len()),
-            GlobalEvent::UpdateRootStyleMenu(s) => write!(f, "GlobalEvent::UpdateRootStyleMenu({})", match s { Some(_) => "Some", None => "None", }),
+            GlobalEvent::UpdateRootStyleMenu => write!(f, "GlobalEvent::UpdateRootStyleMenu"),
             GlobalEvent::StyleMenuUpdated(t, s) => write!(f, "GlobalEvent::StyleMenuUpdated({}, {})", t, s.len()),
             GlobalEvent::ReturnTracksTo(t, s) => write!(f, "GlobalEvent::ReturnTracksTo({}, {})", t, s.len()),
             GlobalEvent::PostponeMpd(t, dur, ts, e) => write!(f, "GlobalEvent::PostponeMpd({}, {:?}, {:?}, {:?})", t, dur, ts, e),
@@ -121,9 +121,9 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::TogglePause => write!(f, "MpdEvent::TogglePause"),
             MpdEvent::ClearQueue => write!(f, "MpdEvent::ClearQueue"),
             MpdEvent::AddToQueue(songs) => write!(f, "MpdEvent::AddToQueue({} songs)", songs.len()),
-            MpdEvent::AddStyleToQueue(genres) => write!(f, "MpdEvent::({} genres)", genres.len()),
+            MpdEvent::AddStyleToQueue(genres) => write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len()),
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
-            MpdEvent::GetTracksFromGenres(target, genres) => write!(f, "MpdEvent::({}, {} genres)", target, genres.len()),
+            MpdEvent::GetTracksFromGenres(target, genres) => write!(f, "MpdEvent::GetTracksFromGenres({}, {} genres)", target, genres.len()),
             MpdEvent::Random => write!(f, "MpdEvent::Random"),
         }
     }

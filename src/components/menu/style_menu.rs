@@ -1,13 +1,13 @@
 use std::sync::mpsc;
 use crate::event::*;
 use crate::components::{Component, menu::{Parent, Menu}};
-use crate::styles::{Style};
+use crate::styles::StyleTree;
 
 pub struct StyleMenu {
     name: String,
     parent: Parent,
     menu: Menu,
-    styles: Vec<Style>,
+    styles: Vec<usize>,
 }
 
 impl StyleMenu {
@@ -23,7 +23,7 @@ impl StyleMenu {
         }
     }
 
-    fn selection(&self) -> Vec<Style> {
+    fn selection(&self) -> Vec<usize> {
         if self.menu.selection == 0 {
             self.styles.clone()
         } else {
@@ -35,23 +35,37 @@ impl StyleMenu {
         }
     }
 
-    fn set_items(&mut self, styles: &Vec<Style>) {
+    fn selection_leaf_names(&self, tree: &StyleTree) -> Vec<String> {
+        let mut ret = Vec::new();
+
+        for style in self.selection() {
+            ret.append(
+                &mut tree.leaf_names(style).iter()
+                    .map(|s| s.to_string())
+                    .collect()
+            );
+        }
+
+        ret
+    }
+
+    fn set_items(&mut self, style_tree: &StyleTree, styles: &Vec<usize>) {
         self.styles = Vec::new();
 
         for style in styles {
-            for genre in style.children() {
+            for genre in style_tree.children(*style) {
                 self.styles.push(genre);
             }
         }
 
-        self.update_menu_items();
+        self.update_menu_items(style_tree);
     }
 
-    fn update_menu_items(&mut self) {
+    fn update_menu_items(&mut self, style_tree: &StyleTree) {
         self.menu.items = vec!["<All>".to_string()];
         self.menu.items.append(
             &mut self.styles.iter()
-                .map(|s| s.name().to_string())
+                .map(|s| style_tree.name(*s).to_string())
                 .collect()
         );
     }
@@ -69,32 +83,46 @@ impl Component for StyleMenu {
         &self.name
     }
 
-    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+    fn handle_focus(
+        &mut self,
+        style_tree: &Option<StyleTree>,
+        e: &FocusEvent,
+        tx: mpsc::Sender<Event>
+    ) {
         match e {
-            FocusEvent::Select => match self.styles.get(self.menu.selection) {
-                Some(style) => tx.send(Event::ToMpd(
-                    MpdEvent::AddStyleToQueue(style.leaves())
-                )).unwrap(),
-                None => (),
+            FocusEvent::Select => {
+                if let Some(style_tree) = style_tree {
+                    tx.send(
+                        Event::ToMpd(MpdEvent::AddStyleToQueue(
+                            self.selection_leaf_names(style_tree)
+                        ))
+                    ).unwrap();
+                }
             }
             e => {
-                self.menu.handle_focus(e, tx.clone());
+                self.menu.handle_focus(style_tree, e, tx.clone());
                 tx.send(self.spawn_update_event()).unwrap()
             }
         }
     }
 
-    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+    fn handle_global(
+        &mut self,
+        style_tree: &Option<StyleTree>,
+        e: &GlobalEvent, tx: mpsc::Sender<Event>
+    ) {
         match e {
-            GlobalEvent::UpdateRootStyleMenu(base_style) if self.parent.is_none() => {
-                if let Some(style) = base_style {
-                    self.set_items(&vec![style.clone()]);
+            GlobalEvent::UpdateRootStyleMenu if self.parent.is_none() => {
+                if let Some(style_tree) = style_tree {
+                    self.set_items(style_tree, &vec![0]);
                     tx.send(self.spawn_update_event()).unwrap();
                 }
             },
             GlobalEvent::StyleMenuUpdated(menu, styles) if self.parent.is(menu) => {
-                self.set_items(styles);
-                tx.send(self.spawn_update_event()).unwrap();
+                if let Some(style_tree) = style_tree {
+                    self.set_items(style_tree, styles);
+                    tx.send(self.spawn_update_event()).unwrap();
+                }
             },
             _ => (),
         }

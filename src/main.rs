@@ -39,6 +39,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut stdout = io::stdout().into_raw_mode().unwrap();
 
+    let mut style_tree = None;
+
     let mut sel = 0;
     let mut screens = init_screens();
 
@@ -80,11 +82,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::ToApp(e) => match e {
                 AppEvent::Quit => break,
                 AppEvent::SwitchScreen(i) => sel = i,
-                AppEvent::StyleTreeLoaded(base_style) => {
+                AppEvent::StyleTreeLoaded(tree) => {
+                    style_tree = tree;
                     tx.send(
-                        Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu(
-                                base_style
-                        ))
+                        Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu)
                     ).unwrap();
                 },
                 _ => (),
@@ -94,18 +95,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::ToGlobal(e) => match e {
                 GlobalEvent::PostponeMpd(_, _, _, _) => {
                     for screen in screens.iter_mut() {
-                        screen.handle_global(&e, tx.clone())
+                        screen.handle_global(&style_tree, &e, tx.clone())
                     }
 
                     redraw = false;
                 },
                 e => {
                     for screen in screens.iter_mut() {
-                        screen.handle_global(&e, tx.clone())
+                        screen.handle_global(&style_tree, &e, tx.clone())
                     }
                 },
             },
-            Event::ToFocus(e) => screens[sel].handle_focus(&e, tx.clone()),
+            Event::ToFocus(e) => screens[sel].handle_focus(&style_tree, &e, tx.clone()),
             Event::ToMpd(e) => mpd_tx.send(e).unwrap(),
             _ => (),
         }

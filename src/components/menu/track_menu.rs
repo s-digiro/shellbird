@@ -1,6 +1,7 @@
 use std::sync::mpsc;
 use mpd::Song;
 use crate::event::*;
+use crate::styles::StyleTree;
 use crate::components::{Component, menu::{Menu, Parent}};
 
 const STYLE_MENU_UPDATE_DELAY: u64 = 500;
@@ -49,7 +50,12 @@ impl TrackMenu {
 impl Component for TrackMenu {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_focus(&mut self, e: &FocusEvent, tx: mpsc::Sender<Event>) {
+    fn handle_focus(
+        &mut self,
+        style_tree: &Option<StyleTree>,
+        e: &FocusEvent,
+        tx: mpsc::Sender<Event>
+    ) {
         match e {
             FocusEvent::Select => {
                 tx.send(
@@ -58,11 +64,16 @@ impl Component for TrackMenu {
                     ))
                 ).unwrap();
             },
-            e => self.menu.handle_focus(e, tx.clone()),
+            e => self.menu.handle_focus(style_tree, e, tx.clone()),
         }
     }
 
-    fn handle_global(&mut self, e: &GlobalEvent, tx: mpsc::Sender<Event>) {
+    fn handle_global(
+        &mut self,
+        style_tree: &Option<StyleTree>,
+        e: &GlobalEvent,
+        tx: mpsc::Sender<Event>
+    ) {
         match e {
             GlobalEvent::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
                 Some(pl) => {
@@ -76,28 +87,37 @@ impl Component for TrackMenu {
                 self.update_menu_items();
             },
             GlobalEvent::StyleMenuUpdated(name, styles) if self.parent.is(name) => {
-                let mut genres = Vec::new();
-                for style in styles {
-                    for genre in style.leaves() {
-                        genres.push(genre);
-                    }
-                }
+                if let Some(style_tree) = style_tree {
+                    let genres = {
+                        let mut leaves = Vec::new();
 
-                let timestamp = std::time::SystemTime::now();
+                        for style in styles {
+                            leaves.append(
+                                &mut style_tree.leaf_names(*style).iter()
+                                    .map(|s| s.to_string())
+                                    .collect()
+                            );
+                        }
 
-                self.last_timestamp = timestamp.clone();
+                        leaves
+                    };
 
-                let event = Event::ToGlobal(GlobalEvent::PostponeMpd(
-                    self.name.to_string(),
-                    std::time::Duration::from_millis(STYLE_MENU_UPDATE_DELAY),
-                    timestamp,
-                    MpdEvent::GetTracksFromGenres(
+                    let timestamp = std::time::SystemTime::now();
+
+                    self.last_timestamp = timestamp.clone();
+
+                    let event = Event::ToGlobal(GlobalEvent::PostponeMpd(
                         self.name.to_string(),
-                        genres,
-                    ),
-                ));
+                        std::time::Duration::from_millis(STYLE_MENU_UPDATE_DELAY),
+                        timestamp,
+                        MpdEvent::GetTracksFromGenres(
+                            self.name.to_string(),
+                            genres,
+                        ),
+                    ));
 
-                tx.send(event).unwrap();
+                    tx.send(event).unwrap();
+                }
             },
             GlobalEvent::PostponeMpd(name, wait_amount, timestamp, mpde)
             if self.name == name.to_string() => {

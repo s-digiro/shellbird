@@ -24,7 +24,12 @@ impl TagDisplay {
 impl Component for TagDisplay {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_global(&mut self, e: &GlobalEvent, _tx: mpsc::Sender<Event>) {
+    fn handle_global(
+        &mut self,
+        _style_tree: &Option<StyleTree>,
+        e: &GlobalEvent,
+        _tx: mpsc::Sender<Event>
+    ) {
         match e {
             GlobalEvent::NowPlaying(song) => {
                 self.contents = match song {

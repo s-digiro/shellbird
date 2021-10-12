@@ -1,4 +1,5 @@
 use crate::event::*;
+use crate::styles::StyleTree;
 use std::sync::mpsc;
 use termion::cursor;
 
@@ -26,9 +27,18 @@ pub use splitters::Splitter;
 pub use splitters::Size;
 
 pub trait Component {
-    fn handle_global(&mut self, _e: &GlobalEvent, _tx: mpsc::Sender<Event>) { }
+    fn handle_global(
+        &mut self,
+        _style_tree: &Option<StyleTree>,
+        _e: &GlobalEvent, _tx: mpsc::Sender<Event>
+    ) { }
 
-    fn handle_focus(&mut self, _e: &FocusEvent, _tx: mpsc::Sender<Event>) { }
+    fn handle_focus(
+        &mut self,
+        _style_tree: &Option<StyleTree>,
+        _e: &FocusEvent,
+        _tx: mpsc::Sender<Event>
+    ) { }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16);
 

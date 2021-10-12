@@ -7,6 +7,7 @@ pub mod style_menu;
 use std::sync::mpsc;
 use crate::components::Component;
 use crate::event::*;
+use crate::styles::StyleTree;
 use termion::{cursor, style};
 
 pub struct Menu {
@@ -17,7 +18,12 @@ pub struct Menu {
 impl Component for Menu {
     fn name(&self) -> &str { "Menu" }
 
-    fn handle_focus(&mut self, request: &FocusEvent, _tx: mpsc::Sender<Event>) {
+    fn handle_focus(
+        &mut self,
+        _style_tree: &Option<StyleTree>,
+        request: &FocusEvent,
+        _tx: mpsc::Sender<Event>
+    ) {
         match request {
             FocusEvent::Next => self.next(),
             FocusEvent::Prev => self.prev(),
