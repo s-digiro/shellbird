@@ -1,6 +1,6 @@
-mod bindable_event;
+mod nestable_event;
 
-pub use bindable_event::BindableEvent;
+pub use nestable_event::NestableEvent;
 
 use mpd::Song;
 use termion::event::Key;
@@ -23,7 +23,8 @@ use crate::mode::Mode;
 pub enum Event {
     Dummy,
 
-    BindKey(String, BindableEvent),
+    BindKey(String, NestableEvent),
+    PostPone(String, NestableEvent),
 
     ToApp(AppEvent),
     ToCommandLine(CommandLineEvent),

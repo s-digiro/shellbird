@@ -86,7 +86,7 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
                         .collect();
 
                     match parse(&new_cmd) {
-                        Some(e) => match BindableEvent::from_event(e) {
+                        Some(e) => match NestableEvent::from_event(e) {
                             Some(e) => Some(Event::BindKey(s.to_string(), e)),
                             None => None,
                         },
