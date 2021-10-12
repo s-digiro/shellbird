@@ -71,15 +71,14 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] CommandLineEvent
 - [x] Track Menu with Style Menu parent
 - [x] Pass StyleTree to handlers
-- [x] Pass Library to handlers? Would make track list perform better
-- [ ] All entry in certain menus
+- [x] All entry in certain menus
 - [ ] component alignment
 - [ ] Track display formatting in menus
 - [ ] statusline
-- [ ] RC
+- [x] RC
 - [ ] Json Reading
 - [ ] Restore cursor after application exits. Termion seems to be bugged and isn't doing it right.
-- [ ] Screen Map
+- [x] Screen Map
 - [ ] Redraw Event
 
 ### To Do Components

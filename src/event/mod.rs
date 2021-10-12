@@ -40,7 +40,7 @@ pub enum Event {
 pub enum AppEvent {
     Resize,
     StyleTreeLoaded(Option<StyleTree>),
-    SwitchScreen(usize),
+    SwitchScreen(String),
     Quit,
 }
 

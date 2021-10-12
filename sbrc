@@ -7,9 +7,10 @@ bind h focusprev
 bind l focusnext
 bind p pause
 bind c clear
-bind 1 switchscreen 0
-bind 2 switchscreen 1
-bind 3 switchscreen 2
-bind 4 switchscreen 3
-bind 5 switchscreen 4
+bind 1 switchscreen NowPlayingScreen
+bind 2 switchscreen QueueScreen
+bind 3 switchscreen PlaylistViewScreen
+bind 4 switchscreen LibraryViewScreen
+bind 5 switchscreen StyleViewScreen
 bind q quit
+switchscreen NowPlayingScreen

@@ -5,6 +5,7 @@ extern crate mpd;
 extern crate home;
 
 use std::io::{self, Write, BufRead, BufReader};
+use std::collections::HashMap;
 use std::sync::mpsc;
 use std::thread;
 use std::path::Path;
@@ -45,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         library: Vec::new(),
     };
 
-    let mut sel = 0;
+    let mut sel = "Default".to_string();
     let mut screens = init_screens();
 
     write!(stdout, "{}{}", cursor::Hide, clear::All).unwrap();
@@ -67,7 +68,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if redraw {
             write!(stdout, "{}", clear::All)?;
 
-            screens[sel].draw();
+            if let Some(screen) = screens.get(&sel) {
+                screen.draw();
+            }
+
             command_line.draw();
 
             stdout.flush().unwrap();
@@ -85,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
             Event::ToApp(e) => match e {
                 AppEvent::Quit => break,
-                AppEvent::SwitchScreen(i) => sel = i,
+                AppEvent::SwitchScreen(name) => sel = name.clone(),
                 AppEvent::StyleTreeLoaded(tree) => {
                     state.style_tree = tree;
                     tx.send(
@@ -95,22 +99,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 _ => (),
             },
             Event::ToCommandLine(e) => command_line.handle(&e, tx.clone()),
-            Event::ToScreen(e) => screens[sel].handle_screen(&e, tx.clone()),
+            Event::ToScreen(e) => if let Some(screen) = screens.get_mut(&sel) {
+                screen.handle_screen(&e, tx.clone());
+            },
             Event::ToGlobal(e) => match e {
                 GlobalEvent::PostponeMpd(_, _, _, _) => {
-                    for screen in screens.iter_mut() {
+                    for screen in screens.values_mut() {
                         screen.handle_global(&state, &e, tx.clone())
                     }
 
                     redraw = false;
                 },
                 e => {
-                    for screen in screens.iter_mut() {
+                    for screen in screens.values_mut() {
                         screen.handle_global(&state, &e, tx.clone())
                     }
                 },
             },
-            Event::ToFocus(e) => screens[sel].handle_focus(&state, &e, tx.clone()),
+            Event::ToFocus(e) => if let Some(screen) = screens.get_mut(&sel) {
+                screen.handle_focus(&state, &e, tx.clone());
+            },
             Event::ToMpd(e) => mpd_tx.send(e).unwrap(),
             _ => (),
         }
@@ -121,14 +129,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_screens() -> Vec<Screen> {
-    vec![
-        screen::new_now_playing_screen(),
-        screen::new_queue_screen(),
-        screen::new_playlist_view_screen(),
-        screen::new_library_view_screen(),
-        screen::new_style_view_screen(),
-    ]
+fn init_screens() -> HashMap<String, Screen> {
+    let mut ret = HashMap::new();
+
+    let screen = screen::new_now_playing_screen();
+    ret.insert(screen.name().to_string(), screen);
+
+    let screen = screen::new_queue_screen();
+    ret.insert(screen.name().to_string(), screen);
+
+    let screen = screen::new_playlist_view_screen();
+    ret.insert(screen.name().to_string(), screen);
+
+    let screen = screen::new_library_view_screen();
+    ret.insert(screen.name().to_string(), screen);
+
+    let screen = screen::new_style_view_screen();
+    ret.insert(screen.name().to_string(), screen);
+
+    ret
 }
 
 fn init_stdin_thread(tx: mpsc::Sender<Event>) {

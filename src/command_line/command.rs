@@ -29,8 +29,8 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             | "exit" => Some(Event::ToApp(AppEvent::Quit)),
 
             "switchscreen"
-            | "screen" => match get_usize(&cmd, 1) {
-                Some(num) => Some(Event::ToApp(AppEvent::SwitchScreen(num))),
+            | "screen" => match cmd.get(1) {
+                Some(s) => Some(Event::ToApp(AppEvent::SwitchScreen(s.to_string()))),
                 None => None,
             },
 
