@@ -1,0 +1,148 @@
+{
+	NowPlayingScreen: {
+		component: HorizontalSplitter
+		name: NowPlayingScreen-Base
+		borders: false
+		children: [
+			{
+				component: EmptySpace
+				name: NowPlayingScreen-EmptySpace1
+				size: 33%
+			}
+			{
+				component: VerticalSplitter
+				name: NowPlayingScreen-CenterSplitter
+				border: false
+				size: 33%
+				children: [
+					{
+						component: PlaceHolder
+						name: NowPlayingScreen-AlbumArt
+						size: 30%
+					}
+					{
+						component: TagDisplay
+						name: NowPlayingScreen-Artist
+						tag: Artist
+						size: 1
+					}
+					{
+						component: TitleDisplay
+						name: NowPlayingScreen-Title
+						size: 1
+					}
+					{
+						component: TagDisplay
+						name: NowPlayingScreen-Album
+						tag: Album
+						size: 40%
+					}
+				]
+			}
+			{
+				component: EmptySpace
+				name: NowPlayingScreen-EmptySpace2
+				size: 33%
+			}
+		]
+	}
+
+	QueueScreen: {
+		component: Queue
+		name: QueueScreen-Queue
+	}
+
+	PlaylistViewScreen: {
+		component: HorizontalSplitter
+		name: PlaylistViewScreen-Base
+		borders: true
+		children: [
+			{
+				component: PlaylistMenu
+				name: PlaylistViewScreen-PlaylistMenu
+				size: 40%
+			}
+			{
+				component: TrackMenu
+				name: PlaylistViewScreen-TrackMenu
+				size: 60%
+			}
+		]
+	}
+
+	LibraryViewScreen: {
+		component: HorizontalSplitter
+		name: LibraryViewScreen-Base
+		border: true
+		children: [
+			{
+				component: TagMenu
+				name: LibraryViewScreen-ArtistMenu
+				tag: AlbumArtist
+				size: 33%
+			}
+			{
+				component: TagMenu
+				name: LibraryViewScreen-AlbumMenu
+				tag: Album
+				size: 33%
+			}
+			{
+				component: TrackMenu
+				name: LibraryViewScreen-TrackMenu
+				size: 33%
+			}
+		]
+	}
+
+	StyleViewScreen: {
+		component: VerticalSplitter
+		name: StyleViewScreen-Base
+		border: false
+		children: [
+			{
+				component: HorizontalSplitter
+				name: StyleViewScreen-StyleMenus
+				border: true
+				size: 40%
+				children: [
+					{
+						component: StyleMenu
+						name: StyleViewScreen-StyleMenu1
+						size: 20%
+					}
+					{
+						component: StyleMenu
+						name: StyleViewScreen-StyleMenu2
+						parent: StyleViewScreen-StyleMenu1
+						size: 20%
+					}
+					{
+						component: StyleMenu
+						name: StyleViewScreen-StyleMenu3
+						parent: StyleViewScreen-StyleMenu2
+						size: 20%
+					}
+					{
+						component: StyleMenu
+						name: StyleViewScreen-StyleMenu4
+						parent: StyleViewScreen-StyleMenu3
+						size: 20%
+					}
+					{
+						component: StyleMenu
+						name: StyleViewScreen-StyleMenu5
+						parent: StyleViewScreen-StyleMenu4
+						size: 20%
+					}
+				]
+			}
+			{
+				component: TrackMenu
+				name: StyleViewScreen-Tracks
+				parent: StyleViewScreen-StyleMenu5
+				size: 60%
+			}
+		]
+	}
+}
