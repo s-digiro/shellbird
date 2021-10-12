@@ -3,8 +3,6 @@ use std::sync::mpsc;
 use components::*;
 use event::*;
 
-use crate::styles::StyleTree;
-
 pub struct Screen {
     base: Box<dyn Component>,
     name: String,
@@ -30,11 +28,11 @@ impl Screen {
 
     pub fn handle_global(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &GlobalEvent,
         tx: mpsc::Sender<Event>
     ) {
-        self.base.handle_global(style_tree, e, tx)
+        self.base.handle_global(state, e, tx)
     }
 
     pub fn handle_screen(&mut self, e: &ScreenEvent, _tx: mpsc::Sender<Event>) {
@@ -54,11 +52,11 @@ impl Screen {
 
     pub fn handle_focus(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &FocusEvent,
         tx: mpsc::Sender<Event>
     ) {
-        self.base.handle_focus(style_tree, e, tx)
+        self.base.handle_focus(state, e, tx)
     }
 }
 

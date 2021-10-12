@@ -24,7 +24,7 @@ impl Component for TitleDisplay {
 
     fn handle_global(
         &mut self,
-        _style_tree: &Option<StyleTree>,
+        _state: &GlobalState,
         e: &GlobalEvent,
         _tx: mpsc::Sender<Event>
     ) {

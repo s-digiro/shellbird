@@ -10,6 +10,7 @@ use std::thread;
 use std::path::Path;
 use std::fs::File;
 
+use shellbird::GlobalState;
 use shellbird::event::*;
 use shellbird::music::{mpd_sender, mpd_listener};
 use shellbird::screen;
@@ -39,7 +40,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut stdout = io::stdout().into_raw_mode().unwrap();
 
-    let mut style_tree = None;
+    let mut state = GlobalState {
+        style_tree: None,
+        library: Vec::new(),
+    };
 
     let mut sel = 0;
     let mut screens = init_screens();
@@ -83,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 AppEvent::Quit => break,
                 AppEvent::SwitchScreen(i) => sel = i,
                 AppEvent::StyleTreeLoaded(tree) => {
-                    style_tree = tree;
+                    state.style_tree = tree;
                     tx.send(
                         Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu)
                     ).unwrap();
@@ -95,18 +99,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::ToGlobal(e) => match e {
                 GlobalEvent::PostponeMpd(_, _, _, _) => {
                     for screen in screens.iter_mut() {
-                        screen.handle_global(&style_tree, &e, tx.clone())
+                        screen.handle_global(&state, &e, tx.clone())
                     }
 
                     redraw = false;
                 },
                 e => {
                     for screen in screens.iter_mut() {
-                        screen.handle_global(&style_tree, &e, tx.clone())
+                        screen.handle_global(&state, &e, tx.clone())
                     }
                 },
             },
-            Event::ToFocus(e) => screens[sel].handle_focus(&style_tree, &e, tx.clone()),
+            Event::ToFocus(e) => screens[sel].handle_focus(&state, &e, tx.clone()),
             Event::ToMpd(e) => mpd_tx.send(e).unwrap(),
             _ => (),
         }

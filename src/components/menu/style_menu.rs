@@ -2,6 +2,7 @@ use std::sync::mpsc;
 use crate::event::*;
 use crate::components::{Component, menu::{Parent, Menu}};
 use crate::styles::StyleTree;
+use crate::GlobalState;
 
 pub struct StyleMenu {
     name: String,
@@ -62,6 +63,7 @@ impl StyleMenu {
     }
 
     fn update_menu_items(&mut self, style_tree: &StyleTree) {
+        self.menu.selection = 0;
         self.menu.items = vec!["<All>".to_string()];
         self.menu.items.append(
             &mut self.styles.iter()
@@ -85,22 +87,22 @@ impl Component for StyleMenu {
 
     fn handle_focus(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &FocusEvent,
         tx: mpsc::Sender<Event>
     ) {
         match e {
             FocusEvent::Select => {
-                if let Some(style_tree) = style_tree {
+                if let Some(tree) = &state.style_tree {
                     tx.send(
                         Event::ToMpd(MpdEvent::AddStyleToQueue(
-                            self.selection_leaf_names(style_tree)
+                            self.selection_leaf_names(tree)
                         ))
                     ).unwrap();
                 }
             }
             e => {
-                self.menu.handle_focus(style_tree, e, tx.clone());
+                self.menu.handle_focus(state, e, tx.clone());
                 tx.send(self.spawn_update_event()).unwrap()
             }
         }
@@ -108,19 +110,19 @@ impl Component for StyleMenu {
 
     fn handle_global(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &GlobalEvent, tx: mpsc::Sender<Event>
     ) {
         match e {
             GlobalEvent::UpdateRootStyleMenu if self.parent.is_none() => {
-                if let Some(style_tree) = style_tree {
-                    self.set_items(style_tree, &vec![0]);
+                if let Some(tree) = &state.style_tree {
+                    self.set_items(tree, &vec![0]);
                     tx.send(self.spawn_update_event()).unwrap();
                 }
             },
             GlobalEvent::StyleMenuUpdated(menu, styles) if self.parent.is(menu) => {
-                if let Some(style_tree) = style_tree {
-                    self.set_items(style_tree, styles);
+                if let Some(tree) = &state.style_tree {
+                    self.set_items(tree, styles);
                     tx.send(self.spawn_update_event()).unwrap();
                 }
             },

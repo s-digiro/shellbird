@@ -2,7 +2,7 @@ use std::sync::mpsc;
 use mpd::Song;
 use crate::components::{Component, menu::{Menu, Parent}};
 use crate::event::*;
-use crate::styles::StyleTree;
+use crate::GlobalState;
 
 pub struct TagMenu {
     name: String,
@@ -45,7 +45,7 @@ impl Component for TagMenu {
 
     fn handle_focus(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &FocusEvent,
         tx: mpsc::Sender<Event>
     ) {
@@ -58,7 +58,7 @@ impl Component for TagMenu {
                 ).unwrap()
             },
             e => {
-                self.menu.handle_focus(style_tree, e, tx.clone());
+                self.menu.handle_focus(state, e, tx.clone());
                 tx.send(self.spawn_update_event()).unwrap();
             },
         }
@@ -66,7 +66,7 @@ impl Component for TagMenu {
 
     fn handle_global(
         &mut self,
-        _style_tree: &Option<StyleTree>,
+        _state: &GlobalState,
         e: &GlobalEvent,
         tx: mpsc::Sender<Event>
     ) {

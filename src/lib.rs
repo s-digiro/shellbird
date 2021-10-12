@@ -11,3 +11,12 @@ pub mod playlist;
 pub mod styles;
 pub mod command_line;
 pub mod mode;
+
+use crate::styles::StyleTree;
+use mpd::Song;
+
+pub struct GlobalState {
+    pub style_tree: Option<StyleTree>,
+    pub library: Vec<Song>,
+}
+

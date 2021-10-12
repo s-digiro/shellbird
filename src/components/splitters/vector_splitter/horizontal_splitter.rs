@@ -1,8 +1,6 @@
 use super::*;
 use termion::cursor;
 
-use crate::styles::StyleTree;
-
 pub struct HorizontalSplitter {
     splitter: VectorSplitter,
 }
@@ -55,20 +53,20 @@ impl Component for HorizontalSplitter {
 
     fn handle_global(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &GlobalEvent,
         tx: mpsc::Sender<Event>
     ) {
-        self.splitter.handle_global(style_tree, e, tx);
+        self.splitter.handle_global(state, e, tx);
     }
 
     fn handle_focus(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &FocusEvent,
         tx: mpsc::Sender<Event>
     ) {
-        self.splitter.handle_focus(style_tree, e, tx)
+        self.splitter.handle_focus(state, e, tx)
     }
 
     fn draw(&self,x: u16, y: u16, w: u16, h: u16) {

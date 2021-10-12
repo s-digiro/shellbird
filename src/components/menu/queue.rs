@@ -3,7 +3,7 @@ use std::sync::mpsc;
 
 use termion::{color, cursor, style};
 use crate::event::*;
-use crate::styles::StyleTree;
+use crate::GlobalState;
 use crate::color::Color;
 use crate::components::{Component, menu::Menu};
 
@@ -55,7 +55,7 @@ impl Component for Queue {
 
     fn handle_focus(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &FocusEvent,
         tx: mpsc::Sender<Event>
     ) {
@@ -67,13 +67,13 @@ impl Component for Queue {
                     )).unwrap()
                 }
             },
-            e => self.menu.handle_focus(style_tree, e, tx.clone()),
+            e => self.menu.handle_focus(state, e, tx.clone()),
         }
     }
 
     fn handle_global(
         &mut self,
-        _style_tree: &Option<StyleTree>,
+        _state: &GlobalState,
         e: &GlobalEvent,
         _tx: mpsc::Sender<Event>
     ) {

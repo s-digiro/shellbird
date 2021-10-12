@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use mpd::Song;
 use crate::event::*;
-use crate::styles::StyleTree;
+use crate::GlobalState;
 use crate::components::{Component, menu::{Menu, Parent}};
 
 const STYLE_MENU_UPDATE_DELAY: u64 = 500;
@@ -52,7 +52,7 @@ impl Component for TrackMenu {
 
     fn handle_focus(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &FocusEvent,
         tx: mpsc::Sender<Event>
     ) {
@@ -64,13 +64,13 @@ impl Component for TrackMenu {
                     ))
                 ).unwrap();
             },
-            e => self.menu.handle_focus(style_tree, e, tx.clone()),
+            e => self.menu.handle_focus(state, e, tx.clone()),
         }
     }
 
     fn handle_global(
         &mut self,
-        style_tree: &Option<StyleTree>,
+        state: &GlobalState,
         e: &GlobalEvent,
         tx: mpsc::Sender<Event>
     ) {
@@ -87,13 +87,13 @@ impl Component for TrackMenu {
                 self.update_menu_items();
             },
             GlobalEvent::StyleMenuUpdated(name, styles) if self.parent.is(name) => {
-                if let Some(style_tree) = style_tree {
+                if let Some(tree) = &state.style_tree {
                     let genres = {
                         let mut leaves = Vec::new();
 
                         for style in styles {
                             leaves.append(
-                                &mut style_tree.leaf_names(*style).iter()
+                                &mut tree.leaf_names(*style).iter()
                                     .map(|s| s.to_string())
                                     .collect()
                             );

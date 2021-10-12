@@ -1,5 +1,5 @@
 use crate::event::*;
-use crate::styles::StyleTree;
+use crate::GlobalState;
 use std::sync::mpsc;
 use termion::cursor;
 
@@ -29,13 +29,13 @@ pub use splitters::Size;
 pub trait Component {
     fn handle_global(
         &mut self,
-        _style_tree: &Option<StyleTree>,
+        _state: &GlobalState,
         _e: &GlobalEvent, _tx: mpsc::Sender<Event>
     ) { }
 
     fn handle_focus(
         &mut self,
-        _style_tree: &Option<StyleTree>,
+        _state: &GlobalState,
         _e: &FocusEvent,
         _tx: mpsc::Sender<Event>
     ) { }
