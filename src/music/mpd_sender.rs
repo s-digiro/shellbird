@@ -9,7 +9,11 @@ use mpd::Query;
 use mpd::Term;
 use mpd::Client;
 
-pub fn init_mpd_sender_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) -> mpsc::Sender<MpdEvent> {
+pub fn init_mpd_sender_thread(
+    ip: &str,
+    port: &str,
+    _tx: mpsc::Sender<Event>
+) -> mpsc::Sender<MpdEvent> {
     let (ret_tx, rx) = mpsc::channel();
 
     let ip = ip.to_string();
@@ -60,27 +64,6 @@ pub fn init_mpd_sender_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) -> 
                             }
                         }
                     }
-                },
-                MpdEvent::GetTracksFromGenres(name, genres) => {
-                    let mut tracks = Vec::new();
-                    for genre in genres {
-                        if let Ok(songs) = conn.search(
-                            Query::new()
-                                .and(
-                                    Term::Tag(Cow::Borrowed("Genre")),
-                                    genre
-                                ),
-                                None
-                        ) {
-                            for song in songs {
-                                tracks.push(song);
-                            }
-                        }
-                    }
-                    tx.send(Event::ToGlobal(GlobalEvent::ReturnTracksTo(
-                        name,
-                        tracks,
-                    ))).unwrap();
                 },
             }
         }

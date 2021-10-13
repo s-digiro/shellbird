@@ -1,5 +1,8 @@
 use std::{fs, thread, sync::mpsc};
+use std::collections::HashMap;
 use std::io::{self, BufReader, BufRead};
+
+use mpd::Song;
 
 use crate::event::*;
 
@@ -37,6 +40,7 @@ impl Style {
 #[derive(Debug)]
 pub struct StyleTree {
     styles: Vec<Style>,
+    tracks: HashMap<Option<String>, Vec<Song>>,
 }
 
 impl StyleTree {
@@ -49,6 +53,7 @@ impl StyleTree {
                     children: Vec::new(),
                 }
             ],
+            tracks: HashMap::new(),
         }
     }
 
@@ -78,6 +83,31 @@ impl StyleTree {
 
             ret
         }
+    }
+
+    pub fn set_tracks(&mut self, tracks: Vec<Song>) {
+        self.tracks.clear();
+
+        for track in tracks {
+            let key = match track.tags.get("Genre") {
+                Some(s) => Some(s.to_string()),
+                None => None,
+            };
+
+            let bucket = match self.tracks.get_mut(&key) {
+                Some(vec) => vec,
+                None => {
+                    self.tracks.insert(key.clone(), Vec::new());
+                    self.tracks.get_mut(&key).unwrap()
+                },
+            };
+
+            bucket.push(track);
+        }
+    }
+
+    pub fn tracks(&self, key: &Option<String>) -> Option<&Vec<Song>> {
+        self.tracks.get(key)
     }
 }
 

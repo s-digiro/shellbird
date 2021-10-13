@@ -73,7 +73,7 @@ fn send_database(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     );
 
     match results {
-        Ok(results) => tx.send(Event::ToGlobal(GlobalEvent::Database(results))).unwrap(),
+        Ok(results) => tx.send(Event::ToApp(AppEvent::Database(results))).unwrap(),
         _ => (),
     }
 }

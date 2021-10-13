@@ -4,15 +4,11 @@ use crate::event::*;
 use crate::GlobalState;
 use crate::components::{Component, menu::{Menu, Parent}};
 
-const STYLE_MENU_UPDATE_DELAY: u64 = 500;
-
 pub struct TrackMenu {
     name: String,
     parent: Parent,
     menu: Menu,
     tracks: Vec<Song>,
-
-    last_timestamp: std::time::SystemTime,
 }
 
 impl TrackMenu {
@@ -25,8 +21,6 @@ impl TrackMenu {
                 selection: 0,
                 items: Vec::new(),
             },
-
-            last_timestamp: std::time::SystemTime::now(),
         }
     }
 
@@ -72,7 +66,7 @@ impl Component for TrackMenu {
         &mut self,
         state: &GlobalState,
         e: &GlobalEvent,
-        tx: mpsc::Sender<Event>
+        _tx: mpsc::Sender<Event>
     ) {
         match e {
             GlobalEvent::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
@@ -102,38 +96,19 @@ impl Component for TrackMenu {
                         leaves
                     };
 
-                    let timestamp = std::time::SystemTime::now();
+                    let tracks = {
+                        let mut ret = Vec::new();
+                        for genre in genres {
+                            if let Some(tracks) = tree.tracks(&Some(genre)) {
+                                ret.append(&mut tracks.clone())
+                            }
+                        }
+                        ret
+                    };
 
-                    self.last_timestamp = timestamp.clone();
-
-                    let event = Event::ToGlobal(GlobalEvent::PostponeMpd(
-                        self.name.to_string(),
-                        std::time::Duration::from_millis(STYLE_MENU_UPDATE_DELAY),
-                        timestamp,
-                        MpdEvent::GetTracksFromGenres(
-                            self.name.to_string(),
-                            genres,
-                        ),
-                    ));
-
-                    tx.send(event).unwrap();
+                    self.tracks = tracks;
+                    self.update_menu_items();
                 }
-            },
-            GlobalEvent::PostponeMpd(name, wait_amount, timestamp, mpde)
-            if self.name == name.to_string() => {
-                let timestamp = timestamp.clone();
-                let wait_amount = wait_amount.clone();
-                if timestamp == self.last_timestamp {
-                    if timestamp + wait_amount <= std::time::SystemTime::now() {
-                        tx.send(Event::ToMpd(mpde.clone())).unwrap();
-                    } else {
-                        tx.send(Event::ToGlobal(e.clone())).unwrap();
-                    }
-                }
-            },
-            GlobalEvent::ReturnTracksTo(name, tracks) if self.name == name.to_string() => {
-                self.tracks = tracks.clone();
-                self.update_menu_items();
             },
             _ => (),
         }

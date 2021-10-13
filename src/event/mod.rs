@@ -4,7 +4,6 @@ pub use nestable_event::NestableEvent;
 
 use mpd::Song;
 use termion::event::Key;
-use std::time::{Duration, SystemTime};
 use std::fmt;
 
 use crate::playlist::Playlist;
@@ -41,6 +40,7 @@ pub enum AppEvent {
     Resize,
     StyleTreeLoaded(Option<StyleTree>),
     SwitchScreen(String),
+    Database(Vec<Song>),
     Quit,
 }
 
@@ -70,8 +70,6 @@ pub enum GlobalEvent {
     PlaylistMenuUpdated(String, Option<Playlist>),
     TagMenuUpdated(String, Vec<Song>),
     StyleMenuUpdated(String, Vec<usize>),
-    ReturnTracksTo(String, Vec<Song>),
-    PostponeMpd(String, Duration, SystemTime, MpdEvent),
     UpdateRootStyleMenu,
 }
 
@@ -94,7 +92,6 @@ pub enum MpdEvent {
     AddToQueue(Vec<Song>),
     AddStyleToQueue(Vec<String>),
     PlayAt(Song),
-    GetTracksFromGenres(String, Vec<String>),
     Random,
 }
 
@@ -109,8 +106,6 @@ impl fmt::Debug for GlobalEvent {
             GlobalEvent::TagMenuUpdated(t, s) => write!(f, "GlobalEvent::TagMenuUpdated({}, {} songs)", t, s.len()),
             GlobalEvent::UpdateRootStyleMenu => write!(f, "GlobalEvent::UpdateRootStyleMenu"),
             GlobalEvent::StyleMenuUpdated(t, s) => write!(f, "GlobalEvent::StyleMenuUpdated({}, {})", t, s.len()),
-            GlobalEvent::ReturnTracksTo(t, s) => write!(f, "GlobalEvent::ReturnTracksTo({}, {})", t, s.len()),
-            GlobalEvent::PostponeMpd(t, dur, ts, e) => write!(f, "GlobalEvent::PostponeMpd({}, {:?}, {:?}, {:?})", t, dur, ts, e),
         }
     }
 }
@@ -123,7 +118,6 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::AddToQueue(songs) => write!(f, "MpdEvent::AddToQueue({} songs)", songs.len()),
             MpdEvent::AddStyleToQueue(genres) => write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len()),
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
-            MpdEvent::GetTracksFromGenres(target, genres) => write!(f, "MpdEvent::GetTracksFromGenres({}, {} genres)", target, genres.len()),
             MpdEvent::Random => write!(f, "MpdEvent::Random"),
         }
     }

@@ -89,6 +89,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
             Event::ToApp(e) => match e {
                 AppEvent::Quit => break,
+                AppEvent::Database(tracks) => {
+                    if let Some(tree) = &mut state.style_tree {
+                        tree.set_tracks(tracks.clone());
+                    }
+
+                    tx.send(Event::ToGlobal(GlobalEvent::Database(tracks))).unwrap();
+                },
                 AppEvent::SwitchScreen(name) => sel = name.clone(),
                 AppEvent::StyleTreeLoaded(tree) => {
                     state.style_tree = tree;
@@ -102,19 +109,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::ToScreen(e) => if let Some(screen) = screens.get_mut(&sel) {
                 screen.handle_screen(&e, tx.clone());
             },
-            Event::ToGlobal(e) => match e {
-                GlobalEvent::PostponeMpd(_, _, _, _) => {
-                    for screen in screens.values_mut() {
-                        screen.handle_global(&state, &e, tx.clone())
-                    }
-
-                    redraw = false;
-                },
-                e => {
-                    for screen in screens.values_mut() {
-                        screen.handle_global(&state, &e, tx.clone())
-                    }
-                },
+            Event::ToGlobal(e) => {
+                for screen in screens.values_mut() {
+                    screen.handle_global(&state, &e, tx.clone())
+                }
             },
             Event::ToFocus(e) => if let Some(screen) = screens.get_mut(&sel) {
                 screen.handle_focus(&state, &e, tx.clone());
