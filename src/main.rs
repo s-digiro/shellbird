@@ -29,7 +29,7 @@ use clap::{AppSettings, Clap};
 #[clap(version = "0.1.0", author = "Sean D. <s.digirolamo218@gmail.com>")]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
-    genres: String,
+    genres: Option<String>,
     sbrc: Option<String>,
     layout: Option<String>,
     #[clap(short)]
@@ -61,7 +61,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     run_sbrc(opts.sbrc, tx.clone());
     mpd_listener::init_mpd_listener_thread("127.0.0.1", "6600", tx.clone());
     signals::init_listener(tx.clone());
-    styles::load_style_tree_async(&opts.genres, tx.clone());
+
+    if let Some(path) = get_genre_path(opts.genres) {
+        styles::load_style_tree_async(&path, tx.clone());
+    }
 
     let mut redraw = true;
 
@@ -231,6 +234,39 @@ fn get_layout_path(path_override: Option<String>) -> Option<String> {
     }
 
     let default = Path::new("/etc/shellbird/layout.json");
+
+    if default.exists() {
+        return Some(default.to_str().unwrap().to_string())
+    }
+
+    None
+}
+
+fn get_genre_path(path_override: Option<String>) -> Option<String> {
+    if let Some(path) = path_override {
+        return Some(path)
+    }
+
+    if let Some(mut home) = home::home_dir() {
+        let free_desktop = {
+            let mut home = home.clone();
+            home.push(".config/shellbird/genres.txt");
+            home
+        };
+
+        let homedir = {
+            home.push(".sbgenres.txt");
+            home
+        };
+
+        if free_desktop.as_path().exists() {
+            return Some(free_desktop.to_str().unwrap().to_string())
+        } else if homedir.as_path().exists() {
+            return Some(homedir.to_str().unwrap().to_string())
+        }
+    }
+
+    let default = Path::new("/etc/shellbird/genres.txt");
 
     if default.exists() {
         return Some(default.to_str().unwrap().to_string())

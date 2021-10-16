@@ -37,6 +37,13 @@ in that order.
 
 An example can be found in the root directory of this project called layout.json
 
+### Genre Tree
+Genres are read from a file. This too can be specified as a commandline
+argument, otherwise it is sourced from ~/.config/shellbird/genres.txt,
+~/.sbgenres.txt or /etc/shellbird/genres.txt, in that order.
+
+An example can be found in the root directory of this project called genres.txt
+
 ## Usage
 * Now Playing Screen: 1
 * Queue Screen: 2
@@ -59,9 +66,6 @@ An example can be found in the root directory of this project called layout.json
 	- Enter command: : (Currently the only command is :pause)
 
 Note: These are all temporary controls. Eventually controls will be fully configurable in a vim-like rc file
-
-## Genre Tree
-Genres are read from a file. An example is in the root of the project, genres.txt.
 
 ## Commands
 A commandline can be brought up with the ':' key. Some available commands are:
