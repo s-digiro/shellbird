@@ -31,6 +31,7 @@ use clap::{AppSettings, Clap};
 struct Opts {
     genres: String,
     sbrc: Option<String>,
+    layout: Option<String>,
     #[clap(short)]
     debug: bool
 }
@@ -46,7 +47,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let mut sel = "Default".to_string();
-    let mut screens = init_screens();
+
+    let mut screens = init_screens(get_layout_path(opts.layout));
 
     write!(stdout, "{}{}", cursor::Hide, clear::All).unwrap();
 
@@ -126,10 +128,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_screens() -> HashMap<String, Screen> {
-    match shellbird::layout_config::load("/home/zenbum/src/shellbird/layout.json") {
-        Ok(map) => map,
-        _ => HashMap::new(),
+fn init_screens(path: Option<String>) -> HashMap<String, Screen> {
+    if let Some(path) = path {
+        match shellbird::layout_config::load(&path) {
+            Ok(map) => map,
+            _ => HashMap::new(),
+        }
+    } else {
+        HashMap::new()
     }
 }
 
@@ -192,6 +198,39 @@ fn get_sbrc(path_override: Option<String>) -> Option<String> {
     }
 
     let default = Path::new("/etc/shellbird/sbrc");
+
+    if default.exists() {
+        return Some(default.to_str().unwrap().to_string())
+    }
+
+    None
+}
+
+fn get_layout_path(path_override: Option<String>) -> Option<String> {
+    if let Some(path) = path_override {
+        return Some(path)
+    }
+
+    if let Some(mut home) = home::home_dir() {
+        let free_desktop = {
+            let mut home = home.clone();
+            home.push(".config/shellbird/layout.json");
+            home
+        };
+
+        let homedir = {
+            home.push(".sblayout.json");
+            home
+        };
+
+        if free_desktop.as_path().exists() {
+            return Some(free_desktop.to_str().unwrap().to_string())
+        } else if homedir.as_path().exists() {
+            return Some(homedir.to_str().unwrap().to_string())
+        }
+    }
+
+    let default = Path::new("/etc/shellbird/layout.json");
 
     if default.exists() {
         return Some(default.to_str().unwrap().to_string())

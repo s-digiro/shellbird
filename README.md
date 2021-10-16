@@ -14,9 +14,28 @@ is not a full blown music player. It is a client for interacting with mpd.
 	cargo install --path ./
 
 ## Configuration
-As of right now, there is no configuration. This project is in very early stages
-of development. Eventually, it will have a vim-like configuration file, and a
-layout file that defines the interface of the program in json format.
+
+### Sbrc
+Configuration is done in sbrc. sbrc location can be specified as a commandline
+argument. Otherwise, it will be sourced from ~/.config/shellbird/sbrc, ~/.sbrc,
+or /etc/shellbird/sbrc, in that order. If sbrc is not found, then it simply will not be
+loaded. If this happens, a message will be displayed in the statusline alerting
+the user.
+
+Sbrc is meant to contain a set of commands that will be run automatically at
+startup. The most obvious use  for this is  to execute a series of bind
+commands. This allows the user to set keybinds. Another possible use is to set
+the startup screen using switchscreen. Be creative!
+
+An example is in the root directory, called sbrc.
+
+### layout
+Shellbirds layout is defined in layout.json. Similarly to sbrc, it can be
+specified as a commandline argument, otherwise it is sourced from
+~/.config/shellbird/layout.json, ~/.sblayout.json, or /etc/shellbird/layout.json
+in that order.
+
+An example can be found in the root directory of this project called layout.json
 
 ## Usage
 * Now Playing Screen: 1
@@ -77,7 +96,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [ ] Track display formatting in menus
 - [ ] statusline
 - [x] RC
-- [ ] Json Reading
+- [x] Json Reading
 - [ ] Restore cursor after application exits. Termion seems to be bugged and isn't doing it right.
 - [x] Screen Map
 - [ ] Redraw Event
