@@ -5,8 +5,10 @@ use termion::{color, cursor, style};
 use crate::event::*;
 use crate::GlobalState;
 use crate::color::Color;
-use crate::components::{Component, menu::Menu};
+use crate::components::{Component, Components, menu::Menu};
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Queue {
     name: String,
     tracks: Vec<Song>,
@@ -16,6 +18,10 @@ pub struct Queue {
 }
 
 impl Queue {
+    pub fn enumed(name: &str) -> Components {
+        Components::Queue(Queue::new(name))
+    }
+
     pub fn new(name: &str) -> Queue {
         Queue {
             name: name.to_string(),

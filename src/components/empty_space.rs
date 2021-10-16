@@ -1,10 +1,16 @@
-use crate::components::Component;
+use crate::components::{Component, Components};
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct EmptySpace {
     name: String,
 }
 
 impl EmptySpace {
+    pub fn enumed(name: &str) -> Components {
+        Components::EmptySpace(EmptySpace::new(name))
+    }
+
     pub fn new(name: &str) -> EmptySpace {
         EmptySpace {
             name: name.to_string(),

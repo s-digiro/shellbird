@@ -1,9 +1,11 @@
 use std::sync::mpsc;
 use mpd::Song;
-use crate::components::{Component, menu::{Menu, Parent}};
+use crate::components::{Component, Components, menu::{Menu, Parent}};
 use crate::event::*;
 use crate::GlobalState;
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct TagMenu {
     name: String,
     tag: String,
@@ -13,6 +15,10 @@ pub struct TagMenu {
 }
 
 impl TagMenu {
+    pub fn enumed(name: &str, tag: &str, parent: Option<String>) -> Components {
+        Components::TagMenu(TagMenu::new(name, tag, parent))
+    }
+
     pub fn new(name: &str, tag: &str, parent: Option<String>) -> TagMenu {
         TagMenu {
             name: name.to_string(),

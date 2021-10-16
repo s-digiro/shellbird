@@ -1,12 +1,11 @@
 extern crate mpd;
-extern crate serde;
-extern crate serde_hjson;
+extern crate json;
 extern crate termion;
 
 pub mod event;
 pub mod components;
 pub mod music;
-//pub mod layout_config;
+pub mod layout_config;
 pub mod screen;
 pub mod signals;
 pub mod color;

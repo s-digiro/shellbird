@@ -3,6 +3,8 @@ use std::sync::mpsc;
 use termion::{cursor, color};
 use crate::color::Color;
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct TagDisplay {
     name: String,
     tag: String,
@@ -11,6 +13,10 @@ pub struct TagDisplay {
 }
 
 impl TagDisplay {
+    pub fn enumed(name: &str, tag: &str) -> Components {
+        Components::TagDisplay(TagDisplay::new(name, tag))
+    }
+
     pub fn new(name: &str, tag: &str) -> TagDisplay {
         TagDisplay {
             name: name.to_string(),

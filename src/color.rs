@@ -4,6 +4,7 @@ use termion::color as termionColor;
 #[derive(Debug)]
 #[derive(Copy)]
 #[derive(Clone)]
+#[derive(PartialEq)]
 pub enum Color {
     Black,
     Red,

@@ -2,8 +2,10 @@ use std::sync::mpsc;
 use mpd::Song;
 use crate::event::*;
 use crate::GlobalState;
-use crate::components::{Component, menu::{Menu, Parent}};
+use crate::components::{Component, Components, menu::{Menu, Parent}};
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct TrackMenu {
     name: String,
     parent: Parent,
@@ -12,6 +14,10 @@ pub struct TrackMenu {
 }
 
 impl TrackMenu {
+    pub fn enumed(name: &str, parent: Option<String>) -> Components {
+        Components::TrackMenu(TrackMenu::new(name, parent))
+    }
+
     pub fn new(name: &str, parent: Option<String>) -> TrackMenu {
         TrackMenu {
             name: name.to_string(),

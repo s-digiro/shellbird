@@ -3,6 +3,8 @@ use termion::{color, cursor};
 use super::*;
 use crate::color::Color;
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct TitleDisplay {
     name: String,
     contents: String,
@@ -10,6 +12,10 @@ pub struct TitleDisplay {
 }
 
 impl TitleDisplay {
+    pub fn enumed(name: &str) -> Components {
+        Components::TitleDisplay(TitleDisplay::new(name))
+    }
+
     pub fn new(name: &str) -> TitleDisplay {
         TitleDisplay {
             name: name.to_string(),

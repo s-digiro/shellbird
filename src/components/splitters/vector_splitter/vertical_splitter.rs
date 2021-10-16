@@ -1,35 +1,51 @@
 use super::*;
+use super::super::Splitters;
 use termion::cursor;
 
 use crate::GlobalState;
+use crate::components::Components;
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct VerticalSplitter {
     splitter: VectorSplitter,
 }
 
 impl VerticalSplitter {
-    pub fn new(name: &str, draw_borders: bool) -> VerticalSplitter {
+    pub fn enumed(
+        name: &str,
+        draw_borders: bool,
+        panels: Vec<Panel>,
+    ) -> Components {
+        Components::Splitter(
+            Splitters::VerticalSplitter(
+                VerticalSplitter::new(name, draw_borders, panels)
+            )
+        )
+    }
+
+    pub fn new(
+        name: &str,
+        draw_borders: bool,
+        panels: Vec<Panel>,
+    ) -> VerticalSplitter {
         VerticalSplitter {
             splitter: VectorSplitter {
                 draw_borders,
                 name: name.to_string(),
-                sel: None,
-                panels: Vec::new()
+                sel: 0,
+                panels,
             }
         }
     }
 }
 
 impl Splitter for VerticalSplitter {
-    fn add(&mut self, component: Box<dyn Component>, size: Size) {
-        self.splitter.add(component, size);
-    }
-
-    fn focus(&self) -> Option<&Box<dyn Component>> {
+    fn focus(&self) -> Option<&Components> {
         self.splitter.focus()
     }
 
-    fn focus_mut(&mut self) -> Option<&mut Box<dyn Component>> {
+    fn focus_mut(&mut self) -> Option<&mut Components> {
         self.splitter.focus_mut()
     }
 
@@ -43,14 +59,6 @@ impl Splitter for VerticalSplitter {
 }
 
 impl Component for VerticalSplitter {
-    fn as_splitter(&self) -> Option<&dyn Splitter> {
-        Some(self)
-    }
-
-    fn as_splitter_mut(&mut self) -> Option<&mut dyn Splitter> {
-        Some(self)
-    }
-
     fn name(&self) -> &str { self.splitter.name() }
 
     fn handle_global(
@@ -74,7 +82,7 @@ impl Component for VerticalSplitter {
     fn draw(&self,x: u16, y: u16, w: u16, h: u16) {
         let mut y = y;
 
-        let last = self.splitter.panels.len() - 1;
+        let last = self.splitter.panels.len() as isize - 1;
 
         for (i, panel) in self.splitter.panels.iter().enumerate() {
             let h = match panel.size {
@@ -85,7 +93,7 @@ impl Component for VerticalSplitter {
 
             y = y + h;
 
-            if self.splitter.draw_borders && i != last {
+            if self.splitter.draw_borders && i as isize != last {
                 for j in x..(x + w) {
                     print!("{}─", cursor::Goto(j, y));
                 }

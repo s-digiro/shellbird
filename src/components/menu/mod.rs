@@ -10,6 +10,8 @@ use crate::event::*;
 use crate::GlobalState;
 use termion::{cursor, style};
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Menu {
     pub selection: usize,
     pub items: Vec<String>,
@@ -126,6 +128,8 @@ impl Menu {
 
 }
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Parent {
     parent: Option<String>,
 }

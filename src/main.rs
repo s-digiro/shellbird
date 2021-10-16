@@ -14,7 +14,6 @@ use std::fs::File;
 use shellbird::GlobalState;
 use shellbird::event::*;
 use shellbird::music::{mpd_sender, mpd_listener};
-use shellbird::screen;
 use shellbird::signals;
 use shellbird::styles;
 use shellbird::command_line::{self, CommandLine};
@@ -128,24 +127,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn init_screens() -> HashMap<String, Screen> {
-    let mut ret = HashMap::new();
-
-    let screen = screen::new_now_playing_screen();
-    ret.insert(screen.name().to_string(), screen);
-
-    let screen = screen::new_queue_screen();
-    ret.insert(screen.name().to_string(), screen);
-
-    let screen = screen::new_playlist_view_screen();
-    ret.insert(screen.name().to_string(), screen);
-
-    let screen = screen::new_library_view_screen();
-    ret.insert(screen.name().to_string(), screen);
-
-    let screen = screen::new_style_view_screen();
-    ret.insert(screen.name().to_string(), screen);
-
-    ret
+    match shellbird::layout_config::load("/home/zenbum/src/shellbird/layout.json") {
+        Ok(map) => map,
+        _ => HashMap::new(),
+    }
 }
 
 fn init_stdin_thread(tx: mpsc::Sender<Event>) {

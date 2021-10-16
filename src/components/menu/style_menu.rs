@@ -1,9 +1,11 @@
 use std::sync::mpsc;
 use crate::event::*;
-use crate::components::{Component, menu::{Parent, Menu}};
+use crate::components::{Component, Components, menu::{Parent, Menu}};
 use crate::styles::StyleTree;
 use crate::GlobalState;
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct StyleMenu {
     name: String,
     parent: Parent,
@@ -12,6 +14,10 @@ pub struct StyleMenu {
 }
 
 impl StyleMenu {
+    pub fn enumed(name: &str, parent: Option<String>) -> Components {
+        Components::StyleMenu(StyleMenu::new(name, parent))
+    }
+
     pub fn new(name: &str, parent: Option<String>) -> StyleMenu {
         StyleMenu {
             name: name.to_string(),

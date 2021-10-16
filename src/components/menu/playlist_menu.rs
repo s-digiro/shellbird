@@ -2,8 +2,10 @@ use std::sync::mpsc;
 use crate::event::*;
 use crate::GlobalState;
 use crate::playlist::Playlist;
-use crate::components::{Component, menu::Menu};
+use crate::components::{Component, Components, menu::Menu};
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct PlaylistMenu {
     name: String,
     menu: Menu,
@@ -11,6 +13,10 @@ pub struct PlaylistMenu {
 }
 
 impl PlaylistMenu {
+    pub fn enumed(name: &str) -> Components {
+        Components::PlaylistMenu(PlaylistMenu::new(name))
+    }
+
     pub fn new(name: &str) -> PlaylistMenu {
         PlaylistMenu {
             name: name.to_string(),

@@ -1,6 +1,6 @@
 use std::sync::mpsc;
 use crate::GlobalState;
-use crate::components::{Component, ErrorBox};
+use crate::components::{Component, Components, ErrorBox};
 use crate::event::*;
 use super::{Panel, Splitter, Size, MoveFocusResult};
 
@@ -10,56 +10,45 @@ mod vertical_splitter;
 pub use horizontal_splitter::HorizontalSplitter;
 pub use vertical_splitter::VerticalSplitter;
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 struct VectorSplitter {
     name: String,
     panels: Vec<Panel>,
-    sel: Option<usize>,
+    sel: usize,
     draw_borders: bool,
 }
 
 impl VectorSplitter {
-    fn sel(&self) -> Option<&Box<dyn Component>> {
-        if let Some(sel) = self.sel {
-            if let Some(panel) = self.panels.get(sel) {
-                Some(&panel.component)
-            } else {
-                None
-            }
+    fn sel(&self) -> Option<&Components> {
+        if let Some(panel) = self.panels.get(self.sel) {
+            Some(&panel.component)
         } else {
             None
         }
     }
 
-    fn sel_mut(&mut self) -> Option<&mut Box<dyn Component>> {
-        if let Some(sel) = self.sel {
-            if let None = self.panels.get(sel) {
-                None
-            } else {
-                Some(&mut self.panels[sel].component)
-            }
-        } else {
+    fn sel_mut(&mut self) -> Option<&mut Components> {
+        if let None = self.panels.get(self.sel) {
             None
+        } else {
+            Some(&mut self.panels[self.sel].component)
         }
     }
 
     fn sel_next(&mut self) -> MoveFocusResult {
-        if let Some(sel) = self.sel {
-            if sel + 1 < self.panels.len() {
-                self.sel = Some(sel + 1);
-                MoveFocusResult::Success
-            } else { MoveFocusResult::Fail
-            } } else { MoveFocusResult::Fail
+        if self.sel + 1 < self.panels.len() {
+            self.sel = self.sel + 1;
+            MoveFocusResult::Success
+        } else {
+            MoveFocusResult::Fail
         }
     }
 
     fn sel_prev(&mut self) -> MoveFocusResult {
-        if let Some(sel) = self.sel {
-            if sel as i32 - 1 >= 0 {
-                self.sel = Some(sel - 1);
-                MoveFocusResult::Success
-            } else {
-                MoveFocusResult::Fail
-            }
+        if self.sel as i32 - 1 >= 0 {
+            self.sel = self.sel - 1;
+            MoveFocusResult::Success
         } else {
             MoveFocusResult::Fail
         }
@@ -67,17 +56,9 @@ impl VectorSplitter {
 }
 
 impl Splitter for VectorSplitter {
-    fn add(&mut self, component: Box<dyn Component>, size: Size) {
-        self.panels.push(Panel { size, component, });
-
-        if let None = self.sel {
-            self.sel = Some(0);
-        }
-    }
-
-    fn focus(&self) -> Option<&Box<dyn Component>> {
+    fn focus(&self) -> Option<&Components> {
         if let Some(component) = self.sel() {
-            if let Some(sel_splitter) = component.as_splitter() {
+            if let Components::Splitter(sel_splitter) = component {
                 sel_splitter.focus()
             } else {
                 Some(component)
@@ -87,14 +68,14 @@ impl Splitter for VectorSplitter {
         }
     }
 
-    fn focus_mut(&mut self) -> Option<&mut Box<dyn Component>> {
+    fn focus_mut(&mut self) -> Option<&mut Components> {
         if let Some(component) = self.sel_mut() {
-            if let None = component.as_splitter_mut() {
-                Some(component)
-            } else {
+            if let Components::Splitter(s) = component {
                 Some(
-                    component.as_splitter_mut().unwrap().focus_mut().unwrap()
+                    s.focus_mut().unwrap()
                 )
+            } else {
+                Some(component)
             }
         } else {
             None
@@ -103,12 +84,12 @@ impl Splitter for VectorSplitter {
 
     fn next(&mut self) -> MoveFocusResult {
         match self.sel_mut() {
-            Some(component) => match component.as_splitter_mut() {
-                Some(splitter) => match splitter.next() {
+            Some(component) => match component {
+                Components::Splitter(splitter) => match splitter.next() {
                     MoveFocusResult::Success => MoveFocusResult::Success,
                     MoveFocusResult::Fail => self.sel_next(),
-                }
-                None => self.sel_next(),
+                },
+                _ => self.sel_next(),
             },
             None => MoveFocusResult::Fail,
         }
@@ -116,12 +97,12 @@ impl Splitter for VectorSplitter {
 
     fn prev(&mut self) -> MoveFocusResult {
         match self.sel_mut() {
-            Some(component) => match component.as_splitter_mut() {
-                Some(splitter) => match splitter.prev() {
+            Some(component) => match component {
+                Components::Splitter(splitter) => match splitter.prev() {
                     MoveFocusResult::Success => MoveFocusResult::Success,
                     MoveFocusResult::Fail => self.sel_prev(),
                 }
-                None => self.sel_prev(),
+                _ => self.sel_prev(),
             },
             None => MoveFocusResult::Fail,
         }
@@ -129,14 +110,6 @@ impl Splitter for VectorSplitter {
 }
 
 impl Component for VectorSplitter {
-    fn as_splitter(&self) -> Option<&dyn Splitter> {
-        Some(self)
-    }
-
-    fn as_splitter_mut(&mut self) -> Option<&mut dyn Splitter> {
-        Some(self)
-    }
-
     fn name(&self) -> &str { &self.name }
 
     fn handle_global(

@@ -4,12 +4,12 @@ use components::*;
 use event::*;
 
 pub struct Screen {
-    base: Box<dyn Component>,
+    base: Components,
     name: String,
 }
 
 impl Screen {
-    pub fn new(name: &str, base: Box<dyn Component>) -> Screen {
+    pub fn new(name: &str, base: Components) -> Screen {
         Screen {
             base,
             name: name.to_string(),
@@ -38,13 +38,13 @@ impl Screen {
     pub fn handle_screen(&mut self, e: &ScreenEvent, _tx: mpsc::Sender<Event>) {
         match e {
             ScreenEvent::FocusNext => {
-                if let Some(splitter) = self.base.as_splitter_mut() {
-                    splitter.next();
+                if let Components::Splitter(s) = &mut self.base {
+                    s.next();
                 }
             },
             ScreenEvent::FocusPrev => {
-                if let Some(splitter) = self.base.as_splitter_mut() {
-                    splitter.prev();
+                if let Components::Splitter(s) = &mut self.base {
+                    s.prev();
                 }
             },
         }
@@ -61,160 +61,171 @@ impl Screen {
 }
 
 pub fn new_now_playing_screen() -> Screen {
-    let mut base = HorizontalSplitter::new("NowPlayingScreen-Base", false);
-
-    let mut center_splitter = VerticalSplitter::new("NowPlayingScreen-CenterSplitter", false);
-
-    center_splitter.add(
-        Box::new(PlaceHolder::new("NowPlayingScreen-AlbumArt")),
-        Size::Percent(30),
-    );
-
-
-    center_splitter.add(
-        Box::new(TagDisplay::new("NowPlayingScreen-Artist", "Artist")),
-        Size::Absolute(1),
-    );
-
-    center_splitter.add(
-        Box::new(TitleDisplay::new("NowPlayingScreen-Title")),
-        Size::Absolute(1),
-    );
-
-    center_splitter.add(
-        Box::new(TagDisplay::new("NowPlayingScreen-Album", "Album")),
-        Size::Absolute(1),
-    );
-
-    base.add(
-        Box::new(EmptySpace::new("NowPlayingScreen-EmptySpace1")),
-        Size::Percent(33),
-    );
-
-    base.add(
-        Box::new(center_splitter),
-        Size::Percent(33),
-    );
-
-    base.add(
-        Box::new(EmptySpace::new("NowPlayingScreen-EmptySpace2")),
-        Size::Percent(33),
-    );
-
-    Screen::new("NowPlayingScreen", Box::new(base))
-
+    Screen::new(
+        "NowPlayingScreen",
+        HorizontalSplitter::enumed(
+            "NowPlayingScreen-Base",
+            false,
+            vec![
+                Panel::new(
+                    Size::Percent(33),
+                    EmptySpace::enumed("NowPlayingScreen-EmptySpace1")
+                ),
+                Panel::new(
+                    Size::Percent(33),
+                    VerticalSplitter::enumed(
+                        "NowPlayingScreen-CenterSplitter",
+                        false,
+                        vec![
+                            Panel::new(
+                                Size::Percent(30),
+                                PlaceHolder::enumed("NowPlayingScreen-AlbumArt"),
+                            ),
+                            Panel::new(
+                                Size::Absolute(1),
+                                TagDisplay::enumed("NowPlayingScreen-Artist", "Artist"),
+                            ),
+                            Panel::new(
+                                Size::Absolute(1),
+                                TitleDisplay::enumed("NowPlayingScreen-Title"),
+                            ),
+                            Panel::new(
+                                Size::Absolute(1),
+                                TagDisplay::enumed("NowPlayingScreen-Album", "Album"),
+                            ),
+                        ],
+                    ),
+                ),
+                Panel::new(
+                    Size::Percent(33),
+                    EmptySpace::enumed("NowPlayingScreen-EmptySpace2"),
+                ),
+            ]
+        ),
+    )
 }
 
 pub fn new_queue_screen() -> Screen {
-    Screen::new("QueueScreen", Box::new(Queue::new("QueueScreen-Queue")))
+    Screen::new("QueueScreen", Queue::enumed("QueueScreen-Queue"))
 }
 
 pub fn new_playlist_view_screen() -> Screen {
-    let mut split = HorizontalSplitter::new("PlaylistViewScreen-Base", true);
-
-    split.add(
-        Box::new(PlaylistMenu::new("PlaylistViewScreen-PlaylistMenu")),
-        Size::Percent(40),
-    );
-
-    split.add(
-        Box::new(TrackMenu::new(
-            "PlaylistViewScreen-TrackMenu",
-            Some("PlaylistView-PlaylistMenu".to_string())
-        )),
-        Size::Percent(60),
-    );
-
-    Screen::new("PlaylistViewScreen", Box::new(split))
+    Screen::new(
+        "PlaylistViewScreen",
+        HorizontalSplitter::enumed(
+            "PlaylistViewScreen-Base",
+            true,
+            vec![
+                Panel::new(
+                    Size::Percent(40),
+                    PlaylistMenu::enumed("PlaylistViewScreen-PlaylistMenu"),
+                ),
+                Panel::new(
+                    Size::Percent(60),
+                    TrackMenu::enumed(
+                        "PlaylistViewScreen-TrackMenu",
+                        Some("PlaylistViewScreen-PlaylistMenu".to_string()),
+                    )
+                ),
+            ],
+        ),
+    )
 }
 
 pub fn new_library_view_screen() -> Screen {
-    let mut base = HorizontalSplitter::new("LibraryViewScreen-Base", true);
-
-    base.add(
-        Box::new(TagMenu::new(
-            "LibraryViewScreen-ArtistMenu",
-            "AlbumArtist",
-            None,
-        )),
-        Size::Percent(33),
-    );
-
-    base.add(
-        Box::new(TagMenu::new(
-            "LibraryViewScreen-AlbumMenu",
-            "Album",
-            Some("LibraryViewScreen-ArtistMenu".to_string()),
-        )),
-        Size::Percent(33),
-    );
-
-    base.add(
-        Box::new(TrackMenu::new(
-            "LibraryViewScreen-TrackMenu",
-            Some("LibraryViewScreen-AlbumMenu".to_string()),
-        )),
-        Size::Percent(33),
-    );
-
-    Screen::new("LibraryViewScreen", Box::new(base))
+    Screen::new(
+        "LibraryViewScreen",
+        HorizontalSplitter::enumed(
+            "LibraryViewScreen-Base",
+            true,
+            vec![
+                Panel::new(
+                    Size::Percent(33),
+                    TagMenu::enumed(
+                        "LibraryViewScreen-ArtistMenu",
+                        "AlbumArtist",
+                        None,
+                    ),
+                ),
+                Panel::new(
+                    Size::Percent(33),
+                    TagMenu::enumed(
+                        "LibraryViewScreen-AlbumMenu",
+                        "Album",
+                        Some("LibraryViewScreen-ArtistMenu".to_string()),
+                    ),
+                ),
+                Panel::new(
+                    Size::Percent(33),
+                    TrackMenu::enumed(
+                        "LibraryViewScreen-TrackMenu",
+                        Some("LibraryViewScreen-TrackMenu".to_string()),
+                    ),
+                ),
+            ],
+        ),
+    )
 }
 
 pub fn new_style_view_screen() -> Screen {
-    let mut base = VerticalSplitter::new("StyleViewScreen-Base", true);
-    let mut filters = HorizontalSplitter::new("StyleViewScreen-Base", true);
-
-    filters.add(
-        Box::new(StyleMenu::new(
-            "StyleViewScreen-StyleMenu1",
-            None,
-        )),
-        Size::Percent(20),
-    );
-
-    filters.add(
-        Box::new(StyleMenu::new(
-            "StyleViewScreen-StyleMenu2",
-            Some(String::from("StyleViewScreen-StyleMenu1")),
-        )),
-        Size::Percent(20),
-    );
-
-
-    filters.add(
-        Box::new(StyleMenu::new(
-            "StyleViewScreen-StyleMenu3",
-            Some(String::from("StyleViewScreen-StyleMenu2")),
-        )),
-        Size::Percent(20),
-    );
-
-
-    filters.add(
-        Box::new(StyleMenu::new(
-            "StyleViewScreen-StyleMenu4",
-            Some(String::from("StyleViewScreen-StyleMenu3")),
-        )),
-        Size::Percent(20),
-    );
-
-
-    filters.add(
-        Box::new(StyleMenu::new(
-            "StyleViewScreen-StyleMenu5",
-            Some(String::from("StyleViewScreen-StyleMenu4")),
-        )),
-        Size::Percent(20),
-    );
-
-    base.add(Box::new(filters), Size::Percent(40));
-    base.add(
-        Box::new(TrackMenu::new(
-            "StyleViewScreen-Tracks",
-            Some(String::from("StyleViewScreen-StyleMenu5")),
-        )),
-        Size::Percent(60),
-    );
-
-    Screen::new("StyleViewScreen", Box::new(base))
+    Screen::new(
+        "StyleViewScreen",
+        VerticalSplitter::enumed(
+            "StyleViewScreen-Base",
+            true,
+            vec![
+                Panel::new(
+                    Size::Percent(40),
+                    HorizontalSplitter::enumed(
+                        "StyleViewScreen-Filters",
+                        true,
+                        vec![
+                            Panel::new(
+                                Size::Percent(20),
+                                StyleMenu::enumed(
+                                    "StyleViewScreen-StyleMenu1",
+                                    None,
+                                ),
+                            ),
+                            Panel::new(
+                                Size::Percent(20),
+                                StyleMenu::enumed(
+                                    "StyleViewScreen-StyleMenu2",
+                                    Some("StyleViewScreen-StyleMenu1".to_string()),
+                                ),
+                            ),
+                            Panel::new(
+                                Size::Percent(20),
+                                StyleMenu::enumed(
+                                    "StyleViewScreen-StyleMenu3",
+                                    Some("StyleViewScreen-StyleMenu2".to_string()),
+                                ),
+                            ),
+                            Panel::new(
+                                Size::Percent(20),
+                                StyleMenu::enumed(
+                                    "StyleViewScreen-StyleMenu4",
+                                    Some("StyleViewScreen-StyleMenu3".to_string()),
+                                ),
+                            ),
+                            Panel::new(
+                                Size::Percent(20),
+                                StyleMenu::enumed(
+                                    "StyleViewScreen-StyleMenu5",
+                                    Some("StyleViewScreen-StyleMenu4".to_string()),
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+                Panel::new(
+                    Size::Percent(40),
+                    TrackMenu::enumed(
+                        "StyleViewScreen-Tracks",
+                        Some("StyleViewScreen-StyleMenu5".to_string()),
+                    ),
+                ),
+            ],
+        ),
+    )
 }

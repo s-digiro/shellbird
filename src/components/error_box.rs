@@ -1,10 +1,16 @@
 use termion::color;
 use termion::cursor;
-use crate::components::Component;
+use crate::components::{Component, Components};
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct ErrorBox;
 
 impl ErrorBox {
+    pub fn enumed() -> Components {
+        Components::ErrorBox(ErrorBox::new())
+    }
+
     pub fn new() -> ErrorBox {
         ErrorBox { }
     }
