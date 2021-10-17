@@ -10,14 +10,14 @@ pub struct PlaceHolder {
 }
 
 impl PlaceHolder {
-    pub fn enumed(name: &str) -> Components {
-        Components::PlaceHolder(PlaceHolder::new(name))
+    pub fn enumed(name: &str, color: Color) -> Components {
+        Components::PlaceHolder(PlaceHolder::new(name, color))
     }
 
-    pub fn new(name: &str) -> PlaceHolder {
+    pub fn new(name: &str, color: Color) -> PlaceHolder {
         PlaceHolder {
             name: name.to_string(),
-            color: Color::Reset,
+            color,
         }
     }
 

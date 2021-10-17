@@ -22,7 +22,7 @@ pub enum Color {
     BrightMagenta,
     BrightCyan,
     BrightWhite,
-    AnsiValue(u8, u8, u8),
+    RGB(u8, u8, u8),
     Reset,
 }
 
@@ -45,7 +45,7 @@ impl termionColor::Color for Color {
             Color::BrightMagenta => write!(f, "{}", termionColor::Fg(termionColor::LightMagenta)),
             Color::BrightCyan => write!(f, "{}", termionColor::Fg(termionColor::LightCyan)),
             Color::BrightWhite => write!(f, "{}", termionColor::Fg(termionColor::LightWhite)),
-            Color::AnsiValue(r, g, b) => write!(f, "{}", termionColor::Fg(termionColor::AnsiValue::rgb(*r, *g, *b))),
+            Color::RGB(r, g, b) => write!(f, "{}", termionColor::Fg(termionColor::AnsiValue::rgb(*r, *g, *b))),
             Color::Reset => write!(f, "{}", termionColor::Fg(termionColor::Reset)),
         }
     }
@@ -68,7 +68,7 @@ impl termionColor::Color for Color {
             Color::BrightMagenta => write!(f, "{}", termionColor::Bg(termionColor::LightMagenta)),
             Color::BrightCyan => write!(f, "{}", termionColor::Bg(termionColor::LightCyan)),
             Color::BrightWhite => write!(f, "{}", termionColor::Bg(termionColor::LightWhite)),
-            Color::AnsiValue(r, g, b) => write!(f, "{}", termionColor::Bg(termionColor::AnsiValue::rgb(*r, *g, *b))),
+            Color::RGB(r, g, b) => write!(f, "{}", termionColor::Bg(termionColor::AnsiValue::rgb(*r, *g, *b))),
             Color::Reset => write!(f, "{}", termionColor::Bg(termionColor::Reset)),
         }
     }

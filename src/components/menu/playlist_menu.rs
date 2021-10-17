@@ -3,6 +3,7 @@ use crate::event::*;
 use crate::GlobalState;
 use crate::playlist::Playlist;
 use crate::components::{Component, Components, menu::Menu};
+use crate::color::Color;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -13,15 +14,16 @@ pub struct PlaylistMenu {
 }
 
 impl PlaylistMenu {
-    pub fn enumed(name: &str) -> Components {
-        Components::PlaylistMenu(PlaylistMenu::new(name))
+    pub fn enumed(name: &str, color: Color) -> Components {
+        Components::PlaylistMenu(PlaylistMenu::new(name, color))
     }
 
-    pub fn new(name: &str) -> PlaylistMenu {
+    pub fn new(name: &str, color: Color) -> PlaylistMenu {
         PlaylistMenu {
             name: name.to_string(),
             playlists: Vec::new(),
             menu: Menu {
+                color,
                 selection: 0,
                 items: Vec::new(),
             },

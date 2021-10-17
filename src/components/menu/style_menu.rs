@@ -1,6 +1,7 @@
 use std::sync::mpsc;
 use crate::event::*;
 use crate::components::{Component, Components, menu::{Parent, Menu}};
+use crate::color::Color;
 use crate::styles::StyleTree;
 use crate::GlobalState;
 
@@ -11,19 +12,22 @@ pub struct StyleMenu {
     parent: Parent,
     menu: Menu,
     styles: Vec<usize>,
+    color: Color,
 }
 
 impl StyleMenu {
-    pub fn enumed(name: &str, parent: Option<String>) -> Components {
-        Components::StyleMenu(StyleMenu::new(name, parent))
+    pub fn enumed(name: &str, color: Color, parent: Option<String>) -> Components {
+        Components::StyleMenu(StyleMenu::new(name, color, parent))
     }
 
-    pub fn new(name: &str, parent: Option<String>) -> StyleMenu {
+    pub fn new(name: &str, color: Color, parent: Option<String>) -> StyleMenu {
         StyleMenu {
             name: name.to_string(),
             parent: Parent::new(parent),
             styles: Vec::new(),
+            color,
             menu: Menu {
+                color,
                 selection: 0,
                 items: vec![ "<All>".to_string()],
             },

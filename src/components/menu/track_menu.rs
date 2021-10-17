@@ -1,6 +1,7 @@
 use std::sync::mpsc;
 use mpd::Song;
 use crate::event::*;
+use crate::color::Color;
 use crate::GlobalState;
 use crate::components::{Component, Components, menu::{Menu, Parent}};
 
@@ -14,16 +15,25 @@ pub struct TrackMenu {
 }
 
 impl TrackMenu {
-    pub fn enumed(name: &str, parent: Option<String>) -> Components {
-        Components::TrackMenu(TrackMenu::new(name, parent))
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        parent: Option<String>
+    ) -> Components {
+        Components::TrackMenu(TrackMenu::new(name, color, parent))
     }
 
-    pub fn new(name: &str, parent: Option<String>) -> TrackMenu {
+    pub fn new(
+        name: &str,
+        color: Color,
+        parent: Option<String>
+    ) -> TrackMenu {
         TrackMenu {
             name: name.to_string(),
             parent: Parent::new(parent),
             tracks: Vec::new(),
             menu: Menu {
+                color,
                 selection: 0,
                 items: Vec::new(),
             },

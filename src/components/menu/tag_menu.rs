@@ -4,6 +4,7 @@ use mpd::Song;
 use crate::components::{Component, Components, menu::{Menu, Parent}};
 use crate::event::*;
 use crate::GlobalState;
+use crate::color::Color;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -16,17 +17,28 @@ pub struct TagMenu {
 }
 
 impl TagMenu {
-    pub fn enumed(name: &str, tag: &str, parent: Option<String>) -> Components {
-        Components::TagMenu(TagMenu::new(name, tag, parent))
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        tag: &str,
+        parent: Option<String>
+    ) -> Components {
+        Components::TagMenu(TagMenu::new(name, color, tag, parent))
     }
 
-    pub fn new(name: &str, tag: &str, parent: Option<String>) -> TagMenu {
+    pub fn new(
+        name: &str,
+        color: Color,
+        tag: &str,
+        parent: Option<String>
+    ) -> TagMenu {
         TagMenu {
             name: name.to_string(),
             parent: Parent::new(parent),
             tag: tag.to_string(),
             tracks: Vec::new(),
             menu: Menu {
+                color,
                 selection: 0,
                 items: Vec::new(),
             },

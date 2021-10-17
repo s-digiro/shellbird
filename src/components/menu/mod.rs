@@ -7,14 +7,16 @@ pub mod style_menu;
 use std::sync::mpsc;
 use crate::components::Component;
 use crate::event::*;
+use crate::color::Color;
 use crate::GlobalState;
-use termion::{cursor, style};
+use termion::{cursor, style, color};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct Menu {
     pub selection: usize,
     pub items: Vec<String>,
+    pub color: Color,
 }
 
 impl Component for Menu {
@@ -53,6 +55,7 @@ impl Component for Menu {
 
             utf8_truncate(&mut val, w as usize);
 
+            println!("{}", color::Fg(self.color));
             if self.selection == i {
                 print!("{}", style::Invert);
             }

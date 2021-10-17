@@ -12,15 +12,15 @@ pub struct TitleDisplay {
 }
 
 impl TitleDisplay {
-    pub fn enumed(name: &str) -> Components {
-        Components::TitleDisplay(TitleDisplay::new(name))
+    pub fn enumed(name: &str, color: Color) -> Components {
+        Components::TitleDisplay(TitleDisplay::new(name, color))
     }
 
-    pub fn new(name: &str) -> TitleDisplay {
+    pub fn new(name: &str, color: Color) -> TitleDisplay {
         TitleDisplay {
             name: name.to_string(),
             contents: String::new(),
-            color: Color::Reset,
+            color,
         }
     }
 }

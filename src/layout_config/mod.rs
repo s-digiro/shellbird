@@ -7,6 +7,7 @@ use std::error::Error;
 
 use crate::components::*;
 use crate::screen::Screen;
+use crate::color::Color;
 
 #[cfg(test)]
 mod tests;
@@ -49,16 +50,16 @@ fn parse_component(val: &JsonValue) -> Option<Components> {
             if let Some(component_type) = component_type.as_str() {
                 match component_type {
                     "HorizontalSplitter" => parse_horizontal_splitter(obj),
-                    "EmptySpace" => parse_empty_space(obj),
+                    "EmptySpace" => Some(parse_empty_space(obj)),
                     "VerticalSplitter" => parse_vertical_splitter(obj),
-                    "PlaceHolder" => parse_place_holder(obj),
-                    "TagDisplay" => parse_tag_display(obj),
-                    "TitleDisplay" => parse_title_display(obj),
-                    "Queue" => parse_queue(obj),
-                    "PlaylistMenu" => parse_playlist_menu(obj),
-                    "TrackMenu" => parse_track_menu(obj),
-                    "TagMenu" => parse_tag_menu(obj),
-                    "StyleMenu" => parse_style_menu(obj),
+                    "PlaceHolder" => Some(parse_place_holder(obj)),
+                    "TagDisplay" => Some(parse_tag_display(obj)),
+                    "TitleDisplay" => Some(parse_title_display(obj)),
+                    "Queue" => Some(parse_queue(obj)),
+                    "PlaylistMenu" => Some(parse_playlist_menu(obj)),
+                    "TrackMenu" => Some(parse_track_menu(obj)),
+                    "TagMenu" => Some(parse_tag_menu(obj)),
+                    "StyleMenu" => Some(parse_style_menu(obj)),
                     _ => None
                 }
             } else {
@@ -72,52 +73,59 @@ fn parse_component(val: &JsonValue) -> Option<Components> {
     }
 }
 
-fn parse_style_menu(obj: &Object) -> Option<Components> {
-    let name = parse_name(obj, "StyleMenu");
-    let parent = parse_parent(obj);
-
-    Some(StyleMenu::enumed(name, parent))
+fn parse_style_menu(obj: &Object) -> Components {
+    StyleMenu::enumed(
+        parse_name(obj, "StyleMenu"),
+        parse_color(obj),
+        parse_parent(obj)
+    )
 }
 
-fn parse_tag_menu(obj: &Object) -> Option<Components> {
-    let name = parse_name(obj, "TagMenu");
-    let parent = parse_parent(obj);
-    let tag = parse_tag(obj, "Artist");
-
-    Some(TagMenu::enumed(name, tag, parent))
+fn parse_tag_menu(obj: &Object) -> Components {
+    TagMenu::enumed(
+        parse_name(obj, "TagMenu"),
+        parse_color(obj),
+        parse_tag(obj, "Artist"),
+        parse_parent(obj)
+    )
 }
 
-fn parse_track_menu(obj: &Object) -> Option<Components> {
-    let name = parse_name(obj, "TrackMenu");
-    let parent = parse_parent(obj);
-
-    Some(TrackMenu::enumed(name, parent))
+fn parse_track_menu(obj: &Object) -> Components {
+    TrackMenu::enumed(
+        parse_name(obj, "TrackMenu"),
+        parse_color(obj),
+        parse_parent(obj),
+    )
 }
 
-fn parse_playlist_menu(obj: &Object) -> Option<Components> {
-    let name = parse_name(obj, "PlaylistMenu");
-
-    Some(PlaylistMenu::enumed(name))
+fn parse_playlist_menu(obj: &Object) -> Components {
+    PlaylistMenu::enumed(
+        parse_name(obj, "PlaylistMenu"),
+        parse_color(obj),
+    )
 }
 
-fn parse_queue(obj: &Object) -> Option<Components> {
-    let name = parse_name(obj, "Queue");
-
-    Some(Queue::enumed(name))
+fn parse_queue(obj: &Object) -> Components {
+    let color = parse_color(obj);
+    Queue::enumed(
+        parse_name(obj, "Queue"),
+        color,
+    )
 }
 
-fn parse_title_display(obj: &Object) -> Option<Components> {
-    let name = parse_name(obj, "TitleDisplay");
-
-    Some(TitleDisplay::enumed(name))
+fn parse_title_display(obj: &Object) -> Components {
+    TitleDisplay::enumed(
+        parse_name(obj, "TitleDisplay"),
+        parse_color(obj)
+    )
 }
 
-fn parse_tag_display(obj: &Object) -> Option<Components> {
-    let name = parse_name(obj, "TagDisplay");
-
-    let tag = parse_tag(obj, "Artist");
-
-    Some(TagDisplay::enumed(name, tag))
+fn parse_tag_display(obj: &Object) -> Components {
+    TagDisplay::enumed(
+        parse_name(obj, "TagDisplay"),
+        parse_color(obj),
+        parse_tag(obj, "Artist"),
+    )
 }
 
 fn parse_parent<'a>(obj: &'a Object) -> Option<String> {
@@ -148,28 +156,17 @@ fn parse_string<'a>(obj: &'a Object, key: &str) -> Option<&'a str> {
     }
 }
 
-fn parse_place_holder(obj: &Object) -> Option<Components> {
-    let name = match obj.get("name") {
-        Some(name) => match name.as_str() {
-            Some(name) => name,
-            _ => "PlaceHolder",
-        },
-        _ => "PlaceHolder",
-    };
-
-    Some(PlaceHolder::enumed(name))
+fn parse_place_holder(obj: &Object) -> Components {
+    PlaceHolder::enumed(
+        parse_name(obj, "PlaceHolder"),
+        parse_color(obj),
+    )
 }
 
-fn parse_empty_space(obj: &Object) -> Option<Components> {
-    let name = match obj.get("name") {
-        Some(name) => match name.as_str() {
-            Some(name) => name,
-            _ => "EmptySpace",
-        },
-        _ => "EmptySpace",
-    };
-
-    Some(EmptySpace::enumed(name))
+fn parse_empty_space(obj: &Object) -> Components {
+    EmptySpace::enumed(
+        parse_name(obj, "EmptySpace"),
+    )
 }
 
 fn parse_horizontal_splitter(obj: &Object) -> Option<Components> {
@@ -307,5 +304,96 @@ fn parse_size(val: &JsonValue) -> Option<Size> {
     } else {
         eprintln!("Error: parse_size: jsonvalue is not an object");
         None
+    }
+}
+
+fn parse_color(obj: &Object) -> Color {
+    match obj.get("color") {
+        Some(JsonValue::Short(s)) => match s.as_str() {
+            "Black" => Color::Black,
+            "Red" => Color::Red,
+            "Green" => Color::Green,
+            "Yellow" => Color::Yellow,
+            "Blue" => Color::Blue,
+            "Magenta" => Color::Magenta,
+            "Cyan" => Color::Cyan,
+            "White" => Color::White,
+            "BrightBlack" => Color::BrightBlack,
+            "BrightRed" => Color::BrightRed,
+            "BrightGreen" => Color::BrightGreen,
+            "BrightYellow" => Color::BrightYellow,
+            "BrightBlue" => Color::BrightBlue,
+            "BrightMagenta" => Color::BrightMagenta,
+            "BrightCyan" => Color::BrightCyan,
+            "BrightWhite" => Color::BrightWhite,
+            "Reset" => Color::Reset,
+            bad => {
+                eprintln!("Error: parse_color: invalid color {:?}. Defaulting to Color::Reset", bad);
+                Color::Reset
+            },
+        },
+        Some(JsonValue::String(s)) => match s.as_str() {
+            "Black" => Color::Black,
+            "Red" => Color::Red,
+            "Green" => Color::Green,
+            "Yellow" => Color::Yellow,
+            "Blue" => Color::Blue,
+            "Magenta" => Color::Magenta,
+            "Cyan" => Color::Cyan,
+            "White" => Color::White,
+            "BrightBlack" => Color::BrightBlack,
+            "BrightRed" => Color::BrightRed,
+            "BrightGreen" => Color::BrightGreen,
+            "BrightYellow" => Color::BrightYellow,
+            "BrightBlue" => Color::BrightBlue,
+            "BrightMagenta" => Color::BrightMagenta,
+            "BrightCyan" => Color::BrightCyan,
+            "BrightWhite" => Color::BrightWhite,
+            "Reset" => Color::Reset,
+            bad => {
+                eprintln!("Error: parse_color: invalid color {:?}. Defaulting to Color::Reset", bad);
+                Color::Reset
+            },
+        },
+        Some(JsonValue::Object(obj)) => match parse_color_rgb(obj) {
+            Some(color) => color,
+            None => {
+                eprintln!("Error: parse_color: bad rgb color '{:?}'. Defaulting to Color::Reset", obj);
+                Color::Reset
+            },
+        }
+        _ => Color::Reset,
+    }
+}
+
+fn parse_color_rgb(obj: &Object) -> Option<Color> {
+    let r = match parse_color_rgb_part(obj, "r") {
+        Some(num) => num,
+        None => return None,
+    };
+
+    let g = match parse_color_rgb_part(obj, "g") {
+        Some(num) => num,
+        None => return None,
+    };
+
+    let b = match parse_color_rgb_part(obj, "b") {
+        Some(num) => num,
+        None => return None,
+    };
+
+    Some(Color::RGB(r, g, b))
+}
+
+fn parse_color_rgb_part(obj: &Object, key: &str) -> Option<u8> {
+    let ret = match obj.get(key) {
+        Some(JsonValue::Number(num)) => num.as_parts().1,
+        _ => return None,
+    };
+
+    if ret > 5 {
+        Some(5)
+    } else {
+        Some(ret as u8)
     }
 }

@@ -13,16 +13,16 @@ pub struct TagDisplay {
 }
 
 impl TagDisplay {
-    pub fn enumed(name: &str, tag: &str) -> Components {
-        Components::TagDisplay(TagDisplay::new(name, tag))
+    pub fn enumed(name: &str, color: Color, tag: &str) -> Components {
+        Components::TagDisplay(TagDisplay::new(name, color, tag))
     }
 
-    pub fn new(name: &str, tag: &str) -> TagDisplay {
+    pub fn new(name: &str, color: Color, tag: &str) -> TagDisplay {
         TagDisplay {
             name: name.to_string(),
             tag: tag.to_string(),
             contents: String::new(),
-            color: Color::Reset,
+            color,
         }
     }
 }

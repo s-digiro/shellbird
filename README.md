@@ -97,6 +97,8 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] All entry in certain menus
 - [x] Tag Menu with StyleMenu parent
 - [x] All option on tagmenu
+- [x] color
+- [ ] Some way of using color to indicate focus
 - [ ] component alignment
 - [ ] Track display formatting in menus
 - [ ] statusline

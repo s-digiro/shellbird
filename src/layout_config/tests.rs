@@ -61,7 +61,7 @@ fn test_parse_horizontal_splitter() -> Result<(), String> {
         vec![
             Panel::new(
                 Size::Percent(10),
-                PlaceHolder::enumed("a name 1"),
+                PlaceHolder::enumed("a name 1", Color::Yellow),
             ),
             Panel::new(
                 Size::Percent(3),
@@ -77,6 +77,7 @@ fn test_parse_horizontal_splitter() -> Result<(), String> {
         "children": [
             {
                 "component": "PlaceHolder",
+                "color": "Yellow",
                 "name": "a name 1",
                 "size": "10%",
             },
@@ -90,6 +91,19 @@ fn test_parse_horizontal_splitter() -> Result<(), String> {
     };
 
     assert_eq!(target, parse_horizontal_splitter(as_object(&input)));
+
+    Ok(())
+}
+
+#[test]
+fn parse_simple_color() -> Result<(), String> {
+    let target = Color::Yellow;
+
+    let input = object! {
+        "color": "Yellow",
+    };
+
+    assert_eq!(target, parse_color(as_object(&input)));
 
     Ok(())
 }
