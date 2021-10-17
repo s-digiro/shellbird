@@ -132,6 +132,9 @@ impl Component for StyleMenu {
                     tx.send(self.spawn_update_event()).unwrap();
                 }
             },
+            GlobalEvent::Database(_tracks) => {
+                tx.send(self.spawn_update_event()).unwrap();
+            },
             _ => (),
         }
     }

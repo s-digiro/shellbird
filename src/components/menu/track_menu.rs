@@ -83,7 +83,11 @@ impl Component for TrackMenu {
                 None => (),
             },
             GlobalEvent::TagMenuUpdated(name, tracks) if self.parent.is(name) => {
-                self.tracks = tracks.clone();
+                self.tracks = tracks.iter()
+                    .filter(|id| state.library.get(**id) != None)
+                    .map(|id| state.library.get(*id).unwrap().clone())
+                    .collect();
+
                 self.update_menu_items();
             },
             GlobalEvent::StyleMenuUpdated(name, styles) if self.parent.is(name) => {

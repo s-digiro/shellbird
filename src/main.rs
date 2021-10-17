@@ -98,6 +98,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         tree.set_tracks(tracks.clone());
                     }
 
+                    state.library = tracks.clone();
+
                     tx.send(Event::ToGlobal(GlobalEvent::Database(tracks))).unwrap();
                 },
                 AppEvent::SwitchScreen(name) => sel = name.clone(),

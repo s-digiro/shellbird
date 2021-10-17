@@ -95,7 +95,8 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Track Menu with Style Menu parent
 - [x] Pass StyleTree to handlers
 - [x] All entry in certain menus
-- [ ] Tag Menu with StyleMenu parent
+- [x] Tag Menu with StyleMenu parent
+- [x] All option on tagmenu
 - [ ] component alignment
 - [ ] Track display formatting in menus
 - [ ] statusline

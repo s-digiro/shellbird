@@ -68,7 +68,7 @@ pub enum GlobalEvent {
     Playlist(Vec<Playlist>),
     Database(Vec<Song>),
     PlaylistMenuUpdated(String, Option<Playlist>),
-    TagMenuUpdated(String, Vec<Song>),
+    TagMenuUpdated(String, Vec<usize>),
     StyleMenuUpdated(String, Vec<usize>),
     UpdateRootStyleMenu,
 }
