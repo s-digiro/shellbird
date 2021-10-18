@@ -54,10 +54,12 @@ pub trait Component: fmt::Debug + PartialEq {
         );
 
         for line in (y + 1)..(y + h - 1) {
-            print!("{}{}{}{}",
+            print!("{}{}",
                cursor::Goto(x, line),
                "│",
-               " ".to_string().repeat((w - 2).into()),
+            );
+            print!("{}{}",
+                cursor::Goto(x + w - 1, line),
                "│",
             );
         }

@@ -79,26 +79,40 @@ impl Component for VerticalSplitter {
         self.splitter.handle_focus(state, e, tx)
     }
 
-    fn draw(&self,x: u16, y: u16, w: u16, h: u16) {
-        let mut y = y;
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
+        let mut inner_x = x;
+        let mut inner_y = y;
+        let mut inner_w = w;
+        let mut inner_h = h;
 
-        let last = self.splitter.panels.len() as isize - 1;
+        if self.splitter.draw_borders {
+            self.border(x, y, w, h);
+            inner_x = inner_x + 1;
+            inner_y = inner_y + 1;
+            inner_w = inner_w - 2;
+            inner_h = inner_h - 2;
+        }
+
+        let last = self.splitter.panels.len() - 1;
 
         for (i, panel) in self.splitter.panels.iter().enumerate() {
-            let h = match panel.size {
-                Size::Percent(p) => (h * p as u16) / 100,
-                Size::Absolute(h) => h,
+            let inner_h = match panel.size {
+                Size::Percent(p) => (inner_h * p as u16) / 100,
+                Size::Absolute(inner_h) => inner_h,
             };
-            panel.component.draw(x, y, w, h);
 
-            y = y + h;
+            panel.component.draw(inner_x, inner_y, inner_w, inner_h);
 
-            if self.splitter.draw_borders && i as isize != last {
-                for j in x..(x + w) {
-                    print!("{}─", cursor::Goto(j, y));
-                }
-                y = y + 1
-            };
+            inner_y = inner_y + inner_h;
+
+            if self.splitter.draw_borders && i != last {
+                super::draw_horizontal_line(x, inner_y, w);
+                inner_y = inner_y + 1;
+            }
+        }
+
+        if self.splitter.draw_borders {
+            super::draw_bottom_border(x, y + h - 1, w);
         }
     }
 }

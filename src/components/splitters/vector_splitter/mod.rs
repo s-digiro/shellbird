@@ -1,4 +1,5 @@
 use std::sync::mpsc;
+use termion::cursor;
 use crate::GlobalState;
 use crate::components::{Component, Components, ErrorBox};
 use crate::event::*;
@@ -137,4 +138,36 @@ impl Component for VectorSplitter {
     fn draw(&self,x: u16, y: u16, w: u16, h: u16) {
         ErrorBox::new().draw(x, y, w, h);
     }
+}
+
+fn draw_vertical_line(x: u16, y: u16, h: u16) {
+    for i in 0..h {
+        print!("{}│", cursor::Goto(x, y + i));
+    }
+    print!("{}┬", cursor::Goto(x, y));
+    print!("{}┴", cursor::Goto(x, y + h - 1));
+}
+
+fn draw_horizontal_line(x: u16, y: u16, w: u16) {
+    for i in 0..w {
+        print!("{}─", cursor::Goto(x + i, y));
+    }
+    print!("{}├", cursor::Goto(x, y));
+    print!("{}┤", cursor::Goto(x + w - 1, y));
+}
+
+fn draw_right_border(x: u16, y: u16, h: u16) {
+    for i in 0..h {
+        print!("{}│", cursor::Goto(x, y + i));
+    }
+    print!("{}┐", cursor::Goto(x, y));
+    print!("{}┘", cursor::Goto(x, h + y - 1));
+}
+
+fn draw_bottom_border(x: u16, y: u16, w: u16) {
+    for i in 0..w {
+        print!("{}─", cursor::Goto(x + i, y));
+    }
+    print!("{}└", cursor::Goto(x, y));
+    print!("{}┘", cursor::Goto(w + x - 1, y));
 }

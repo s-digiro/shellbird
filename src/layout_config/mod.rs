@@ -181,7 +181,7 @@ fn parse_horizontal_splitter(obj: &Object) -> Option<Components> {
     let borders = match obj.get("borders") {
         Some(val) => match val.as_str() {
             Some("false") => false,
-            _ => false,
+            _ => true,
         },
         _ => true,
     };
@@ -221,7 +221,7 @@ fn parse_vertical_splitter(obj: &Object) -> Option<Components> {
     let borders = match obj.get("borders") {
         Some(val) => match val.as_str() {
             Some("false") => false,
-            _ => false,
+            _ => true,
         },
         _ => true,
     };
