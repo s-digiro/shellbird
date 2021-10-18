@@ -97,6 +97,7 @@ impl Component for HorizontalSplitter {
             let inner_w = match panel.size {
                 Size::Percent(p) => (inner_w * p as u16) / 100,
                 Size::Absolute(inner_w) => inner_w,
+                Size::Remainder => w - inner_x + 1,
             };
 
             panel.component.draw(inner_x, inner_y, inner_w, inner_h);

@@ -16,6 +16,7 @@ pub enum MoveFocusResult {
 pub enum Size {
     Percent(u8),
     Absolute(u16),
+    Remainder,
 }
 
 #[derive(Debug)]

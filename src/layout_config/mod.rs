@@ -267,7 +267,7 @@ fn parse_size(val: &JsonValue) -> Option<Size> {
                         if let Ok(val) = s.parse::<u16>() {
                             Some(Size::Absolute(val))
                         } else {
-                            None
+                            Some(Size::Remainder)
                         }
                     }
                 },
@@ -287,7 +287,7 @@ fn parse_size(val: &JsonValue) -> Option<Size> {
                         if let Ok(val) = s.parse::<u16>() {
                             Some(Size::Absolute(val))
                         } else {
-                            None
+                            Some(Size::Remainder)
                         }
                     }
                 }
@@ -297,8 +297,8 @@ fn parse_size(val: &JsonValue) -> Option<Size> {
                 },
             },
             None => {
-                eprintln!("Error: parse_size: no size key");
-                None
+                eprintln!("Error: parse_size: no size key, defaulting to Remainder");
+                Some(Size::Remainder)
             }
         }
     } else {
