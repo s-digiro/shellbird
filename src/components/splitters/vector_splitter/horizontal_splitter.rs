@@ -1,7 +1,6 @@
 use super::*;
 use super::super::Splitters;
 use crate::components::Components;
-use termion::cursor;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -77,7 +76,7 @@ impl Component for HorizontalSplitter {
         self.splitter.handle_focus(state, e, tx)
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         let mut inner_x = x;
         let mut inner_y = y;
         let mut inner_w = w;
@@ -100,7 +99,11 @@ impl Component for HorizontalSplitter {
                 Size::Remainder => w - inner_x + 1,
             };
 
-            panel.component.draw(inner_x, inner_y, inner_w, inner_h);
+            if i == self.splitter.sel {
+                panel.component.draw(inner_x, inner_y, inner_w, inner_h, focus);
+            } else {
+                panel.component.draw(inner_x, inner_y, inner_w, inner_h, false);
+            }
 
             inner_x = inner_x + inner_w;
 

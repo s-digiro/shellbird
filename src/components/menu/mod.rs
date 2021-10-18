@@ -17,6 +17,7 @@ pub struct Menu {
     pub selection: usize,
     pub items: Vec<String>,
     pub color: Color,
+    pub focus_color: Color,
 }
 
 impl Component for Menu {
@@ -46,7 +47,7 @@ impl Component for Menu {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         let first_visible = self.first_visible(h);
 
         let mut line = y;
@@ -55,7 +56,7 @@ impl Component for Menu {
 
             utf8_truncate(&mut val, w as usize);
 
-            println!("{}", color::Fg(self.color));
+            print!("{}", color::Fg(self.color(focus)));
             if self.selection == i {
                 print!("{}", style::Invert);
             }
@@ -77,6 +78,14 @@ impl Component for Menu {
 }
 
 impl Menu {
+    pub fn color(&self, focus: bool) -> Color {
+        if focus {
+            self.focus_color
+        } else {
+            self.color
+        }
+    }
+
     pub fn selection(&self) -> Option<&String> {
         match self.items.get(self.selection) {
             Some(item) => Some(item),

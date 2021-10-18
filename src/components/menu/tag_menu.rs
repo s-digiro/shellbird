@@ -20,15 +20,17 @@ impl TagMenu {
     pub fn enumed(
         name: &str,
         color: Color,
+        focus_color: Color,
         tag: &str,
         parent: Option<String>
     ) -> Components {
-        Components::TagMenu(TagMenu::new(name, color, tag, parent))
+        Components::TagMenu(TagMenu::new(name, color, focus_color, tag, parent))
     }
 
     pub fn new(
         name: &str,
         color: Color,
+        focus_color: Color,
         tag: &str,
         parent: Option<String>
     ) -> TagMenu {
@@ -39,6 +41,7 @@ impl TagMenu {
             tracks: Vec::new(),
             menu: Menu {
                 color,
+                focus_color,
                 selection: 0,
                 items: Vec::new(),
             },
@@ -175,7 +178,7 @@ impl Component for TagMenu {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
-        self.menu.draw(x, y, w, h);
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
+        self.menu.draw(x, y, w, h, focus);
     }
 }

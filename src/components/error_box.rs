@@ -21,7 +21,8 @@ impl Component for ErrorBox {
 
     fn draw(
         &self,
-        x: u16, y: u16, w: u16, h: u16
+        x: u16, y: u16, w: u16, h: u16,
+        _focus: bool,
     ) {
         let mut text = "Error".to_string();
         text.truncate((w - 2).into());

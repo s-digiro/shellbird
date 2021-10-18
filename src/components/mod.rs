@@ -43,7 +43,7 @@ pub trait Component: fmt::Debug + PartialEq {
         _tx: mpsc::Sender<Event>
     ) { }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16);
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool);
 
     fn border(&self, x: u16, y: u16, w: u16, h: u16) {
         print!("{}{}{}{}",
@@ -134,19 +134,19 @@ impl Component for Components {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         match self {
-            Components::PlaceHolder(c) => c.draw(x, y, w, h),
-            Components::EmptySpace(c) => c.draw(x, y, w, h),
-            Components::ErrorBox(c) => c.draw(x, y, w, h),
-            Components::TitleDisplay(c) => c.draw(x, y, w, h),
-            Components::TagDisplay(c) => c.draw(x, y, w, h),
-            Components::Queue(c) => c.draw(x, y, w, h),
-            Components::PlaylistMenu(c) => c.draw(x, y, w, h),
-            Components::TrackMenu(c) => c.draw(x, y, w, h),
-            Components::TagMenu(c) => c.draw(x, y, w, h),
-            Components::StyleMenu(c) => c.draw(x, y, w, h),
-            Components::Splitter(c) => c.draw(x, y, w, h),
+            Components::PlaceHolder(c) => c.draw(x, y, w, h, focus),
+            Components::EmptySpace(c) => c.draw(x, y, w, h, focus),
+            Components::ErrorBox(c) => c.draw(x, y, w, h, focus),
+            Components::TitleDisplay(c) => c.draw(x, y, w, h, focus),
+            Components::TagDisplay(c) => c.draw(x, y, w, h, focus),
+            Components::Queue(c) => c.draw(x, y, w, h, focus),
+            Components::PlaylistMenu(c) => c.draw(x, y, w, h, focus),
+            Components::TrackMenu(c) => c.draw(x, y, w, h, focus),
+            Components::TagMenu(c) => c.draw(x, y, w, h, focus),
+            Components::StyleMenu(c) => c.draw(x, y, w, h, focus),
+            Components::Splitter(c) => c.draw(x, y, w, h, focus),
         }
     }
 

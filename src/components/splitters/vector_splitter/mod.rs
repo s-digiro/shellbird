@@ -135,8 +135,8 @@ impl Component for VectorSplitter {
         }
     }
 
-    fn draw(&self,x: u16, y: u16, w: u16, h: u16) {
-        ErrorBox::new().draw(x, y, w, h);
+    fn draw(&self,x: u16, y: u16, w: u16, h: u16, focus: bool) {
+        ErrorBox::new().draw(x, y, w, h, focus);
     }
 }
 

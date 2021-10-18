@@ -16,11 +16,21 @@ pub struct StyleMenu {
 }
 
 impl StyleMenu {
-    pub fn enumed(name: &str, color: Color, parent: Option<String>) -> Components {
-        Components::StyleMenu(StyleMenu::new(name, color, parent))
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        focus_color: Color,
+        parent: Option<String>
+    ) -> Components {
+        Components::StyleMenu(StyleMenu::new(name, color, focus_color, parent))
     }
 
-    pub fn new(name: &str, color: Color, parent: Option<String>) -> StyleMenu {
+    pub fn new(
+        name: &str,
+        color: Color,
+        focus_color: Color,
+        parent: Option<String>
+    ) -> StyleMenu {
         StyleMenu {
             name: name.to_string(),
             parent: Parent::new(parent),
@@ -28,6 +38,7 @@ impl StyleMenu {
             color,
             menu: Menu {
                 color,
+                focus_color,
                 selection: 0,
                 items: vec![ "<All>".to_string()],
             },
@@ -143,7 +154,7 @@ impl Component for StyleMenu {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
-        self.menu.draw(x, y, w, h);
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
+        self.menu.draw(x, y, w, h, focus);
     }
 }

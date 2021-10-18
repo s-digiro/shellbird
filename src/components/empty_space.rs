@@ -22,5 +22,5 @@ impl EmptySpace {
 impl Component for EmptySpace {
     fn name(&self) -> &str { &self.name }
 
-    fn draw(&self, _x: u16, _y: u16, _w: u16, _h: u16) { }
+    fn draw(&self, _x: u16, _y: u16, _w: u16, _h: u16, _focus: bool) { }
 }

@@ -79,7 +79,7 @@ impl Component for VerticalSplitter {
         self.splitter.handle_focus(state, e, tx)
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         let mut inner_x = x;
         let mut inner_y = y;
         let mut inner_w = w;
@@ -102,7 +102,11 @@ impl Component for VerticalSplitter {
                 Size::Remainder => inner_h - inner_y,
             };
 
-            panel.component.draw(inner_x, inner_y, inner_w, inner_h);
+            if i == self.splitter.sel {
+                panel.component.draw(inner_x, inner_y, inner_w, inner_h, focus);
+            } else {
+                panel.component.draw(inner_x, inner_y, inner_w, inner_h, false);
+            }
 
             inner_y = inner_y + inner_h;
 

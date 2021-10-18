@@ -23,7 +23,7 @@ impl Screen {
     pub fn draw(&self) {
         let (w, h) = termion::terminal_size().unwrap();
         // h - 1 so we have room for statusline
-        self.base.draw(1, 1, w, h - 1);
+        self.base.draw(1, 1, w, h - 1, true);
     }
 
     pub fn handle_global(

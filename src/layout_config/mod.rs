@@ -76,7 +76,8 @@ fn parse_component(val: &JsonValue) -> Option<Components> {
 fn parse_style_menu(obj: &Object) -> Components {
     StyleMenu::enumed(
         parse_name(obj, "StyleMenu"),
-        parse_color(obj),
+        parse_color(obj, "color"),
+        parse_color(obj, "focus_color"),
         parse_parent(obj)
     )
 }
@@ -84,7 +85,8 @@ fn parse_style_menu(obj: &Object) -> Components {
 fn parse_tag_menu(obj: &Object) -> Components {
     TagMenu::enumed(
         parse_name(obj, "TagMenu"),
-        parse_color(obj),
+        parse_color(obj, "color"),
+        parse_color(obj, "focus_color"),
         parse_tag(obj, "Artist"),
         parse_parent(obj)
     )
@@ -93,7 +95,8 @@ fn parse_tag_menu(obj: &Object) -> Components {
 fn parse_track_menu(obj: &Object) -> Components {
     TrackMenu::enumed(
         parse_name(obj, "TrackMenu"),
-        parse_color(obj),
+        parse_color(obj, "color"),
+        parse_color(obj, "focus_color"),
         parse_parent(obj),
     )
 }
@@ -101,29 +104,30 @@ fn parse_track_menu(obj: &Object) -> Components {
 fn parse_playlist_menu(obj: &Object) -> Components {
     PlaylistMenu::enumed(
         parse_name(obj, "PlaylistMenu"),
-        parse_color(obj),
+        parse_color(obj, "color"),
+        parse_color(obj, "focus_color"),
     )
 }
 
 fn parse_queue(obj: &Object) -> Components {
-    let color = parse_color(obj);
     Queue::enumed(
         parse_name(obj, "Queue"),
-        color,
+        parse_color(obj, "color"),
+        parse_color(obj, "focus_color"),
     )
 }
 
 fn parse_title_display(obj: &Object) -> Components {
     TitleDisplay::enumed(
         parse_name(obj, "TitleDisplay"),
-        parse_color(obj)
+        parse_color(obj, "color")
     )
 }
 
 fn parse_tag_display(obj: &Object) -> Components {
     TagDisplay::enumed(
         parse_name(obj, "TagDisplay"),
-        parse_color(obj),
+        parse_color(obj, "color"),
         parse_tag(obj, "Artist"),
     )
 }
@@ -159,7 +163,7 @@ fn parse_string<'a>(obj: &'a Object, key: &str) -> Option<&'a str> {
 fn parse_place_holder(obj: &Object) -> Components {
     PlaceHolder::enumed(
         parse_name(obj, "PlaceHolder"),
-        parse_color(obj),
+        parse_color(obj, "color"),
     )
 }
 
@@ -307,8 +311,8 @@ fn parse_size(val: &JsonValue) -> Option<Size> {
     }
 }
 
-fn parse_color(obj: &Object) -> Color {
-    match obj.get("color") {
+fn parse_color(obj: &Object, key: &str) -> Color {
+    match obj.get(key) {
         Some(JsonValue::Short(s)) => match s.as_str() {
             "Black" => Color::Black,
             "Red" => Color::Red,

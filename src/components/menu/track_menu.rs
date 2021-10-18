@@ -18,14 +18,16 @@ impl TrackMenu {
     pub fn enumed(
         name: &str,
         color: Color,
+        focus_color: Color,
         parent: Option<String>
     ) -> Components {
-        Components::TrackMenu(TrackMenu::new(name, color, parent))
+        Components::TrackMenu(TrackMenu::new(name, color, focus_color, parent))
     }
 
     pub fn new(
         name: &str,
         color: Color,
+        focus_color: Color,
         parent: Option<String>
     ) -> TrackMenu {
         TrackMenu {
@@ -34,6 +36,7 @@ impl TrackMenu {
             tracks: Vec::new(),
             menu: Menu {
                 color,
+                focus_color,
                 selection: 0,
                 items: Vec::new(),
             },
@@ -134,7 +137,7 @@ impl Component for TrackMenu {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
-        self.menu.draw(x, y, w, h);
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
+        self.menu.draw(x, y, w, h, focus);
     }
 }

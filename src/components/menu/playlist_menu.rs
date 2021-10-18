@@ -14,16 +14,17 @@ pub struct PlaylistMenu {
 }
 
 impl PlaylistMenu {
-    pub fn enumed(name: &str, color: Color) -> Components {
-        Components::PlaylistMenu(PlaylistMenu::new(name, color))
+    pub fn enumed(name: &str, color: Color, focus_color: Color) -> Components {
+        Components::PlaylistMenu(PlaylistMenu::new(name, color, focus_color))
     }
 
-    pub fn new(name: &str, color: Color) -> PlaylistMenu {
+    pub fn new(name: &str, color: Color, focus_color: Color) -> PlaylistMenu {
         PlaylistMenu {
             name: name.to_string(),
             playlists: Vec::new(),
             menu: Menu {
                 color,
+                focus_color,
                 selection: 0,
                 items: Vec::new(),
             },
@@ -88,7 +89,7 @@ impl Component for PlaylistMenu {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
-        self.menu.draw(x, y, w, h);
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
+        self.menu.draw(x, y, w, h, focus);
     }
 }

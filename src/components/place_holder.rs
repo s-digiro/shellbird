@@ -29,6 +29,7 @@ impl Component for PlaceHolder {
     fn draw(
         &self,
         x: u16, y: u16, w: u16, h: u16,
+        _focus: bool,
     ) {
         println!("{}", color::Fg(self.color));
         self.border(x, y, w, h);

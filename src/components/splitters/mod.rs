@@ -72,10 +72,10 @@ impl Component for Splitters {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         match self {
-            Splitters::VerticalSplitter(c) => c.draw(x, y, w, h),
-            Splitters::HorizontalSplitter(c) => c.draw(x, y, w, h),
+            Splitters::VerticalSplitter(c) => c.draw(x, y, w, h, focus),
+            Splitters::HorizontalSplitter(c) => c.draw(x, y, w, h, focus),
         }
     }
 

@@ -17,16 +17,17 @@ pub struct Queue {
 }
 
 impl Queue {
-    pub fn enumed(name: &str, color: Color) -> Components {
-        Components::Queue(Queue::new(name, color))
+    pub fn enumed(name: &str, color: Color, focus_color: Color) -> Components {
+        Components::Queue(Queue::new(name, color, focus_color))
     }
 
-    pub fn new(name: &str, color: Color) -> Queue {
+    pub fn new(name: &str, color: Color, focus_color: Color) -> Queue {
         Queue {
             name: name.to_string(),
             tracks: Vec::new(),
             now_playing: None,
             menu: Menu {
+                focus_color,
                 color,
                 selection: 0,
                 items: Vec::new(),
@@ -89,13 +90,13 @@ impl Component for Queue {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         let first_visible = self.menu.first_visible(h);
 
         let mut line = y;
 
         for (i, track) in self.tracks.iter().enumerate().skip(first_visible) {
-            print!("{}", color::Fg(self.menu.color));
+            print!("{}", color::Fg(self.menu.color(focus)));
 
             let mut name = match &track.title {
                 Some(title) => title.to_string(),

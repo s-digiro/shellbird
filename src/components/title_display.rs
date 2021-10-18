@@ -48,7 +48,7 @@ impl Component for TitleDisplay {
         }
     }
 
-    fn draw(&self, x: u16, y: u16, w: u16, _h: u16) {
+    fn draw(&self, x: u16, y: u16, w: u16, _h: u16, _focus: bool) {
         let mut text = self.contents.clone();
 
         text.truncate(w.into());
