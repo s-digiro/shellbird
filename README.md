@@ -98,10 +98,12 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Tag Menu with StyleMenu parent
 - [x] All option on tagmenu
 - [x] color
-- [ ] Remainder size option
+- [x] Remainder size option
+- [ ] Menu Title display option
 - [ ] tags with multiple values
 - [ ] Do away with screens. Just have them as components. Make every component capable of acting as a screen. ComponentMap
-- [ ] Some way of using color to indicate focus
+- [x] Some way of using color to indicate focus
+- [ ] Better splitter borders
 - [ ] component alignment
 - [ ] Track display formatting in menus
 - [ ] statusline
