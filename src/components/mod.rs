@@ -11,6 +11,7 @@ mod title_display;
 mod tag_display;
 mod menu;
 mod empty_space;
+mod align;
 
 pub use place_holder::PlaceHolder;
 pub use empty_space::EmptySpace;
@@ -28,6 +29,7 @@ pub use splitters::Splitter;
 pub use splitters::Splitters;
 pub use splitters::Size;
 pub use splitters::Panel;
+pub use align::Align;
 
 pub trait Component: fmt::Debug + PartialEq {
     fn handle_global(

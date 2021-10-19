@@ -9,18 +9,20 @@ pub struct TitleDisplay {
     name: String,
     contents: String,
     color: Color,
+    align: Align,
 }
 
 impl TitleDisplay {
-    pub fn enumed(name: &str, color: Color) -> Components {
-        Components::TitleDisplay(TitleDisplay::new(name, color))
+    pub fn enumed(name: &str, color: Color, align: Align) -> Components {
+        Components::TitleDisplay(TitleDisplay::new(name, color, align))
     }
 
-    pub fn new(name: &str, color: Color) -> TitleDisplay {
+    pub fn new(name: &str, color: Color, align: Align) -> TitleDisplay {
         TitleDisplay {
             name: name.to_string(),
             contents: String::new(),
             color,
+            align,
         }
     }
 }
@@ -51,7 +53,11 @@ impl Component for TitleDisplay {
     fn draw(&self, x: u16, y: u16, w: u16, _h: u16, _focus: bool) {
         let mut text = self.contents.clone();
 
+        let offset = self.align.offset(self.contents.len(), w);
+
         text.truncate(w.into());
+
+        let x = std::cmp::max(0, (x as i32 + offset) as u16);
 
         print!("{}{}{}{}",
             color::Fg(self.color),

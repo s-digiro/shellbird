@@ -1,6 +1,5 @@
 use super::*;
 use super::super::Splitters;
-use termion::cursor;
 
 use crate::GlobalState;
 use crate::components::Components;

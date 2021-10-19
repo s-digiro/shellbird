@@ -10,19 +10,33 @@ pub struct TagDisplay {
     tag: String,
     contents: String,
     color: Color,
+    align: Align,
 }
 
 impl TagDisplay {
-    pub fn enumed(name: &str, color: Color, tag: &str) -> Components {
-        Components::TagDisplay(TagDisplay::new(name, color, tag))
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        align: Align,
+        tag: &str
+    ) -> Components {
+        Components::TagDisplay(
+            TagDisplay::new(name, color, align, tag)
+        )
     }
 
-    pub fn new(name: &str, color: Color, tag: &str) -> TagDisplay {
+    pub fn new(
+        name: &str,
+        color: Color,
+        align: Align,
+        tag: &str
+    ) -> TagDisplay {
         TagDisplay {
             name: name.to_string(),
             tag: tag.to_string(),
             contents: String::new(),
             color,
+            align,
         }
     }
 }
@@ -53,7 +67,11 @@ impl Component for TagDisplay {
     fn draw(&self, x: u16, y: u16, w: u16, _h: u16, _focus: bool) {
         let mut text = self.contents.clone();
 
+        let offset = self.align.offset(self.contents.len(), w);
+
         text.truncate(w as usize);
+
+        let x = std::cmp::max(0, (x as i32 + offset) as u16);
 
         print!("{}{}{}{}",
                color::Fg(self.color),

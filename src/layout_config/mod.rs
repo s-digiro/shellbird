@@ -120,7 +120,8 @@ fn parse_queue(obj: &Object) -> Components {
 fn parse_title_display(obj: &Object) -> Components {
     TitleDisplay::enumed(
         parse_name(obj, "TitleDisplay"),
-        parse_color(obj, "color")
+        parse_color(obj, "color"),
+        parse_align(obj),
     )
 }
 
@@ -128,6 +129,7 @@ fn parse_tag_display(obj: &Object) -> Components {
     TagDisplay::enumed(
         parse_name(obj, "TagDisplay"),
         parse_color(obj, "color"),
+        parse_align(obj),
         parse_tag(obj, "Artist"),
     )
 }
@@ -300,10 +302,7 @@ fn parse_size(val: &JsonValue) -> Option<Size> {
                     None
                 },
             },
-            None => {
-                eprintln!("Error: parse_size: no size key, defaulting to Remainder");
-                Some(Size::Remainder)
-            }
+            None => Some(Size::Remainder),
         }
     } else {
         eprintln!("Error: parse_size: jsonvalue is not an object");
@@ -399,5 +398,33 @@ fn parse_color_rgb_part(obj: &Object, key: &str) -> Option<u8> {
         Some(5)
     } else {
         Some(ret as u8)
+    }
+}
+
+fn parse_align(obj: &Object) -> Align {
+    match obj.get("align") {
+        Some(JsonValue::String(s)) => match s.as_str() {
+            "Center" => Align::Center,
+            "Right" => Align::Right,
+            "Left" => Align::Left,
+            _ => {
+                eprintln!("Error: parse_align: invalid value for text_align. Defaulting to Align::Left");
+                Align::Left
+            },
+        },
+        Some(JsonValue::Short(s)) => match s.as_str() {
+            "Center" => Align::Center,
+            "Right" => Align::Right,
+            "Left" => Align::Left,
+            _ => {
+                eprintln!("Error: parse_align: invalid value for text_align. Defaulting to Align::Left");
+                Align::Left
+            },
+        },
+        Some(_) => {
+            eprintln!("Error: parse_align: text_align is not a string");
+            Align::Left
+        },
+        None => Align::Left,
     }
 }
