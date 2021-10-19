@@ -104,7 +104,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [ ] Do away with screens. Just have them as components. Make every component capable of acting as a screen. ComponentMap
 - [x] Some way of using color to indicate focus
 - [ ] Better splitter borders
-- [ ] component alignment
+- [x] component alignment
 - [ ] Track display formatting in menus
 - [ ] statusline
 - [x] RC
