@@ -25,21 +25,21 @@
 						"component": "TagDisplay",
 						"name": "NowPlayingScreen-Artist",
 						"tag": "Artist",
-						"align": "Center",
+						"alignment": "Center",
 						"color": "Blue",
 						"size": "1"
 					},
 					{
 						"component": "TitleDisplay",
 						"name": "NowPlayingScreen-Title",
-						"align": "Center",
+						"alignment": "Center",
 						"color": "Cyan",
 						"size": "1"
 					},
 					{
 						"component": "TagDisplay",
 						"name": "NowPlayingScreen-Album",
-						"align": "Center",
+						"alignment": "Center",
 						"tag": "Album",
 						"color": "Green",
 						"size": "1"

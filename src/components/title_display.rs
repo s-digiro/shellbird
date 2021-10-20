@@ -2,6 +2,7 @@ use std::sync::mpsc;
 use termion::{color, cursor};
 use super::*;
 use crate::color::Color;
+use unicode_truncate::{UnicodeTruncateStr, Alignment};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -9,20 +10,20 @@ pub struct TitleDisplay {
     name: String,
     contents: String,
     color: Color,
-    align: Align,
+    alignment: Alignment,
 }
 
 impl TitleDisplay {
-    pub fn enumed(name: &str, color: Color, align: Align) -> Components {
-        Components::TitleDisplay(TitleDisplay::new(name, color, align))
+    pub fn enumed(name: &str, color: Color, alignment: Alignment) -> Components {
+        Components::TitleDisplay(TitleDisplay::new(name, color, alignment))
     }
 
-    pub fn new(name: &str, color: Color, align: Align) -> TitleDisplay {
+    pub fn new(name: &str, color: Color, alignment: Alignment) -> TitleDisplay {
         TitleDisplay {
             name: name.to_string(),
             contents: String::new(),
             color,
-            align,
+            alignment,
         }
     }
 }
@@ -51,17 +52,10 @@ impl Component for TitleDisplay {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, _h: u16, _focus: bool) {
-        let pad_left = self.align.pad_left(self.contents.len(), w);
-        let pad_right = self.align.pad_right(self.contents.len(), w);
-
-        let text = self.align.crop(&self.contents, w);
-
-        print!("{}{}{}{}{}{}",
+        print!("{}{}{}{}",
             color::Fg(self.color),
             cursor::Goto(x, y),
-            pad_left,
-            text,
-            pad_right,
+            self.contents.unicode_pad(w as usize, self.alignment, true),
             color::Fg(Color::Reset),
         );
     }

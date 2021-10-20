@@ -10,6 +10,7 @@ use crate::event::*;
 use crate::color::Color;
 use crate::GlobalState;
 use termion::{cursor, style, color};
+use unicode_truncate::{UnicodeTruncateStr, Alignment};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -55,25 +56,13 @@ impl Component for Menu {
         let mut i = self.first_visible(h);
         for line in y..(y + h) {
             if let Some(s) = self.items.get(i) {
-                let space_count = w as i32 - s.chars().count() as i32;
-                let mut spaces = "".to_string();
-                let mut s = s.to_string();
-
-                if space_count < 0 {
-                    let s_len = std::cmp::max(0, s.len() as i32 + space_count);
-                    utf8_truncate(&mut s, s_len as usize);
-                } else if space_count > 0 {
-                    spaces = " ".repeat(space_count as usize);
-                }
-
                 if self.selection == i {
                     buffer.push_str(
                         &format!(
-                            "{}{}{}{}{}{}",
+                            "{}{}{}{}{}",
                             style::Invert,
                             cursor::Goto(x, line),
-                            s,
-                            spaces,
+                            s.unicode_pad(w as usize, Alignment::Left, true),
                             style::Reset,
                             color::Fg(self.color(focus)),
                         )
@@ -81,10 +70,9 @@ impl Component for Menu {
                 } else {
                     buffer.push_str(
                         &format!(
-                            "{}{}{}",
+                            "{}{}",
                             cursor::Goto(x, line),
-                            s,
-                            spaces,
+                            s.unicode_pad(w as usize, Alignment::Left, true),
                         )
                     );
                 }
@@ -93,7 +81,7 @@ impl Component for Menu {
                     &format!(
                         "{}{}",
                         cursor::Goto(x, line),
-                        " ".repeat(w as usize),
+                        " ".unicode_pad(w as usize, Alignment::Left, true),
                     ),
                 );
             }
@@ -196,19 +184,4 @@ impl Parent {
     }
 }
 
-fn utf8_truncate(input : &mut String, maxsize: usize) {
-    let mut utf8_maxsize = input.len();
-    if utf8_maxsize >= maxsize {
-        {
-            let mut char_iter = input.char_indices();
-            while utf8_maxsize >= maxsize {
-                utf8_maxsize = match char_iter.next_back() {
-                    Some((index, _)) => index,
-                    _ => 0
-                };
-            }
-        } // Extra {} wrap to limit the immutable borrow of char_indices()
-        input.truncate(utf8_maxsize);
-    }
-}
 

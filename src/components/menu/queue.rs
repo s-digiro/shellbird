@@ -6,6 +6,7 @@ use crate::event::*;
 use crate::GlobalState;
 use crate::color::Color;
 use crate::components::{Component, Components, menu::Menu};
+use unicode_truncate::{UnicodeTruncateStr, Alignment};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -96,16 +97,7 @@ impl Component for Queue {
         let mut i = self.menu.first_visible(h);
         for line in y..(y + h) {
             if let Some(s) = self.menu.items.get(i) {
-                let space_count = w as i32 - s.len() as i32;
-                let mut spaces = "".to_string();
-                let mut s = s.to_string();
-
-                if space_count < 0 {
-                    let s_len = std::cmp::max(0, s.len() as i32 + space_count);
-                    super::utf8_truncate(&mut s, s_len as usize);
-                } else if space_count > 0 {
-                    spaces = " ".repeat(space_count as usize);
-                }
+                let s = s.unicode_pad(w as usize, Alignment::Left, true);
 
                 if self.menu.selection == i {
                     buffer.push_str(&format!("{}", style::Invert));
@@ -119,11 +111,10 @@ impl Component for Queue {
 
                 buffer.push_str(
                     &format!(
-                        "{}{}{}{}{}",
+                        "{}{}{}{}",
                         color::Fg(self.menu.color(focus)),
                         cursor::Goto(x, line),
                         s,
-                        spaces,
                         style::Reset,
                     )
                 );

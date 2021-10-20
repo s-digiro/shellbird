@@ -1,6 +1,8 @@
 use json::JsonValue;
 use json::object::Object;
 
+use unicode_truncate::Alignment;
+
 use std::collections::HashMap;
 use std::fs;
 use std::error::Error;
@@ -121,7 +123,7 @@ fn parse_title_display(obj: &Object) -> Components {
     TitleDisplay::enumed(
         parse_name(obj, "TitleDisplay"),
         parse_color(obj, "color"),
-        parse_align(obj),
+        parse_alignment(obj),
     )
 }
 
@@ -129,7 +131,7 @@ fn parse_tag_display(obj: &Object) -> Components {
     TagDisplay::enumed(
         parse_name(obj, "TagDisplay"),
         parse_color(obj, "color"),
-        parse_align(obj),
+        parse_alignment(obj),
         parse_tag(obj, "Artist"),
     )
 }
@@ -401,30 +403,30 @@ fn parse_color_rgb_part(obj: &Object, key: &str) -> Option<u8> {
     }
 }
 
-fn parse_align(obj: &Object) -> Align {
-    match obj.get("align") {
+fn parse_alignment(obj: &Object) -> Alignment {
+    match obj.get("alignment") {
         Some(JsonValue::String(s)) => match s.as_str() {
-            "Center" => Align::Center,
-            "Right" => Align::Right,
-            "Left" => Align::Left,
+            "Center" => Alignment::Center,
+            "Right" => Alignment::Right,
+            "Left" => Alignment::Left,
             _ => {
-                eprintln!("Error: parse_align: invalid value for text_align. Defaulting to Align::Left");
-                Align::Left
+                eprintln!("Error: parse_alignment: invalid value for text_align. Defaulting to Alignment::Left");
+                Alignment::Left
             },
         },
         Some(JsonValue::Short(s)) => match s.as_str() {
-            "Center" => Align::Center,
-            "Right" => Align::Right,
-            "Left" => Align::Left,
+            "Center" => Alignment::Center,
+            "Right" => Alignment::Right,
+            "Left" => Alignment::Left,
             _ => {
-                eprintln!("Error: parse_align: invalid value for text_align. Defaulting to Align::Left");
-                Align::Left
+                eprintln!("Error: parse_alignment: invalid value for text_align. Defaulting to Alignment::Left");
+                Alignment::Left
             },
         },
         Some(_) => {
-            eprintln!("Error: parse_align: text_align is not a string");
-            Align::Left
+            eprintln!("Error: parse_alignment: text_align is not a string");
+            Alignment::Left
         },
-        None => Align::Left,
+        None => Alignment::Left,
     }
 }

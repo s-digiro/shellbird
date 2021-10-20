@@ -2,6 +2,7 @@ use super::*;
 use std::sync::mpsc;
 use termion::{cursor, color};
 use crate::color::Color;
+use unicode_truncate::{UnicodeTruncateStr, Alignment};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -10,25 +11,25 @@ pub struct TagDisplay {
     tag: String,
     contents: String,
     color: Color,
-    align: Align,
+    alignment: Alignment,
 }
 
 impl TagDisplay {
     pub fn enumed(
         name: &str,
         color: Color,
-        align: Align,
+        alignment: Alignment,
         tag: &str
     ) -> Components {
         Components::TagDisplay(
-            TagDisplay::new(name, color, align, tag)
+            TagDisplay::new(name, color, alignment, tag)
         )
     }
 
     pub fn new(
         name: &str,
         color: Color,
-        align: Align,
+        alignment: Alignment,
         tag: &str
     ) -> TagDisplay {
         TagDisplay {
@@ -36,7 +37,7 @@ impl TagDisplay {
             tag: tag.to_string(),
             contents: String::new(),
             color,
-            align,
+            alignment,
         }
     }
 }
@@ -65,18 +66,12 @@ impl Component for TagDisplay {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, _h: u16, _focus: bool) {
-        let pad_left = self.align.pad_left(self.contents.len(), w);
-        let pad_right = self.align.pad_right(self.contents.len(), w);
-
-        let text = self.align.crop(&self.contents, w);
-
-        print!("{}{}{}{}{}{}",
-               color::Fg(self.color),
-               cursor::Goto(x, y),
-               pad_left,
-               text,
-               pad_right,
-               color::Fg(color::Reset),
+        print!(
+            "{}{}{}{}",
+            color::Fg(self.color),
+            cursor::Goto(x, y),
+            self.contents.unicode_pad(w as usize, self.alignment, true),
+            color::Fg(color::Reset),
         );
     }
 }

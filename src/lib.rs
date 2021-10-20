@@ -1,4 +1,6 @@
 extern crate mpd;
+extern crate unicode_width;
+extern crate unicode_truncate;
 extern crate json;
 extern crate termion;
 
