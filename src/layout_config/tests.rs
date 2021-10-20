@@ -40,7 +40,7 @@ fn test_parse_size_number() -> Result<(), String> {
 
 #[test]
 fn test_parse_style_menu() -> Result<(), String> {
-    let target = Some(StyleMenu::enumed("a name", None));
+    let target = StyleMenu::enumed("a name", Color::Reset, Color::Reset, None);
 
     let input = object! {
         "component": "StyleMenu",
@@ -65,7 +65,7 @@ fn test_parse_horizontal_splitter() -> Result<(), String> {
             ),
             Panel::new(
                 Size::Percent(3),
-                TagDisplay::enumed("a name 2", "Genre"),
+                TagDisplay::enumed("a name 2", Color::Reset, Align::Left, "Genre"),
             ),
         ],
     ));
@@ -103,7 +103,7 @@ fn parse_simple_color() -> Result<(), String> {
         "color": "Yellow",
     };
 
-    assert_eq!(target, parse_color(as_object(&input)));
+    assert_eq!(target, parse_color(as_object(&input), "color"));
 
     Ok(())
 }

@@ -55,7 +55,7 @@ impl Component for Menu {
         let mut i = self.first_visible(h);
         for line in y..(y + h) {
             if let Some(s) = self.items.get(i) {
-                let space_count = w as i32 - s.len() as i32;
+                let space_count = w as i32 - s.chars().count() as i32;
                 let mut spaces = "".to_string();
                 let mut s = s.to_string();
 
