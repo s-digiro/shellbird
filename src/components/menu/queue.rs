@@ -91,42 +91,57 @@ impl Component for Queue {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
-        let first_visible = self.menu.first_visible(h);
+        let mut buffer = String::new();
 
-        let mut line = y;
+        let mut i = self.menu.first_visible(h);
+        for line in y..(y + h) {
+            if let Some(s) = self.menu.items.get(i) {
+                let space_count = w as i32 - s.len() as i32;
+                let mut spaces = "".to_string();
+                let mut s = s.to_string();
 
-        for (i, track) in self.tracks.iter().enumerate().skip(first_visible) {
-            print!("{}", color::Fg(self.menu.color(focus)));
-
-            let mut name = match &track.title {
-                Some(title) => title.to_string(),
-                None => "<Empty>".to_string(),
-            };
-
-            name.truncate(w as usize);
-
-            if self.menu.selection == i {
-                print!("{}", style::Invert);
-            }
-            if let Some(np) = &self.now_playing {
-                if track == np {
-                    print!("{}", style::Bold);
+                if space_count < 0 {
+                    let s_len = std::cmp::max(0, s.len() as i32 + space_count);
+                    super::utf8_truncate(&mut s, s_len as usize);
+                } else if space_count > 0 {
+                    spaces = " ".repeat(space_count as usize);
                 }
-            }
-            print!("{}{}{}{}",
-                cursor::Goto(x, line),
-                name,
-                " ".repeat(w as usize - name.len()),
-                style::Reset,
-            );
 
-            line += 1;
+                if self.menu.selection == i {
+                    buffer.push_str(&format!("{}", style::Invert));
+                }
 
-            if line >= y + h {
-                break;
+                if let Some(np) = &self.now_playing {
+                    if self.tracks.get(i) == Some(np) {
+                        buffer.push_str(&format!("{}", style::Bold));
+                    }
+                }
+
+                buffer.push_str(
+                    &format!(
+                        "{}{}{}{}{}",
+                        color::Fg(self.menu.color(focus)),
+                        cursor::Goto(x, line),
+                        s,
+                        spaces,
+                        style::Reset,
+                    )
+                );
+            } else {
+                buffer.push_str(
+                    &format!(
+                        "{}{}",
+                        cursor::Goto(x, line),
+                        " ".repeat(w as usize),
+                    ),
+                );
             }
+
+            i = i + 1;
         }
 
-        print!("{}", color::Fg(Color::Reset));
+        buffer.push_str(&format!("{}", style::Reset));
+
+        print!("{}", buffer);
     }
 }

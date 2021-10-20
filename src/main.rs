@@ -70,8 +70,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         if redraw {
-            write!(stdout, "{}", clear::All)?;
-
             if let Some(screen) = screens.get(&sel) {
                 screen.draw();
             }

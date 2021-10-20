@@ -48,32 +48,62 @@ impl Component for Menu {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
-        let first_visible = self.first_visible(h);
+        let mut buffer = String::new();
 
-        let mut line = y;
-        for (i, val) in self.items.iter().enumerate().skip(first_visible) {
-            let mut val = val.clone();
+        buffer.push_str(&format!("{}", color::Fg(self.color(focus))));
 
-            utf8_truncate(&mut val, w as usize);
+        let mut i = self.first_visible(h);
+        for line in y..(y + h) {
+            if let Some(s) = self.items.get(i) {
+                let space_count = w as i32 - s.len() as i32;
+                let mut spaces = "".to_string();
+                let mut s = s.to_string();
 
-            print!("{}", color::Fg(self.color(focus)));
-            if self.selection == i {
-                print!("{}", style::Invert);
+                if space_count < 0 {
+                    let s_len = std::cmp::max(0, s.len() as i32 + space_count);
+                    utf8_truncate(&mut s, s_len as usize);
+                } else if space_count > 0 {
+                    spaces = " ".repeat(space_count as usize);
+                }
+
+                if self.selection == i {
+                    buffer.push_str(
+                        &format!(
+                            "{}{}{}{}{}{}",
+                            style::Invert,
+                            cursor::Goto(x, line),
+                            s,
+                            spaces,
+                            style::Reset,
+                            color::Fg(self.color(focus)),
+                        )
+                    );
+                } else {
+                    buffer.push_str(
+                        &format!(
+                            "{}{}{}",
+                            cursor::Goto(x, line),
+                            s,
+                            spaces,
+                        )
+                    );
+                }
+            } else {
+                buffer.push_str(
+                    &format!(
+                        "{}{}",
+                        cursor::Goto(x, line),
+                        " ".repeat(w as usize),
+                    ),
+                );
             }
 
-            print!("{}{}{}{}",
-                cursor::Goto(x, line),
-                val,
-                " ".repeat(w as usize - val.len()),
-                style::Reset,
-            );
-
-            line += 1;
-
-            if line >= y + h {
-                break;
-            }
+            i = i + 1;
         }
+
+        buffer.push_str(&format!("{}", style::Reset));
+
+        print!("{}", buffer);
     }
 }
 

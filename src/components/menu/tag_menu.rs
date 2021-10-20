@@ -14,6 +14,7 @@ pub struct TagMenu {
     parent: Parent,
     tracks: Vec<usize>,
     menu: Menu,
+    multitag_separator: Option<String>,
 }
 
 impl TagMenu {
@@ -39,12 +40,21 @@ impl TagMenu {
             parent: Parent::new(parent),
             tag: tag.to_string(),
             tracks: Vec::new(),
+            multitag_separator: Some(" / ".to_string()),
             menu: Menu {
                 color,
                 focus_color,
                 selection: 0,
                 items: Vec::new(),
             },
+        }
+    }
+
+    pub fn tag_is(&self, tag_val: &str, target: &str) -> bool {
+        if let Some(sep) = &self.multitag_separator {
+            tag_val.split(sep).collect::<Vec<&str>>().contains(&target)
+        } else {
+            tag_val == target
         }
     }
 
@@ -58,17 +68,35 @@ impl TagMenu {
         self.menu.selection = 0;
         self.menu.items = vec!["<All>".to_string()];
 
-        let mut items: Vec<String> = self.tracks.clone().iter()
+        let items: Vec<String> = self.tracks.clone().iter()
             .filter(|id| library.get(**id) != None)
             .map(|id| match library.get(*id).unwrap().tags.get(&self.tag) {
                 Some(val) => val.to_string(),
                 None => "<Empty>".to_string(),
             }).collect();
 
-        items.sort();
-        items.dedup();
+        let mut final_items = Vec::new();
 
-        self.menu.items.append(&mut items);
+        if let Some(sep) = &self.multitag_separator {
+            for item in items.iter() {
+                if item.contains(sep) {
+                    let mut new_tags = item.split(sep)
+                        .map(|s| s.to_string())
+                        .collect();
+
+                    final_items.append(&mut new_tags);
+                } else {
+                    final_items.push(item.to_string());
+                }
+            }
+        } else {
+            final_items = items;
+        }
+
+        final_items.sort();
+        final_items.dedup();
+
+        self.menu.items.append(&mut final_items);
     }
 
     pub fn selection(&self, library: &Vec<Song>) -> Vec<usize> {
@@ -81,7 +109,7 @@ impl TagMenu {
                         Some(tag) => match tag.as_str() {
                             "<Empty>" => song.tags.get(&self.tag) == None,
                             tag => match song.tags.get(&self.tag) {
-                                Some(t) => t == tag,
+                                Some(t) => self.tag_is(t, tag),
                                 None => false,
                             },
                         },
@@ -100,7 +128,7 @@ impl TagMenu {
                 Some(sel_tag) => match sel_tag.as_str() {
                     "<Empty>" => library.get(**id).unwrap().tags.get(&self.tag) == None,
                     sel_tag => match library.get(**id).unwrap().tags.get(&self.tag) {
-                        Some(tag) => tag == sel_tag,
+                        Some(tag) => self.tag_is(tag, sel_tag),
                         None => false,
                     },
                 },

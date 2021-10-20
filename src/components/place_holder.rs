@@ -31,7 +31,8 @@ impl Component for PlaceHolder {
         x: u16, y: u16, w: u16, h: u16,
         _focus: bool,
     ) {
-        println!("{}", color::Fg(self.color));
+        print!("{}", color::Fg(self.color));
         self.border(x, y, w, h);
+        self.clear(x + 1, y + 1, w - 2, h - 2);
     }
 }

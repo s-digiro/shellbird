@@ -74,6 +74,22 @@ pub trait Component: fmt::Debug + PartialEq {
         );
     }
 
+    fn clear(&self, x: u16, y: u16, w: u16, h: u16) {
+        let mut buffer = String::new();
+
+        for line in y..(y + h) {
+            buffer.push_str(
+                &format!(
+                    "{}{}",
+                    cursor::Goto(x, line),
+                    " ".repeat(w as usize),
+                ),
+            );
+        }
+
+        print!("{}", buffer);
+    }
+
     fn name(&self) -> &str;
 }
 

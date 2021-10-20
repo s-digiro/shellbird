@@ -51,18 +51,17 @@ impl Component for TitleDisplay {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, _h: u16, _focus: bool) {
-        let mut text = self.contents.clone();
+        let pad_left = self.align.pad_left(self.contents.len(), w);
+        let pad_right = self.align.pad_right(self.contents.len(), w);
 
-        let offset = self.align.offset(self.contents.len(), w);
+        let text = self.align.crop(&self.contents, w);
 
-        text.truncate(w.into());
-
-        let x = std::cmp::max(0, (x as i32 + offset) as u16);
-
-        print!("{}{}{}{}",
+        print!("{}{}{}{}{}{}",
             color::Fg(self.color),
             cursor::Goto(x, y),
+            pad_left,
             text,
+            pad_right,
             color::Fg(Color::Reset),
         );
     }

@@ -63,7 +63,7 @@ impl CommandLine {
                     self.tx.send(event.clone()).unwrap();
                     self.clear();
                 } else if !self.keybinds.keys()
-                    .any(|s| s.starts_with(&self.contents)) 
+                    .any(|s| s.starts_with(&self.contents))
                 {
                     self.clear();
                 }
