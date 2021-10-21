@@ -98,7 +98,7 @@ impl Component for VerticalSplitter {
             let inner_h = match panel.size {
                 Size::Percent(p) => (inner_h * p as u16) / 100,
                 Size::Absolute(inner_h) => inner_h,
-                Size::Remainder => inner_h - inner_y,
+                Size::Remainder => (inner_h - inner_y) + 1,
             };
 
             if i == self.splitter.sel {
