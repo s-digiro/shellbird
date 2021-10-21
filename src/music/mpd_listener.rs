@@ -9,24 +9,38 @@ use crate::event::*;
 use crate::playlist::Playlist;
 
 pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
-    let mut conn = get_mpd_conn(ip, port).unwrap();
+    let ip = ip.to_string();
+    let port = port.to_string();
 
     thread::spawn(move || {
-
-        send_database(&mut conn, &tx);
-        send_queue(&mut conn, &tx);
-        send_now_playing(&mut conn, &tx);
-        send_playlists(&mut conn, &tx);
+        let mut conn = None;
 
         loop {
-            if let Ok(systems) = conn.wait(&[]) {
-                for system in systems {
-                    match system {
-                        Subsystem::Player => send_now_playing(&mut conn, &tx),
-                        Subsystem::Queue => send_queue(&mut conn, &tx),
-                        Subsystem::Playlist => send_playlists(&mut conn, &tx),
-                        Subsystem::Database => send_database(&mut conn, &tx),
-                        _ => (),
+            while let None = conn {
+                conn = get_mpd_conn(&ip, &port);
+            }
+
+            if let Some(c) = &mut conn {
+                send_database(c, &tx);
+                send_queue(c, &tx);
+                send_now_playing(c, &tx);
+                send_playlists(c, &tx);
+
+                loop {
+                    if let Ok(systems) = c.wait(&[]) {
+                        for system in systems {
+                            match system {
+                                Subsystem::Player => send_now_playing(c, &tx),
+                                Subsystem::Queue => send_queue(c, &tx),
+                                Subsystem::Playlist => send_playlists(c, &tx),
+                                Subsystem::Database => send_database(c, &tx),
+                                _ => (),
+                            }
+                        }
+                    } else {
+                        tx.send(Event::ToApp(AppEvent::LostMpdConnection)).unwrap();
+                        conn = None;
+                        break;
                     }
                 }
             }

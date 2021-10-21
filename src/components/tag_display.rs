@@ -61,6 +61,9 @@ impl Component for TagDisplay {
                     None => "<Unavailable>".to_string(),
                 }
             },
+            GlobalEvent::LostMpdConnection => {
+                self.contents = "<Unavailable>".to_string();
+            },
             _ => (),
         }
     }

@@ -87,6 +87,10 @@ impl Component for Queue {
         match e {
             GlobalEvent::NowPlaying(song) => self.set_now_playing(&song),
             GlobalEvent::Queue(q) => self.update_items(q),
+            GlobalEvent::LostMpdConnection => {
+                self.now_playing = None;
+                self.update_items(&Vec::new());
+            },
             _ => (),
         }
     }

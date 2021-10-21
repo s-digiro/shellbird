@@ -85,6 +85,11 @@ impl Component for PlaylistMenu {
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
             },
+            GlobalEvent::LostMpdConnection => {
+                self.playlists = Vec::new();
+                self.update_menu_items();
+                tx.send(self.spawn_update_event()).unwrap();
+            },
             _ => (),
         }
     }

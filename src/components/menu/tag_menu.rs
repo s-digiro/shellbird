@@ -202,6 +202,11 @@ impl Component for TagMenu {
 
                 tx.send(self.spawn_update_event(&tracks)).unwrap()
             },
+            GlobalEvent::LostMpdConnection => {
+                self.tracks = Vec::new();
+                self.set_menu_items(&Vec::new());
+                tx.send(self.spawn_update_event(&Vec::new())).unwrap();
+            },
             _ => (),
         }
     }

@@ -91,6 +91,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
             Event::ToApp(e) => match e {
                 AppEvent::Quit => break,
+                AppEvent::LostMpdConnection => {
+                    state.library = Vec::new();
+
+                    tx.send(Event::ToGlobal(GlobalEvent::LostMpdConnection)).unwrap();
+                },
                 AppEvent::Database(tracks) => {
                     if let Some(tree) = &mut state.style_tree {
                         tree.set_tracks(tracks.clone());

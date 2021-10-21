@@ -41,6 +41,7 @@ pub enum AppEvent {
     StyleTreeLoaded(Option<StyleTree>),
     SwitchScreen(String),
     Database(Vec<Song>),
+    LostMpdConnection,
     Quit,
 }
 
@@ -71,6 +72,7 @@ pub enum GlobalEvent {
     TagMenuUpdated(String, Vec<usize>),
     StyleMenuUpdated(String, Vec<usize>),
     UpdateRootStyleMenu,
+    LostMpdConnection,
 }
 
 #[derive(Debug)]
@@ -106,6 +108,7 @@ impl fmt::Debug for GlobalEvent {
             GlobalEvent::TagMenuUpdated(t, s) => write!(f, "GlobalEvent::TagMenuUpdated({}, {} songs)", t, s.len()),
             GlobalEvent::UpdateRootStyleMenu => write!(f, "GlobalEvent::UpdateRootStyleMenu"),
             GlobalEvent::StyleMenuUpdated(t, s) => write!(f, "GlobalEvent::StyleMenuUpdated({}, {})", t, s.len()),
+            GlobalEvent::LostMpdConnection => write!(f, "GlobalEvent::LostMpdConnection"),
         }
     }
 }

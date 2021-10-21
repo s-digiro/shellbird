@@ -88,6 +88,10 @@ impl Component for TrackMenu {
         _tx: mpsc::Sender<Event>
     ) {
         match e {
+            GlobalEvent::LostMpdConnection => {
+                self.tracks = Vec::new();
+                self.update_menu_items();
+            },
             GlobalEvent::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
                 Some(pl) => {
                     self.tracks = pl.tracks.clone();
