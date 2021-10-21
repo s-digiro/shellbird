@@ -44,7 +44,6 @@ pub fn init_mpd_sender_thread(
                 };
 
                 if let Err(_) = result {
-                    tx.send(Event::ToApp(AppEvent::LostMpdConnection)).unwrap();
                     conn = None;
                 }
             }

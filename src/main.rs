@@ -94,6 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 AppEvent::LostMpdConnection => {
                     state.library = Vec::new();
 
+                    eprintln!("MPD Connection Dropped");
                     tx.send(Event::ToGlobal(GlobalEvent::LostMpdConnection)).unwrap();
                 },
                 AppEvent::Database(tracks) => {
