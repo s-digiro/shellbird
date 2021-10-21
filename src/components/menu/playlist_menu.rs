@@ -1,4 +1,7 @@
 use std::sync::mpsc;
+
+use unicode_truncate::Alignment;
+
 use crate::event::*;
 use crate::GlobalState;
 use crate::playlist::Playlist;
@@ -14,19 +17,45 @@ pub struct PlaylistMenu {
 }
 
 impl PlaylistMenu {
-    pub fn enumed(name: &str, color: Color, focus_color: Color) -> Components {
-        Components::PlaylistMenu(PlaylistMenu::new(name, color, focus_color))
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        focus_color: Color,
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
+    ) -> Components {
+        Components::PlaylistMenu(
+            PlaylistMenu::new(
+                name,
+                color,
+                focus_color,
+                title,
+                title_alignment,
+                menu_alignment,
+            )
+        )
     }
 
-    pub fn new(name: &str, color: Color, focus_color: Color) -> PlaylistMenu {
+    pub fn new(
+        name: &str,
+        color: Color,
+        focus_color: Color,
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
+    ) -> PlaylistMenu {
         PlaylistMenu {
             name: name.to_string(),
             playlists: Vec::new(),
             menu: Menu {
+                title,
                 color,
                 focus_color,
                 selection: 0,
                 items: Vec::new(),
+                title_alignment,
+                menu_alignment,
             },
         }
     }

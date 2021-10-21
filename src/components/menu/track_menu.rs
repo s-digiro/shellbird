@@ -1,5 +1,9 @@
 use std::sync::mpsc;
+
 use mpd::Song;
+
+use unicode_truncate::Alignment;
+
 use crate::event::*;
 use crate::color::Color;
 use crate::GlobalState;
@@ -19,15 +23,31 @@ impl TrackMenu {
         name: &str,
         color: Color,
         focus_color: Color,
-        parent: Option<String>
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
+        parent: Option<String>,
     ) -> Components {
-        Components::TrackMenu(TrackMenu::new(name, color, focus_color, parent))
+        Components::TrackMenu(
+            TrackMenu::new(
+                name,
+                color,
+                focus_color,
+                title,
+                title_alignment,
+                menu_alignment,
+                parent
+            )
+        )
     }
 
     pub fn new(
         name: &str,
         color: Color,
         focus_color: Color,
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
         parent: Option<String>
     ) -> TrackMenu {
         TrackMenu {
@@ -35,6 +55,9 @@ impl TrackMenu {
             parent: Parent::new(parent),
             tracks: Vec::new(),
             menu: Menu {
+                title,
+                title_alignment,
+                menu_alignment,
                 color,
                 focus_color,
                 selection: 0,

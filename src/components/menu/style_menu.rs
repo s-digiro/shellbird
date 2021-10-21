@@ -1,4 +1,7 @@
 use std::sync::mpsc;
+
+use unicode_truncate::Alignment;
+
 use crate::event::*;
 use crate::components::{Component, Components, menu::{Parent, Menu}};
 use crate::color::Color;
@@ -20,15 +23,31 @@ impl StyleMenu {
         name: &str,
         color: Color,
         focus_color: Color,
-        parent: Option<String>
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
+        parent: Option<String>,
     ) -> Components {
-        Components::StyleMenu(StyleMenu::new(name, color, focus_color, parent))
+        Components::StyleMenu(
+            StyleMenu::new(
+                name,
+                color,
+                focus_color,
+                title,
+                title_alignment,
+                menu_alignment,
+                parent,
+            )
+        )
     }
 
     pub fn new(
         name: &str,
         color: Color,
         focus_color: Color,
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
         parent: Option<String>
     ) -> StyleMenu {
         StyleMenu {
@@ -37,6 +56,9 @@ impl StyleMenu {
             styles: Vec::new(),
             color,
             menu: Menu {
+                title,
+                title_alignment,
+                menu_alignment,
                 color,
                 focus_color,
                 selection: 0,

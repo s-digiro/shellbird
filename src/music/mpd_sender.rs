@@ -13,7 +13,7 @@ use mpd::Song;
 pub fn init_mpd_sender_thread(
     ip: &str,
     port: &str,
-    tx: mpsc::Sender<Event>
+    _tx: mpsc::Sender<Event>
 ) -> mpsc::Sender<MpdEvent> {
     let (ret_tx, rx) = mpsc::channel();
 

@@ -19,6 +19,9 @@ pub struct Menu {
     pub items: Vec<String>,
     pub color: Color,
     pub focus_color: Color,
+    pub title: Option<String>,
+    pub title_alignment: Alignment,
+    pub menu_alignment: Alignment,
 }
 
 impl Component for Menu {
@@ -49,12 +52,32 @@ impl Component for Menu {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
+        let mut cur_y = y;
+
         let mut buffer = String::new();
+
+
+        let mut i = self.first_visible(h);
+
+        if let Some(title) = &self.title {
+            buffer.push_str(
+                &format!(
+                    "{}{}{}{}{}{}",
+                    color::Fg(self.color(focus)),
+                    cursor::Goto(x, y),
+                    title.unicode_pad(w as usize, self.title_alignment, true),
+                    cursor::Goto(x, y + 1),
+                    "─".repeat(w as usize),
+                    style::Reset,
+                )
+            );
+
+            cur_y = cur_y + 2;
+        }
 
         buffer.push_str(&format!("{}", color::Fg(self.color(focus))));
 
-        let mut i = self.first_visible(h);
-        for line in y..(y + h) {
+        for line in cur_y..(y + h) {
             if let Some(s) = self.items.get(i) {
                 if self.selection == i {
                     buffer.push_str(
@@ -62,7 +85,7 @@ impl Component for Menu {
                             "{}{}{}{}{}",
                             style::Invert,
                             cursor::Goto(x, line),
-                            s.unicode_pad(w as usize, Alignment::Left, true),
+                            s.unicode_pad(w as usize, self.menu_alignment, true),
                             style::Reset,
                             color::Fg(self.color(focus)),
                         )
@@ -72,7 +95,7 @@ impl Component for Menu {
                         &format!(
                             "{}{}",
                             cursor::Goto(x, line),
-                            s.unicode_pad(w as usize, Alignment::Left, true),
+                            s.unicode_pad(w as usize, self.menu_alignment, true),
                         )
                     );
                 }
@@ -81,7 +104,7 @@ impl Component for Menu {
                     &format!(
                         "{}{}",
                         cursor::Goto(x, line),
-                        " ".unicode_pad(w as usize, Alignment::Left, true),
+                        " ".unicode_pad(w as usize, self.menu_alignment, true),
                     ),
                 );
             }
@@ -135,6 +158,11 @@ impl Menu {
         &self,
         h: u16,
     ) -> usize {
+        let h = match self.title {
+            Some(_) => h - 2,
+            None => h,
+        };
+
         let mut center = h / 2;
         if h % 2 == 0 {
             center = center - 1;

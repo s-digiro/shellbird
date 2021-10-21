@@ -18,20 +18,46 @@ pub struct Queue {
 }
 
 impl Queue {
-    pub fn enumed(name: &str, color: Color, focus_color: Color) -> Components {
-        Components::Queue(Queue::new(name, color, focus_color))
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        focus_color: Color,
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
+    ) -> Components {
+        Components::Queue(
+            Queue::new(
+                name,
+                color,
+                focus_color,
+                title,
+                title_alignment,
+                menu_alignment,
+            )
+        )
     }
 
-    pub fn new(name: &str, color: Color, focus_color: Color) -> Queue {
+    pub fn new(
+        name: &str,
+        color: Color,
+        focus_color: Color,
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
+    ) -> Queue {
         Queue {
             name: name.to_string(),
             tracks: Vec::new(),
             now_playing: None,
             menu: Menu {
+                title,
                 focus_color,
                 color,
                 selection: 0,
                 items: Vec::new(),
+                title_alignment,
+                menu_alignment,
             },
         }
     }
@@ -96,12 +122,30 @@ impl Component for Queue {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
+        let mut cur_y = y;
+
         let mut buffer = String::new();
 
+        if let Some(title) = &self.menu.title {
+            buffer.push_str(
+                &format!(
+                    "{}{}{}{}{}{}",
+                    color::Fg(self.menu.color(focus)),
+                    cursor::Goto(x, y),
+                    title.unicode_pad(w as usize, self.menu.title_alignment, true),
+                    cursor::Goto(x, y + 1),
+                    "─".repeat(w as usize),
+                    style::Reset,
+                )
+            );
+
+            cur_y = cur_y + 2;
+        }
+
         let mut i = self.menu.first_visible(h);
-        for line in y..(y + h) {
+        for line in cur_y..(y + h) {
             if let Some(s) = self.menu.items.get(i) {
-                let s = s.unicode_pad(w as usize, Alignment::Left, true);
+                let s = s.unicode_pad(w as usize, self.menu.menu_alignment, true);
 
                 if self.menu.selection == i {
                     buffer.push_str(&format!("{}", style::Invert));

@@ -1,6 +1,10 @@
 use std::sync::mpsc;
 use std::collections::HashSet;
+
 use mpd::Song;
+
+use unicode_truncate::Alignment;
+
 use crate::components::{Component, Components, menu::{Menu, Parent}};
 use crate::event::*;
 use crate::GlobalState;
@@ -22,16 +26,33 @@ impl TagMenu {
         name: &str,
         color: Color,
         focus_color: Color,
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
         tag: &str,
         parent: Option<String>
     ) -> Components {
-        Components::TagMenu(TagMenu::new(name, color, focus_color, tag, parent))
+        Components::TagMenu(
+            TagMenu::new(
+                name,
+                color,
+                focus_color,
+                title,
+                title_alignment,
+                menu_alignment,
+                tag,
+                parent,
+            )
+        )
     }
 
     pub fn new(
         name: &str,
         color: Color,
         focus_color: Color,
+        title: Option<String>,
+        title_alignment: Alignment,
+        menu_alignment: Alignment,
         tag: &str,
         parent: Option<String>
     ) -> TagMenu {
@@ -42,6 +63,9 @@ impl TagMenu {
             tracks: Vec::new(),
             multitag_separator: Some(" / ".to_string()),
             menu: Menu {
+                title,
+                title_alignment,
+                menu_alignment,
                 color,
                 focus_color,
                 selection: 0,

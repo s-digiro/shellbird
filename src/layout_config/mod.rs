@@ -80,6 +80,9 @@ fn parse_style_menu(obj: &Object) -> Components {
         parse_name(obj, "StyleMenu"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
+        parse_title(obj),
+        parse_alignment(obj, "title_alignment"),
+        parse_alignment(obj, "menu_alignment"),
         parse_parent(obj)
     )
 }
@@ -89,6 +92,9 @@ fn parse_tag_menu(obj: &Object) -> Components {
         parse_name(obj, "TagMenu"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
+        parse_title(obj),
+        parse_alignment(obj, "title_alignment"),
+        parse_alignment(obj, "menu_alignment"),
         parse_tag(obj, "Artist"),
         parse_parent(obj)
     )
@@ -99,6 +105,9 @@ fn parse_track_menu(obj: &Object) -> Components {
         parse_name(obj, "TrackMenu"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
+        parse_title(obj),
+        parse_alignment(obj, "title_alignment"),
+        parse_alignment(obj, "menu_alignment"),
         parse_parent(obj),
     )
 }
@@ -108,6 +117,9 @@ fn parse_playlist_menu(obj: &Object) -> Components {
         parse_name(obj, "PlaylistMenu"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
+        parse_title(obj),
+        parse_alignment(obj, "title_alignment"),
+        parse_alignment(obj, "menu_alignment"),
     )
 }
 
@@ -116,6 +128,9 @@ fn parse_queue(obj: &Object) -> Components {
         parse_name(obj, "Queue"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
+        parse_title(obj),
+        parse_alignment(obj, "title_alignment"),
+        parse_alignment(obj, "menu_alignment"),
     )
 }
 
@@ -123,7 +138,7 @@ fn parse_title_display(obj: &Object) -> Components {
     TitleDisplay::enumed(
         parse_name(obj, "TitleDisplay"),
         parse_color(obj, "color"),
-        parse_alignment(obj),
+        parse_alignment(obj, "alignment"),
     )
 }
 
@@ -131,7 +146,7 @@ fn parse_tag_display(obj: &Object) -> Components {
     TagDisplay::enumed(
         parse_name(obj, "TagDisplay"),
         parse_color(obj, "color"),
-        parse_alignment(obj),
+        parse_alignment(obj, "alignment"),
         parse_tag(obj, "Artist"),
     )
 }
@@ -154,6 +169,13 @@ fn parse_name<'a>(obj: &'a Object, def: &'a str) -> &'a str {
     match parse_string(obj, "name") {
         Some(s) => s,
         None => def,
+    }
+}
+
+fn parse_title<'a>(obj: &'a Object) -> Option<String> {
+    match parse_string(obj, "title") {
+        Some(s) => Some(s.to_string()),
+        None => None,
     }
 }
 
@@ -403,8 +425,8 @@ fn parse_color_rgb_part(obj: &Object, key: &str) -> Option<u8> {
     }
 }
 
-fn parse_alignment(obj: &Object) -> Alignment {
-    match obj.get("alignment") {
+fn parse_alignment(obj: &Object, key: &str) -> Alignment {
+    match obj.get(key) {
         Some(JsonValue::String(s)) => match s.as_str() {
             "Center" => Alignment::Center,
             "Right" => Alignment::Right,
