@@ -60,6 +60,7 @@
 	"QueueScreen": {
 		"component": "Queue",
 		"color": "Cyan",
+		"title": "Queue",
 		"name": "QueueScreen-Queue"
 	},
 	"PlaylistViewScreen": {
@@ -71,6 +72,7 @@
 				"component": "PlaylistMenu",
 				"name": "PlaylistViewScreen-PlaylistMenu",
 				"size": "40%",
+				"title": "Playlists",
 				"color": "Yellow",
 				"focus_color": "BrightYellow"
 			},
@@ -78,6 +80,7 @@
 				"component": "TrackMenu",
 				"name": "PlaylistViewScreen-TrackMenu",
 				"parent": "PlaylistViewScreen-PlaylistMenu",
+				"title": "Tracks",
 				"size": "60%",
 				"color": "Cyan",
 				"focus_color": "BrightCyan"
@@ -95,12 +98,15 @@
 				"focus_color": "BrightBlue",
 				"name": "LibraryViewScreen-ArtistMenu",
 				"tag": "AlbumArtist",
+				"multitag_separator": " / ",
+				"title": "Artist",
 				"size": "33%"
 			},
 			{
 				"component": "TagMenu",
 				"color": "Green",
 				"focus_color": "BrightGreen",
+				"title": "Album",
 				"name": "LibraryViewScreen-AlbumMenu",
 				"parent": "LibraryViewScreen-ArtistMenu",
 				"tag": "Album",
@@ -111,6 +117,7 @@
 				"name": "LibraryViewScreen-TrackMenu",
 				"color": "Cyan",
 				"focus_color": "BrightCyan",
+				"title": "Tracks",
 				"parent": "LibraryViewScreen-AlbumMenu",
 				"size": "Remainder"
 			}
@@ -133,6 +140,7 @@
 						"name": "StyleViewScreen-StyleMenu1",
 						"color": "Magenta",
 						"focus_color": "BrightMagenta",
+						"title": "Style",
 						"size": "14%"
 					},
 					{
@@ -141,6 +149,7 @@
 						"focus_color": "BrightMagenta",
 						"name": "StyleViewScreen-StyleMenu2",
 						"parent": "StyleViewScreen-StyleMenu1",
+						"title": "Sub-Style",
 						"size": "14%"
 					},
 					{
@@ -149,6 +158,7 @@
 						"focus_color": "BrightMagenta",
 						"name": "StyleViewScreen-StyleMenu3",
 						"parent": "StyleViewScreen-StyleMenu2",
+						"title": "Sub-Sub-Style",
 						"size": "14%"
 					},
 					{
@@ -157,6 +167,7 @@
 						"focus_color": "BrightMagenta",
 						"name": "StyleViewScreen-StyleMenu4",
 						"parent": "StyleViewScreen-StyleMenu3",
+						"title": "Sub-Sub-Sub-Style",
 						"size": "14%"
 					},
 					{
@@ -165,6 +176,7 @@
 						"focus_color": "BrightMagenta",
 						"name": "StyleViewScreen-StyleMenu5",
 						"parent": "StyleViewScreen-StyleMenu4",
+						"title": "Genre",
 						"size": "14%"
 					},
 					{
@@ -173,7 +185,9 @@
 						"focus_color": "BrightBlue",
 						"name": "StyleViewScreen-ArtistMenu",
 						"tag": "AlbumArtist",
+						"multitag_separator": " / ",
 						"parent": "StyleViewScreen-StyleMenu5",
+						"title": "Artist",
 						"size": "14%"
 					},
 					{
@@ -181,6 +195,7 @@
 						"color": "Green",
 						"focus_color": "BrightGreen",
 						"name": "StyleViewScreen-AlbumMenu",
+						"title": "Album",
 						"tag": "Album",
 						"parent": "StyleViewScreen-ArtistMenu",
 						"size": "Remainder"
@@ -192,7 +207,8 @@
 				"name": "StyleViewScreen-Tracks",
 				"parent": "StyleViewScreen-AlbumMenu",
 				"color": "Cyan",
-				"focus_color": "BrightCyan"
+				"focus_color": "BrightCyan",
+				"size": "Remainder"
 			}
 		]
 	}

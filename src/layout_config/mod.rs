@@ -77,47 +77,48 @@ fn parse_component(val: &JsonValue) -> Option<Components> {
 
 fn parse_style_menu(obj: &Object) -> Components {
     StyleMenu::enumed(
-        parse_name(obj, "StyleMenu"),
+        parse_string(obj, "name").unwrap_or("StyleMenu"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
-        parse_title(obj),
+        parse_optional_string(obj, "title"),
         parse_alignment(obj, "title_alignment"),
         parse_alignment(obj, "menu_alignment"),
-        parse_parent(obj)
+        parse_optional_string(obj, "parent")
     )
 }
 
 fn parse_tag_menu(obj: &Object) -> Components {
     TagMenu::enumed(
-        parse_name(obj, "TagMenu"),
+        parse_string(obj, "name").unwrap_or("TagMenu"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
-        parse_title(obj),
+        parse_optional_string(obj, "title"),
         parse_alignment(obj, "title_alignment"),
         parse_alignment(obj, "menu_alignment"),
-        parse_tag(obj, "Artist"),
-        parse_parent(obj)
+        parse_string(obj, "tag").unwrap_or("Artist"),
+        parse_optional_string(obj, "multitag_separator"),
+        parse_optional_string(obj, "parent"),
     )
 }
 
 fn parse_track_menu(obj: &Object) -> Components {
     TrackMenu::enumed(
-        parse_name(obj, "TrackMenu"),
+        parse_string(obj, "name").unwrap_or("TrackMenu"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
-        parse_title(obj),
+        parse_optional_string(obj, "title"),
         parse_alignment(obj, "title_alignment"),
         parse_alignment(obj, "menu_alignment"),
-        parse_parent(obj),
+        parse_optional_string(obj, "parent"),
     )
 }
 
 fn parse_playlist_menu(obj: &Object) -> Components {
     PlaylistMenu::enumed(
-        parse_name(obj, "PlaylistMenu"),
+        parse_string(obj, "name").unwrap_or("PlaylistMenu"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
-        parse_title(obj),
+        parse_optional_string(obj, "title"),
         parse_alignment(obj, "title_alignment"),
         parse_alignment(obj, "menu_alignment"),
     )
@@ -125,10 +126,10 @@ fn parse_playlist_menu(obj: &Object) -> Components {
 
 fn parse_queue(obj: &Object) -> Components {
     Queue::enumed(
-        parse_name(obj, "Queue"),
+        parse_string(obj, "name").unwrap_or("Queue"),
         parse_color(obj, "color"),
         parse_color(obj, "focus_color"),
-        parse_title(obj),
+        parse_optional_string(obj, "title"),
         parse_alignment(obj, "title_alignment"),
         parse_alignment(obj, "menu_alignment"),
     )
@@ -136,7 +137,7 @@ fn parse_queue(obj: &Object) -> Components {
 
 fn parse_title_display(obj: &Object) -> Components {
     TitleDisplay::enumed(
-        parse_name(obj, "TitleDisplay"),
+        parse_string(obj, "name").unwrap_or("TitleDisplay"),
         parse_color(obj, "color"),
         parse_alignment(obj, "alignment"),
     )
@@ -144,39 +145,11 @@ fn parse_title_display(obj: &Object) -> Components {
 
 fn parse_tag_display(obj: &Object) -> Components {
     TagDisplay::enumed(
-        parse_name(obj, "TagDisplay"),
+        parse_string(obj, "name").unwrap_or( "TagDisplay"),
         parse_color(obj, "color"),
         parse_alignment(obj, "alignment"),
-        parse_tag(obj, "Artist"),
+        parse_string(obj, "tag").unwrap_or("Artist"),
     )
-}
-
-fn parse_parent<'a>(obj: &'a Object) -> Option<String> {
-    match parse_string(obj, "parent") {
-        Some(s) => Some(s.to_string()),
-        None => None,
-    }
-}
-
-fn parse_tag<'a>(obj: &'a Object, def: &'a str) -> &'a str {
-    match parse_string(obj, "tag") {
-        Some(s) => s,
-        None => def,
-    }
-}
-
-fn parse_name<'a>(obj: &'a Object, def: &'a str) -> &'a str {
-    match parse_string(obj, "name") {
-        Some(s) => s,
-        None => def,
-    }
-}
-
-fn parse_title<'a>(obj: &'a Object) -> Option<String> {
-    match parse_string(obj, "title") {
-        Some(s) => Some(s.to_string()),
-        None => None,
-    }
 }
 
 fn parse_string<'a>(obj: &'a Object, key: &str) -> Option<&'a str> {
@@ -186,16 +159,23 @@ fn parse_string<'a>(obj: &'a Object, key: &str) -> Option<&'a str> {
     }
 }
 
+fn parse_optional_string<'a>(obj: &'a Object, key: &str) -> Option<String> {
+    match obj.get(key) {
+        Some(s) => Some(s.to_string()),
+        None => None,
+    }
+}
+
 fn parse_place_holder(obj: &Object) -> Components {
     PlaceHolder::enumed(
-        parse_name(obj, "PlaceHolder"),
+        parse_string(obj, "name").unwrap_or("PlaceHolder"),
         parse_color(obj, "color"),
     )
 }
 
 fn parse_empty_space(obj: &Object) -> Components {
     EmptySpace::enumed(
-        parse_name(obj, "EmptySpace"),
+        parse_string(obj, "name").unwrap_or("EmptySpace"),
     )
 }
 

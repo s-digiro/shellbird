@@ -100,7 +100,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] color
 - [x] Remainder size option
 - [x] Menu Title display option
-- [ ] tags with multiple values
+- [x] tags with multiple values
 - [ ] Do away with screens. Just have them as components. Make every component capable of acting as a screen. ComponentMap
 - [x] Some way of using color to indicate focus
 - [ ] Better splitter borders

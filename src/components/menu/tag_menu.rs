@@ -30,6 +30,7 @@ impl TagMenu {
         title_alignment: Alignment,
         menu_alignment: Alignment,
         tag: &str,
+        multitag_separator: Option<String>,
         parent: Option<String>
     ) -> Components {
         Components::TagMenu(
@@ -41,6 +42,7 @@ impl TagMenu {
                 title_alignment,
                 menu_alignment,
                 tag,
+                multitag_separator,
                 parent,
             )
         )
@@ -54,6 +56,7 @@ impl TagMenu {
         title_alignment: Alignment,
         menu_alignment: Alignment,
         tag: &str,
+        multitag_separator: Option<String>,
         parent: Option<String>
     ) -> TagMenu {
         TagMenu {
@@ -61,7 +64,7 @@ impl TagMenu {
             parent: Parent::new(parent),
             tag: tag.to_string(),
             tracks: Vec::new(),
-            multitag_separator: Some(" / ".to_string()),
+            multitag_separator,
             menu: Menu {
                 title,
                 title_alignment,
