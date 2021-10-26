@@ -20,6 +20,8 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                 conn = get_mpd_conn(&ip, &port);
             }
 
+            tx.send(spawn_error_msg("Mpd Connection established!")).unwrap();
+
             if let Some(c) = &mut conn {
                 send_database(c, &tx);
                 send_queue(c, &tx);
@@ -38,7 +40,15 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                             }
                         }
                     } else {
-                        tx.send(Event::ToApp(AppEvent::LostMpdConnection)).unwrap();
+                        tx.send(
+                            Event::ToApp(AppEvent::LostMpdConnection)
+                        ).unwrap();
+
+                        tx.send(spawn_error_msg(
+                            "Mpd Connection dropped. Reestablishing \
+                                connection..."
+                        )).unwrap();
+
                         conn = None;
                         break;
                     }
@@ -46,6 +56,11 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
             }
         }
     });
+}
+
+fn spawn_error_msg(msg: &str) -> Event {
+    let msg = format!("Mpd Listener Thread: {}", msg);
+    Event::ToApp(AppEvent::Error(msg))
 }
 
 fn send_now_playing(conn: &mut Client, tx: &mpsc::Sender<Event>) {

@@ -6,6 +6,8 @@ bind G bot
 bind h focusprev
 bind l focusnext
 bind p pause
+bind <return> play
+bind z random
 bind c clear
 bind 1 switchscreen NowPlayingScreen
 bind 2 switchscreen QueueScreen
@@ -13,4 +15,5 @@ bind 3 switchscreen PlaylistViewScreen
 bind 4 switchscreen LibraryViewScreen
 bind 5 switchscreen StyleViewScreen
 bind q quit
+bind s start
 switchscreen NowPlayingScreen

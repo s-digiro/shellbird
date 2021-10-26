@@ -15,6 +15,7 @@ use unicode_truncate::{UnicodeTruncateStr, Alignment};
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct Menu {
+    pub name: String,
     pub selection: usize,
     pub items: Vec<String>,
     pub color: Color,
@@ -25,13 +26,13 @@ pub struct Menu {
 }
 
 impl Component for Menu {
-    fn name(&self) -> &str { "Menu" }
+    fn name(&self) -> &str { &self.name }
 
     fn handle_focus(
         &mut self,
         _state: &GlobalState,
         request: &FocusEvent,
-        _tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>
     ) {
         match request {
             FocusEvent::Next => self.next(),
@@ -49,6 +50,8 @@ impl Component for Menu {
                     .unwrap_or(&self.selection),
             _ => (),
         }
+
+        tx.send(self.spawn_needs_draw_event()).unwrap();
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {

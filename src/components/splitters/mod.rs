@@ -6,6 +6,7 @@ mod vector_splitter;
 pub use vector_splitter::HorizontalSplitter;
 pub use vector_splitter::VerticalSplitter;
 
+#[derive(PartialEq)]
 pub enum MoveFocusResult {
     Success,
     Fail,
@@ -23,21 +24,23 @@ pub enum Size {
 #[derive(PartialEq)]
 pub struct Panel {
     size: Size,
-    component: Components,
+    key: String,
 }
 
 impl Panel {
-    pub fn new(size: Size, component: Components) -> Panel {
-        Panel { size, component }
+    pub fn new(size: Size, key: String) -> Panel {
+        Panel { size, key }
     }
 }
 
 pub trait Splitter: Component {
-    fn focus(&self) -> Option<&Components>;
-    fn focus_mut(&mut self) -> Option<&mut Components>;
+    fn focus(&self) -> Option<&str>;
 
     fn next(&mut self) -> MoveFocusResult;
     fn prev(&mut self) -> MoveFocusResult;
+
+    fn contains(&self, key: &str) -> bool;
+    fn children(&self) -> Vec<&str>;
 }
 
 #[derive(Debug)]
@@ -57,6 +60,18 @@ impl Component for Splitters {
         match self {
             Splitters::VerticalSplitter(c) => c.handle_global(state, e, tx),
             Splitters::HorizontalSplitter(c) => c.handle_global(state, e, tx),
+        }
+    }
+
+    fn handle_component(
+        &mut self,
+        state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>
+    ) {
+        match self {
+            Splitters::VerticalSplitter(c) => c.handle_component(state, e, tx),
+            Splitters::HorizontalSplitter(c) => c.handle_component(state, e, tx),
         }
     }
 
@@ -96,17 +111,10 @@ impl Component for Splitters {
 
 
 impl Splitter for Splitters {
-    fn focus(&self) -> Option<&Components> {
+    fn focus(&self) -> Option<&str> {
         match self {
             Splitters::VerticalSplitter(c) => c.focus(),
             Splitters::HorizontalSplitter(c) => c.focus(),
-        }
-    }
-
-    fn focus_mut(&mut self) -> Option<&mut Components> {
-        match self {
-            Splitters::VerticalSplitter(c) => c.focus_mut(),
-            Splitters::HorizontalSplitter(c) => c.focus_mut(),
         }
     }
 
@@ -121,6 +129,19 @@ impl Splitter for Splitters {
         match self {
             Splitters::VerticalSplitter(c) => c.prev(),
             Splitters::HorizontalSplitter(c) => c.prev(),
+        }
+    }
+    fn contains(&self, key: &str) -> bool {
+        match self {
+            Splitters::VerticalSplitter(c) => c.contains(key),
+            Splitters::HorizontalSplitter(c) => c.contains(key),
+        }
+    }
+
+    fn children(&self) -> Vec<&str> {
+        match self {
+            Splitters::VerticalSplitter(c) => c.children(),
+            Splitters::HorizontalSplitter(c) => c.children(),
         }
     }
 }

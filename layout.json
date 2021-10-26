@@ -1,8 +1,8 @@
-{
-	"NowPlayingScreen": {
+[
+	{
 		"component": "HorizontalSplitter",
-		"name": "NowPlayingScreen-Base",
-		"borders": "false",
+		"name": "NowPlayingScreen",
+		"borders": false,
 		"children": [
 			{
 				"component": "EmptySpace",
@@ -12,7 +12,7 @@
 			{
 				"component": "VerticalSplitter",
 				"name": "NowPlayingScreen-CenterSplitter",
-				"borders": "false",
+				"borders": false,
 				"size": "33%",
 				"children": [
 					{
@@ -57,16 +57,16 @@
 			}
 		]
 	},
-	"QueueScreen": {
+	{
 		"component": "Queue",
 		"color": "Cyan",
 		"title": "Queue",
-		"name": "QueueScreen-Queue"
+		"name": "QueueScreen"
 	},
-	"PlaylistViewScreen": {
+	{
 		"component": "HorizontalSplitter",
-		"name": "PlaylistViewScreen-Base",
-		"borders": "true",
+		"name": "PlaylistViewScreen",
+		"borders": true,
 		"children": [
 			{
 				"component": "PlaylistMenu",
@@ -87,10 +87,10 @@
 			}
 		]
 	},
-	"LibraryViewScreen": {
+	{
 		"component": "HorizontalSplitter",
-		"name": "LibraryViewScreen-Base",
-		"borders": "true",
+		"name": "LibraryViewScreen",
+		"borders": true,
 		"children": [
 			{
 				"component": "TagMenu",
@@ -123,15 +123,15 @@
 			}
 		]
 	},
-	"StyleViewScreen": {
+	{
 		"component": "VerticalSplitter",
-		"name": "StyleViewScreen-Base",
-		"borders": "false",
+		"name": "StyleViewScreen",
+		"borders": false,
 		"children": [
 			{
 				"component": "HorizontalSplitter",
 				"name": "StyleViewScreen-StyleMenus",
-				"borders": "true",
+				"borders": true,
 				"color": "BrightBlack",
 				"size": "40%",
 				"children": [
@@ -212,4 +212,4 @@
 			}
 		]
 	}
-}
+]

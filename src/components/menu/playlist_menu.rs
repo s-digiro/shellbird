@@ -11,7 +11,6 @@ use crate::color::Color;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct PlaylistMenu {
-    name: String,
     menu: Menu,
     playlists: Vec<Playlist>,
 }
@@ -46,10 +45,10 @@ impl PlaylistMenu {
         menu_alignment: Alignment,
     ) -> PlaylistMenu {
         PlaylistMenu {
-            name: name.to_string(),
             playlists: Vec::new(),
             menu: Menu {
                 title,
+                name: name.to_string(),
                 color,
                 focus_color,
                 selection: 0,
@@ -67,7 +66,7 @@ impl PlaylistMenu {
 
     fn spawn_update_event(&self) -> Event {
         Event::ToGlobal(GlobalEvent::PlaylistMenuUpdated(
-            self.name.clone(),
+            self.name().to_string(),
             match self.playlists.get(self.menu.selection) {
                 Some(pl) => Some(pl.clone()),
                 None => None,
@@ -77,7 +76,7 @@ impl PlaylistMenu {
 }
 
 impl Component for PlaylistMenu {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str { &self.menu.name }
 
     fn handle_focus(
         &mut self,
@@ -113,11 +112,13 @@ impl Component for PlaylistMenu {
                 self.playlists = playlists.clone();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             GlobalEvent::LostMpdConnection => {
                 self.playlists = Vec::new();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             _ => (),
         }

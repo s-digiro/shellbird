@@ -11,7 +11,6 @@ use crate::GlobalState;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct StyleMenu {
-    name: String,
     parent: Parent,
     menu: Menu,
     styles: Vec<usize>,
@@ -51,11 +50,11 @@ impl StyleMenu {
         parent: Option<String>
     ) -> StyleMenu {
         StyleMenu {
-            name: name.to_string(),
             parent: Parent::new(parent),
             styles: Vec::new(),
             color,
             menu: Menu {
+                name: name.to_string(),
                 title,
                 title_alignment,
                 menu_alignment,
@@ -117,7 +116,7 @@ impl StyleMenu {
 
     fn spawn_update_event(&self) -> Event {
         Event::ToGlobal(GlobalEvent::StyleMenuUpdated(
-            self.name.clone(),
+            self.name().to_string(),
             self.selection(),
         ))
     }
@@ -125,7 +124,7 @@ impl StyleMenu {
 
 impl Component for StyleMenu {
     fn name(&self) -> &str {
-        &self.name
+        &self.menu.name
     }
 
     fn handle_focus(
@@ -161,16 +160,19 @@ impl Component for StyleMenu {
                 if let Some(tree) = &state.style_tree {
                     self.set_items(tree, &vec![0]);
                     tx.send(self.spawn_update_event()).unwrap();
+                    tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
             },
             GlobalEvent::StyleMenuUpdated(menu, styles) if self.parent.is(menu) => {
                 if let Some(tree) = &state.style_tree {
                     self.set_items(tree, styles);
                     tx.send(self.spawn_update_event()).unwrap();
+                    tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
             },
             GlobalEvent::Database(_tracks) => {
                 tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             _ => (),
         }

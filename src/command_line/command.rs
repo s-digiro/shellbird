@@ -24,6 +24,8 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
                 None => None,
             },
 
+            "draw" => draw(&cmd),
+
             "quit"
             | "q"
             | "exit" => Some(Event::ToApp(AppEvent::Quit)),
@@ -39,6 +41,7 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "next" => Some(Event::ToFocus(FocusEvent::Next)),
             "prev" => Some(Event::ToFocus(FocusEvent::Prev)),
             "select" => Some(Event::ToFocus(FocusEvent::Select)),
+            "start" => Some(Event::ToFocus(FocusEvent::Start)),
 
             "top"
             | "gotop"
@@ -116,5 +119,41 @@ fn get_usize(cmd: &Vec<String>, i: usize) -> Option<usize> {
             _ => None,
         },
         None => None,
+    }
+}
+
+fn _get_boolean(cmd: &Vec<String>, i: usize) -> Option<bool> {
+    match cmd.get(i) {
+        Some(s) => match s.to_lowercase().as_str() {
+            "0" | "false" => Some(false),
+            _ => Some(true),
+        },
+        None => None,
+    }
+}
+
+fn draw(cmd: &Vec<String>) -> Option<Event> {
+    if let Some(component) = cmd.get(1) {
+        let (max_w, max_h) = termion::terminal_size().unwrap();
+
+        let max_h = max_h - 1;
+
+        let x = get_usize(cmd, 2).unwrap_or(1) as u16;
+        let y = get_usize(cmd, 3).unwrap_or(1) as u16;
+        let w = get_usize(cmd, 4).unwrap_or(max_w as usize) as u16;
+        let h = get_usize(cmd, 5).unwrap_or(max_h as usize) as u16;
+        let focus = match cmd.get(6) {
+            Some(s) => s.to_string(),
+            None => "<None>".to_string(),
+        };
+
+        Some(
+            Event::ToComponent(
+                component.to_string(),
+                ComponentEvent::Draw(x, y, w, h, focus)
+            )
+        )
+    } else {
+        None
     }
 }

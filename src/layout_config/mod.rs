@@ -8,13 +8,12 @@ use std::fs;
 use std::error::Error;
 
 use crate::components::*;
-use crate::screen::Screen;
 use crate::color::Color;
 
 #[cfg(test)]
 mod tests;
 
-pub fn load(path: &str) -> Result<HashMap<String, Screen>, Box<dyn Error>> {
+pub fn load(path: &str) -> Result<HashMap<String, Components>, Box<dyn Error>> {
     let file_contents = match fs::read_to_string(path) {
         Ok(fc) => fc,
         Err(e) => return Err(Box::new(e)),
@@ -25,53 +24,74 @@ pub fn load(path: &str) -> Result<HashMap<String, Screen>, Box<dyn Error>> {
         Err(e) => return Err(Box::new(e)),
     };
 
-    let mut screens = HashMap::new();
+    let mut ret = HashMap::new();
 
-    if let JsonValue::Object(obj) = val {
-        for (screen_name, screen_val) in obj.iter() {
-            if let Some(screen) = parse_screen(screen_name, screen_val) {
-                screens.insert(screen_name.to_string(), screen);
-            }
-        }
-    }
+    if let JsonValue::Array(arr) = val {
+        for val in arr {
+            if let JsonValue::Object(obj) = val {
+                let (name, c) = parse_component(&obj, &mut ret);
 
-    Ok(screens)
-}
-
-fn parse_screen(name: &str, val: &JsonValue) -> Option<Screen> {
-    if let Some(base) = parse_component(val) {
-        Some(Screen::new(name, base))
-    } else {
-        None
-    }
-}
-
-fn parse_component(val: &JsonValue) -> Option<Components> {
-    if let JsonValue::Object(obj) = val {
-        if let Some(component_type) = obj.get("component") {
-            if let Some(component_type) = component_type.as_str() {
-                match component_type {
-                    "HorizontalSplitter" => parse_horizontal_splitter(obj),
-                    "EmptySpace" => Some(parse_empty_space(obj)),
-                    "VerticalSplitter" => parse_vertical_splitter(obj),
-                    "PlaceHolder" => Some(parse_place_holder(obj)),
-                    "TagDisplay" => Some(parse_tag_display(obj)),
-                    "TitleDisplay" => Some(parse_title_display(obj)),
-                    "Queue" => Some(parse_queue(obj)),
-                    "PlaylistMenu" => Some(parse_playlist_menu(obj)),
-                    "TrackMenu" => Some(parse_track_menu(obj)),
-                    "TagMenu" => Some(parse_tag_menu(obj)),
-                    "StyleMenu" => Some(parse_style_menu(obj)),
-                    _ => None
+                if let Some(c) = c {
+                    ret.insert(name, c);
                 }
             } else {
-                None
+                eprintln!(
+                    "Warning: layout_config::load: Base Component is not an \
+                        object. It is being skipped."
+                );
             }
+        }
+    }
+
+    Ok(ret)
+}
+
+fn parse_component(
+    obj: &Object,
+    map: &mut HashMap<String, Components>
+) -> (String, Option<Components>) {
+    if let Some(component) = obj.get("component") {
+        let c = match component.as_str() {
+            Some("HorizontalSplitter") => parse_horizontal_splitter(obj, map),
+            Some("EmptySpace") => parse_empty_space(obj),
+            Some("VerticalSplitter") => parse_vertical_splitter(obj, map),
+            Some("PlaceHolder") => parse_place_holder(obj),
+            Some("TagDisplay") => parse_tag_display(obj),
+            Some("TitleDisplay") => parse_title_display(obj),
+            Some("Queue") => parse_queue(obj),
+            Some("PlaylistMenu") => parse_playlist_menu(obj),
+            Some("TrackMenu") => parse_track_menu(obj),
+            Some("TagMenu") => parse_tag_menu(obj),
+            Some("StyleMenu") => parse_style_menu(obj),
+            _ => {
+                eprintln!(
+                    "Error: parse_component: component with component has \
+                        invalid value for component. Creating ErrorBox."
+                );
+                ErrorBox::enumed()
+            },
+        };
+
+        (c.name().to_string(), Some(c))
+    } else if let Some(name) = obj.get("name") {
+        if let Some(name) = name.as_str() {
+            (name.to_string(), None)
         } else {
-            None
+            eprintln!(
+                "Error: parse_component: component with no component but with \
+                    name has name that is not a string. Creating ErrorBox \
+                    instead."
+            );
+            let error = ErrorBox::enumed();
+            (error.name().to_string(), Some(error))
         }
     } else {
-        None
+        eprintln!(
+            "Error: parse_component: component object has no component field \
+            or name field. Need at least one. Creating ErrorBox."
+        );
+        let error = ErrorBox::enumed();
+        (error.name().to_string(), Some(error))
     }
 }
 
@@ -179,138 +199,109 @@ fn parse_empty_space(obj: &Object) -> Components {
     )
 }
 
-fn parse_horizontal_splitter(obj: &Object) -> Option<Components> {
-    let name = match obj.get("name") {
-        Some(name) => match name.as_str() {
-            Some(name) => name,
-            _ => "HorizontalSplitter",
-        },
-        None => "HorizontalSplitter",
-    };
-
-    let borders = match obj.get("borders") {
-        Some(val) => match val.as_str() {
-            Some("false") => false,
-            _ => true,
-        },
-        _ => true,
-    };
-
-    let children = match obj.get("children") {
+fn parse_vector_splitter_children(
+    obj: &Object,
+    map: &mut HashMap<String, Components>,
+) -> Vec<Panel> {
+    match obj.get("children") {
         Some(val) => match val {
             JsonValue::Array(arr) => {
                 let mut children = Vec::new();
 
                 for val in arr {
-                    if let Some(c) = parse_component(val) {
-                        if let Some(size) = parse_size(val) {
-                            children.push(Panel::new(size, c));
-                        }
+                    match val {
+                        JsonValue::Object(obj) => {
+                            let (name, c) = parse_component(obj, map);
+                            let size = parse_size(obj);
+
+                            if let Some(c) = c {
+                                map.insert(name.clone(), c);
+                            }
+
+                            let panel = Panel::new(size, name);
+                            children.push(panel);
+                        },
+                        _ => eprintln!(
+                            "Error: parse_vector_splitter_children: child is \
+                                not an object"
+                        ),
                     }
                 }
 
                 children
             },
-            _ => Vec::new(),
+            _ => {
+                eprintln!(
+                    "Error: parse_vector_splitter_children: child is not an \
+                        array. Initializing splitter with no children"
+                );
+                Vec::new()
+            },
         },
         None => Vec::new(),
-    };
-
-    Some(HorizontalSplitter::enumed(name, borders, children))
+    }
 }
 
-fn parse_vertical_splitter(obj: &Object) -> Option<Components> {
-    let name = match obj.get("name") {
-        Some(name) => match name.as_str() {
-            Some(name) => name,
-            _ => "VerticalSplitter",
-        },
-        None => "VerticalSplitter",
-    };
+fn parse_horizontal_splitter(
+    obj: &Object,
+    map: &mut HashMap<String, Components>
+) -> Components {
+    HorizontalSplitter::enumed(
+        parse_string(obj, "name").unwrap_or("HorizontalSplitter"),
+        parse_bool(obj, "borders").unwrap_or(true),
+        parse_vector_splitter_children(obj, map),
+    )
+}
 
-    let borders = match obj.get("borders") {
+fn parse_bool(obj: &Object, key: &str) -> Option<bool> {
+    match obj.get(key) {
+        Some(val) => val.as_bool(),
+        None => None,
+    }
+}
+
+fn parse_vertical_splitter(
+    obj: &Object,
+    map: &mut HashMap<String, Components>,
+) -> Components {
+    VerticalSplitter::enumed(
+        parse_string(obj, "name").unwrap_or("VerticalSplitter"),
+        parse_bool(obj, "borders").unwrap_or(true),
+        parse_vector_splitter_children(obj, map),
+    )
+}
+
+fn parse_size(obj: &Object) -> Size {
+    match obj.get("size") {
         Some(val) => match val.as_str() {
-            Some("false") => false,
-            _ => true,
-        },
-        _ => true,
-    };
+            Some(s) => {
+                if s.ends_with("%") {
+                    let mut s = s.to_string();
+                    s.pop();
 
-    let children = match obj.get("children") {
-        Some(val) => match val {
-            JsonValue::Array(arr) => {
-                let mut children = Vec::new();
-
-                for val in arr {
-                    if let Some(c) = parse_component(val) {
-                        if let Some(size) = parse_size(val) {
-                            children.push(Panel::new(size, c));
-                        }
+                    if let Ok(val) = s.parse::<u8>() {
+                        Size::Percent(val)
+                    } else {
+                        eprintln!("Error: parse_size: String cannot be parsed into u8. Defaulting to Remainder.");
+                        Size::Remainder
+                    }
+                } else if s == "Remainder" {
+                    Size::Remainder
+                } else {
+                    if let Ok(val) = s.parse::<u16>() {
+                        Size::Absolute(val)
+                    } else {
+                        eprintln!("Error: parse_size: String cannot be parsed into u16. Defaulting to Remainder");
+                        Size::Remainder
                     }
                 }
-
-                children
             },
-            _ => Vec::new(),
+            _ => {
+                eprintln!("Error: parse_size: Size cannot be parsed into string. Defaulting to Remainder");
+                Size::Remainder
+            },
         },
-        None => Vec::new(),
-    };
-
-    Some(VerticalSplitter::enumed(name, borders, children))
-}
-
-fn parse_size(val: &JsonValue) -> Option<Size> {
-    if let JsonValue::Object(obj) = val {
-        match obj.get("size") {
-            Some(val) => match val {
-                JsonValue::String(s) => {
-                    if s.ends_with("%") {
-                        let mut s = s.to_string();
-                        s.pop();
-
-                        if let Ok(val) = s.parse::<u8>() {
-                            Some(Size::Percent(val))
-                        } else {
-                            None
-                        }
-                    } else {
-                        if let Ok(val) = s.parse::<u16>() {
-                            Some(Size::Absolute(val))
-                        } else {
-                            Some(Size::Remainder)
-                        }
-                    }
-                },
-                JsonValue::Short(s) => {
-                    let s = s.as_str();
-
-                    if s.ends_with("%") {
-                        let mut s = s.to_string();
-                        s.pop();
-
-                        if let Ok(val) = s.parse::<u8>() {
-                            Some(Size::Percent(val))
-                        } else {
-                            None
-                        }
-                    } else {
-                        if let Ok(val) = s.parse::<u16>() {
-                            Some(Size::Absolute(val))
-                        } else {
-                            Some(Size::Remainder)
-                        }
-                    }
-                }
-                _ => {
-                    eprintln!("Error: parse_size: size is not string");
-                    None
-                },
-            },
-            None => Some(Size::Remainder),
-        }
-    } else {
-        eprintln!("Error: parse_size: jsonvalue is not an object");
-        None
+        None => Size::Remainder,
     }
 }
 

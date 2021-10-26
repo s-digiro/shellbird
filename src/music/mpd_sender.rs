@@ -13,13 +13,14 @@ use mpd::Song;
 pub fn init_mpd_sender_thread(
     ip: &str,
     port: &str,
-    _tx: mpsc::Sender<Event>
+    tx: mpsc::Sender<Event>
 ) -> mpsc::Sender<MpdEvent> {
     let (ret_tx, rx) = mpsc::channel();
 
     let ip = ip.to_string();
     let port = port.to_string();
 
+    let rethrow_tx: mpsc::Sender<MpdEvent> = ret_tx.clone();
     thread::spawn(move || {
         let mut conn = None;
 
@@ -34,7 +35,7 @@ pub fn init_mpd_sender_thread(
                     _ => break, // Main program exited
                 };
 
-                let result = match request {
+                let result = match request.clone() {
                     MpdEvent::TogglePause => c.toggle_pause(),
                     MpdEvent::Random => toggle_random(c),
                     MpdEvent::ClearQueue => c.clear(),
@@ -44,7 +45,13 @@ pub fn init_mpd_sender_thread(
                 };
 
                 if let Err(_) = result {
+                    tx.send(Event::ToApp(AppEvent::Error(format!(
+                        "Mpd Sender Thread: Mpd Connection dropped. Resending \
+                            MpdRequest {:?}",
+                        request
+                    )))).unwrap();
                     conn = None;
+                    rethrow_tx.send(request).unwrap();
                 }
             }
         }

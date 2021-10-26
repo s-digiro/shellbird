@@ -28,13 +28,31 @@ pub use splitters::Splitter;
 pub use splitters::Splitters;
 pub use splitters::Size;
 pub use splitters::Panel;
+pub use splitters::MoveFocusResult;
 
 pub trait Component: fmt::Debug + PartialEq {
+    fn spawn_needs_draw_event(&self) -> Event {
+        Event::ToScreen(ScreenEvent::NeedsRedraw(self.name().to_string()))
+    }
+
     fn handle_global(
         &mut self,
         _state: &GlobalState,
-        _e: &GlobalEvent, _tx: mpsc::Sender<Event>
+        _e: &GlobalEvent,
+        _tx: mpsc::Sender<Event>
     ) { }
+
+    fn handle_component(
+        &mut self,
+        _state: &GlobalState,
+        e: &ComponentEvent,
+        _tx: mpsc::Sender<Event>,
+    ) {
+        match e {
+            ComponentEvent::Draw(x, y, w, h, focus) =>
+                self.draw(*x, *y, *w, *h, focus.as_str() == self.name()),
+        }
+    }
 
     fn handle_focus(
         &mut self,
@@ -126,6 +144,27 @@ impl Component for Components {
             Components::TagMenu(c) => c.handle_global(state, e, tx),
             Components::StyleMenu(c) => c.handle_global(state, e, tx),
             Components::Splitter(x) => x.handle_global(state, e, tx),
+        }
+    }
+
+    fn handle_component(
+        &mut self,
+        state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
+        match self {
+            Components::PlaceHolder(c) => c.handle_component(state, e, tx),
+            Components::EmptySpace(c) => c.handle_component(state, e, tx),
+            Components::ErrorBox(c) => c.handle_component(state, e, tx),
+            Components::TitleDisplay(c) => c.handle_component(state, e, tx),
+            Components::TagDisplay(c) => c.handle_component(state, e, tx),
+            Components::Queue(c) => c.handle_component(state, e, tx),
+            Components::PlaylistMenu(c) => c.handle_component(state, e, tx),
+            Components::TrackMenu(c) => c.handle_component(state, e, tx),
+            Components::TagMenu(c) => c.handle_component(state, e, tx),
+            Components::StyleMenu(c) => c.handle_component(state, e, tx),
+            Components::Splitter(x) => x.handle_component(state, e, tx),
         }
     }
 

@@ -12,7 +12,6 @@ use crate::components::{Component, Components, menu::{Menu, Parent}};
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct TrackMenu {
-    name: String,
     parent: Parent,
     menu: Menu,
     tracks: Vec<Song>,
@@ -51,10 +50,10 @@ impl TrackMenu {
         parent: Option<String>
     ) -> TrackMenu {
         TrackMenu {
-            name: name.to_string(),
             parent: Parent::new(parent),
             tracks: Vec::new(),
             menu: Menu {
+                name: name.to_string(),
                 title,
                 title_alignment,
                 menu_alignment,
@@ -84,7 +83,7 @@ impl TrackMenu {
 }
 
 impl Component for TrackMenu {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str { &self.menu.name }
 
     fn handle_focus(
         &mut self,
@@ -100,6 +99,15 @@ impl Component for TrackMenu {
                     ))
                 ).unwrap();
             },
+            FocusEvent::Start => {
+                if let Some(track) = self.selected_tracks().first() {
+                    tx.send(
+                        Event::ToMpd(MpdEvent::PlayAt(
+                            track.clone()
+                        ))
+                    ).unwrap();
+                }
+            },
             e => self.menu.handle_focus(state, e, tx.clone()),
         }
     }
@@ -108,17 +116,19 @@ impl Component for TrackMenu {
         &mut self,
         state: &GlobalState,
         e: &GlobalEvent,
-        _tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>
     ) {
         match e {
             GlobalEvent::LostMpdConnection => {
                 self.tracks = Vec::new();
                 self.update_menu_items();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             GlobalEvent::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
                 Some(pl) => {
                     self.tracks = pl.tracks.clone();
                     self.update_menu_items();
+                    tx.send(self.spawn_needs_draw_event()).unwrap();
                 },
                 None => (),
             },
@@ -129,6 +139,7 @@ impl Component for TrackMenu {
                     .collect();
 
                 self.update_menu_items();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             GlobalEvent::StyleMenuUpdated(name, styles) if self.parent.is(name) => {
                 if let Some(tree) = &state.style_tree {
@@ -158,6 +169,7 @@ impl Component for TrackMenu {
 
                     self.tracks = tracks;
                     self.update_menu_items();
+                    tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
             },
             _ => (),

@@ -13,7 +13,6 @@ use crate::color::Color;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct TagMenu {
-    name: String,
     tag: String,
     parent: Parent,
     tracks: Vec<usize>,
@@ -60,12 +59,12 @@ impl TagMenu {
         parent: Option<String>
     ) -> TagMenu {
         TagMenu {
-            name: name.to_string(),
             parent: Parent::new(parent),
             tag: tag.to_string(),
             tracks: Vec::new(),
             multitag_separator,
             menu: Menu {
+                name: name.to_string(),
                 title,
                 title_alignment,
                 menu_alignment,
@@ -88,7 +87,7 @@ impl TagMenu {
     pub fn spawn_update_event(&self, library: &Vec<Song>) -> Event {
         let event_tracks = self.selection(library);
 
-        Event::ToGlobal(GlobalEvent::TagMenuUpdated(self.name.clone(), event_tracks))
+        Event::ToGlobal(GlobalEvent::TagMenuUpdated(self.name().to_string(), event_tracks))
     }
 
     pub fn set_menu_items(&mut self, library: &Vec<Song>) {
@@ -167,7 +166,7 @@ impl TagMenu {
 }
 
 impl Component for TagMenu {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str { &self.menu.name }
 
     fn handle_focus(
         &mut self,
@@ -214,6 +213,7 @@ impl Component for TagMenu {
 
                     self.set_menu_items(&state.library);
                     tx.send(self.spawn_update_event(&state.library)).unwrap();
+                    tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
             },
             GlobalEvent::TagMenuUpdated(origin, tracks) if self.parent.is(origin) => {
@@ -221,18 +221,21 @@ impl Component for TagMenu {
 
                 self.set_menu_items(&state.library);
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             GlobalEvent::Database(tracks) if self.parent.is_none() => {
                 self.tracks = (0..tracks.len()).collect();
 
                 self.set_menu_items(&tracks);
 
-                tx.send(self.spawn_update_event(&tracks)).unwrap()
+                tx.send(self.spawn_update_event(&tracks)).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             GlobalEvent::LostMpdConnection => {
                 self.tracks = Vec::new();
                 self.set_menu_items(&Vec::new());
                 tx.send(self.spawn_update_event(&Vec::new())).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             _ => (),
         }

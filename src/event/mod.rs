@@ -31,17 +31,26 @@ pub enum Event {
     ToScreen(ScreenEvent),
     ToGlobal(GlobalEvent),
     ToFocus(FocusEvent),
+    ToComponent(String, ComponentEvent),
     ToMpd(MpdEvent),
 }
 
 #[derive(Debug)]
 #[derive(Clone)]
+pub enum ComponentEvent {
+    Draw(u16, u16, u16, u16, String),
+}
+
+#[derive(Clone)]
 pub enum AppEvent {
+    ClearScreen,
     Resize,
     StyleTreeLoaded(Option<StyleTree>),
     SwitchScreen(String),
     Database(Vec<Song>),
     LostMpdConnection,
+    DrawScreen,
+    Error(String),
     Quit,
 }
 
@@ -60,6 +69,7 @@ pub enum CommandLineEvent {
 pub enum ScreenEvent {
     FocusNext,
     FocusPrev,
+    NeedsRedraw(String),
 }
 
 #[derive(Clone)]
@@ -81,6 +91,7 @@ pub enum FocusEvent {
     Next,
     Prev,
     Select,
+    Start,
     GoTo(usize),
     GoToTop,
     GoToBottom,
@@ -122,6 +133,22 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::AddStyleToQueue(genres) => write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len()),
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
             MpdEvent::Random => write!(f, "MpdEvent::Random"),
+        }
+    }
+}
+
+impl fmt::Debug for AppEvent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AppEvent::Resize => write!(f, "AppEvent::Resize"),
+            AppEvent::Error(s) => write!(f, "AppEvent::Error({:?})", s),
+            AppEvent::DrawScreen => write!(f, "AppEvent::DrawScreen"),
+            AppEvent::StyleTreeLoaded(_) => write!(f, "AppEvent::StyleTreeLoaded"),
+            AppEvent::SwitchScreen(s) => write!(f, "AppEvent::SwitchScreen({:?})", s),
+            AppEvent::Database(s) => write!(f, "AppEvent::Database({} songs)", s.len()),
+            AppEvent::LostMpdConnection => write!(f, "AppEvent::LostMpdConnection"),
+            AppEvent::Quit => write!(f, "AppEvent::Quit"),
+            AppEvent::ClearScreen => write!(f, "AppEvent::ClearScreen"),
         }
     }
 }

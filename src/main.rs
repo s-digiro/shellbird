@@ -5,7 +5,7 @@ extern crate mpd;
 extern crate home;
 
 use std::io::{self, Write, BufRead, BufReader};
-use std::collections::HashMap;
+use std::collections::{VecDeque, HashMap};
 use std::sync::mpsc;
 use std::thread;
 use std::path::Path;
@@ -17,7 +17,7 @@ use shellbird::music::{mpd_sender, mpd_listener};
 use shellbird::signals;
 use shellbird::styles;
 use shellbird::command_line::{self, CommandLine};
-use shellbird::screen::Screen;
+use shellbird::components::{Splitter, Components, Component, MoveFocusResult};
 
 use termion::raw::IntoRawMode;
 use termion::{clear, cursor};
@@ -41,14 +41,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut stdout = io::stdout().into_raw_mode().unwrap();
 
-    let mut state = GlobalState {
-        style_tree: None,
-        library: Vec::new(),
-    };
+    let mut state = GlobalState::new();
 
-    let mut sel = "Default".to_string();
-
-    let mut screens = init_screens(get_layout_path(opts.layout));
+    let mut components = init_components(get_layout_path(opts.layout));
 
     write!(stdout, "{}{}", cursor::Hide, clear::All).unwrap();
 
@@ -66,20 +61,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         styles::load_style_tree_async(&path, tx.clone());
     }
 
-    let mut redraw = true;
-
     loop {
-        if redraw {
-            if let Some(screen) = screens.get(&sel) {
-                screen.draw();
-            }
+        command_line.draw();
 
-            command_line.draw();
-
-            stdout.flush().unwrap();
-        }
-
-        redraw = true;
+        stdout.flush().unwrap();
 
         let e = rx.recv()?;
 
@@ -89,12 +74,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         match e {
             Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
+            Event::ToComponent(name, e) => {
+                if let Some(c) = components.get_mut(&name) {
+                    c.handle_component(&state, &e, tx.clone());
+                }
+            },
             Event::ToApp(e) => match e {
                 AppEvent::Quit => break,
+                AppEvent::Error(s) => eprintln!("{}", s),
+                AppEvent::ClearScreen => print!("{}", clear::All),
+                AppEvent::DrawScreen => send_draw_screen(&state.screen, &components, &tx),
                 AppEvent::LostMpdConnection => {
                     state.library = Vec::new();
-
-                    eprintln!("MPD Connection Dropped");
                     tx.send(Event::ToGlobal(GlobalEvent::LostMpdConnection)).unwrap();
                 },
                 AppEvent::Database(tracks) => {
@@ -106,26 +97,44 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     tx.send(Event::ToGlobal(GlobalEvent::Database(tracks))).unwrap();
                 },
-                AppEvent::SwitchScreen(name) => sel = name.clone(),
+                AppEvent::SwitchScreen(name) => {
+                    state.screen = name.clone();
+                    tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap();
+                },
                 AppEvent::StyleTreeLoaded(tree) => {
                     state.style_tree = tree;
                     tx.send(
                         Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu)
                     ).unwrap();
                 },
-                _ => (),
+                AppEvent::Resize => tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap(),
             },
             Event::ToCommandLine(e) => command_line.handle(&e, tx.clone()),
-            Event::ToScreen(e) => if let Some(screen) = screens.get_mut(&sel) {
-                screen.handle_screen(&e, tx.clone());
+            Event::ToScreen(e) => match e {
+                ScreenEvent::FocusNext => {
+                    focus_next(&state.screen, &mut components);
+                    tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap();
+                },
+                ScreenEvent::FocusPrev => {
+                    focus_prev(&state.screen, &mut components);
+                    tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap();
+                },
+                ScreenEvent::NeedsRedraw(name) => {
+                    if screen_contains(&state.screen, &name, &components) {
+                        tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap();
+                    }
+                },
             },
             Event::ToGlobal(e) => {
-                for screen in screens.values_mut() {
-                    screen.handle_global(&state, &e, tx.clone())
+                for c in components.values_mut() {
+                    c.handle_global(&state, &e, tx.clone())
                 }
             },
-            Event::ToFocus(e) => if let Some(screen) = screens.get_mut(&sel) {
-                screen.handle_focus(&state, &e, tx.clone());
+            Event::ToFocus(e) => {
+                let focus = focus(&state.screen, &components).to_string();
+                if let Some(c) = components.get_mut(&focus) {
+                    c.handle_focus(&state, &e, tx.clone());
+                }
             },
             Event::ToMpd(e) => mpd_tx.send(e).unwrap(),
             _ => (),
@@ -137,7 +146,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_screens(path: Option<String>) -> HashMap<String, Screen> {
+fn init_components(path: Option<String>) -> HashMap<String, Components> {
     if let Some(path) = path {
         match shellbird::layout_config::load(&path) {
             Ok(map) => map,
@@ -279,4 +288,140 @@ fn get_genre_path(path_override: Option<String>) -> Option<String> {
     }
 
     None
+}
+
+fn send_draw_screen(
+    screen: &str,
+    components: &HashMap<String, Components>,
+    tx: &mpsc::Sender<Event>
+) {
+    let (w, h) = termion::terminal_size().unwrap();
+    let h = h - 1;
+    if let Some(_) = components.get(screen) {
+        tx.send(Event::ToComponent(
+            screen.to_string(),
+            ComponentEvent::Draw(1, 1, w, h, focus(screen, components)),
+        )).unwrap();
+    } else {
+        tx.send(Event::ToApp(AppEvent::ClearScreen)).unwrap();
+    }
+}
+
+fn focus<'a>(
+    screen: &'a str,
+    components: &'a HashMap<String, Components>
+) -> String {
+    let stack = construct_focus_stack(screen, components);
+
+    let key = stack.back().unwrap().to_string();
+
+    match components.get(&key) {
+        Some(Components::Splitter(s)) => match s.focus() {
+            Some(focus) => focus.to_string(),
+            None => s.name().to_string(),
+        },
+        _ => key.to_string(),
+    }
+}
+
+fn focus_next(screen: &str, components: &mut HashMap<String, Components>) {
+    let mut stack = construct_focus_stack(screen, components);
+
+    let mut res = MoveFocusResult::Fail;
+    while res == MoveFocusResult::Fail {
+        if let Some(key) = stack.pop_back() {
+            let c = match components.get_mut(&key) {
+                Some(Components::Splitter(s)) => s,
+                _ => break,
+            };
+
+            res = c.next();
+        } else {
+            break;
+        }
+    }
+}
+
+fn focus_prev(screen: &str, components: &mut HashMap<String, Components>) {
+    let mut stack = construct_focus_stack(screen, components);
+
+    let mut res = MoveFocusResult::Fail;
+    while res == MoveFocusResult::Fail {
+        if let Some(key) = stack.pop_back() {
+            let c = match components.get_mut(&key) {
+                Some(Components::Splitter(s)) => s,
+                _ => break,
+            };
+
+            res = c.prev();
+        } else {
+            break;
+        }
+    }
+}
+
+fn construct_focus_stack(
+    screen: &str,
+    components: &HashMap<String, Components>
+) -> VecDeque<String> {
+    let mut stack: VecDeque<String> = VecDeque::new();
+    stack.push_back(screen.to_string());
+    loop {
+        let back = stack.back().unwrap().to_string();
+        if let Some(Components::Splitter(s)) = components.get(&back) {
+            if let Some(focus) = s.focus() {
+                if let Some(Components::Splitter(s)) = components.get(focus) {
+                    stack.push_back(s.name().to_string());
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        } else {
+            break
+        }
+    }
+
+    stack
+}
+
+fn screen_contains(
+    screen: &str,
+    key: &str,
+    components: &HashMap<String, Components>
+) -> bool {
+    if screen == key {
+        true
+    } else {
+        match components.get(screen) {
+            Some(c) => splitter_contains(c, key, components),
+            None => false,
+        }
+    }
+}
+
+fn splitter_contains(
+    component: &Components,
+    key: &str,
+    components: &HashMap<String, Components>,
+) -> bool {
+    match component {
+        Components::Splitter(splitter) => {
+            if splitter.name() == key {
+                true
+            } else {
+                for child in splitter.children() {
+                    if let Some(component) = components.get(child) {
+                        if splitter_contains(component, key, components) {
+                            return true
+                        }
+                    }
+                }
+
+                false
+            }
+        },
+        _ => component.name() == key,
+    }
 }

@@ -11,7 +11,6 @@ use unicode_truncate::{UnicodeTruncateStr, Alignment};
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct Queue {
-    name: String,
     tracks: Vec<Song>,
     menu: Menu,
     now_playing: Option<Song>,
@@ -47,11 +46,11 @@ impl Queue {
         menu_alignment: Alignment,
     ) -> Queue {
         Queue {
-            name: name.to_string(),
             tracks: Vec::new(),
             now_playing: None,
             menu: Menu {
                 title,
+                name: name.to_string(),
                 focus_color,
                 color,
                 selection: 0,
@@ -84,7 +83,7 @@ impl Queue {
 }
 
 impl Component for Queue {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str { &self.menu.name }
 
     fn handle_focus(
         &mut self,
@@ -108,14 +107,21 @@ impl Component for Queue {
         &mut self,
         _state: &GlobalState,
         e: &GlobalEvent,
-        _tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>
     ) {
         match e {
-            GlobalEvent::NowPlaying(song) => self.set_now_playing(&song),
-            GlobalEvent::Queue(q) => self.update_items(q),
+            GlobalEvent::NowPlaying(song) => {
+                self.set_now_playing(&song);
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            GlobalEvent::Queue(q) => {
+                self.update_items(q);
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
             GlobalEvent::LostMpdConnection => {
                 self.now_playing = None;
                 self.update_items(&Vec::new());
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             _ => (),
         }

@@ -49,7 +49,7 @@ impl Component for TagDisplay {
         &mut self,
         _state: &GlobalState,
         e: &GlobalEvent,
-        _tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>
     ) {
         match e {
             GlobalEvent::NowPlaying(song) => {
@@ -59,7 +59,8 @@ impl Component for TagDisplay {
                         None => "<Empty>".to_string(),
                     },
                     None => "<Unavailable>".to_string(),
-                }
+                };
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             GlobalEvent::LostMpdConnection => {
                 self.contents = "<Unavailable>".to_string();

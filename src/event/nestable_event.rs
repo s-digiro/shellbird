@@ -9,6 +9,7 @@ pub enum NestableEvent {
     ToFocus(FocusEvent),
     ToMpd(MpdEvent),
     ToCommandLine(CommandLineEvent),
+    ToComponent(String, ComponentEvent),
 }
 
 impl NestableEvent {
@@ -20,6 +21,7 @@ impl NestableEvent {
             Event::ToFocus(e) => Some(NestableEvent::ToFocus(e)),
             Event::ToMpd(e) => Some(NestableEvent::ToMpd(e)),
             Event::ToCommandLine(e) => Some(NestableEvent::ToCommandLine(e)),
+            Event::ToComponent(s, e) => Some(NestableEvent::ToComponent(s, e)),
             _ => None,
         }
     }
@@ -32,6 +34,7 @@ impl NestableEvent {
             NestableEvent::ToFocus(e) => Event::ToFocus(e),
             NestableEvent::ToMpd(e) => Event::ToMpd(e),
             NestableEvent::ToCommandLine(e) => Event::ToCommandLine(e),
+            NestableEvent::ToComponent(s, e) => Event::ToComponent(s, e),
         }
     }
 
