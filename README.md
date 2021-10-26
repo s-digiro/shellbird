@@ -103,6 +103,8 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] tags with multiple values
 - [x] Do away with screens. Just have them as components. Make every component capable of acting as a screen. ComponentMap
 - [x] Some way of using color to indicate focus
+- [ ] Update README. Document everything in this todo list. Delete things from list that are documented.
+- [ ] Refactor code. Its starting to get a little ugly. There is screen and focus stuff in main.rs. Move most of stuff in main.rs to lib.rs.
 - [ ] Remove FocusEvent events. Just make ToFocus contain a ComponentEvent that will always go to focus
 - [ ] Better splitter borders
 - [x] component alignment
