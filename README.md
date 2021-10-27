@@ -115,7 +115,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Json Reading
 - [ ] Restore cursor after application exits. Termion seems to be bugged and isn't doing it right.
 - [x] Screen Map
-- [ ] Redraw Event
+- [x] Redraw Event
 
 ### To Do Components
 - [ ] SearchResultsMenu
