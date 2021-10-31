@@ -113,7 +113,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [ ] statusline
 - [x] RC
 - [x] Json Reading
-- [ ] Restore cursor after application exits. Termion seems to be bugged and isn't doing it right.
+- [x] Restore cursor after application exits. Termion seems to be bugged and isn't doing it right.
 - [x] Screen Map
 - [x] Redraw Event
 

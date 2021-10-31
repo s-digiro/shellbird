@@ -201,7 +201,7 @@ impl<'a> Shellbird<'a> {
             }
         }
 
-        write!(stdout, "{}{}", cursor::Restore, clear::All).unwrap();
+        write!(stdout, "{}{}{}", clear::All, cursor::Goto(1,1), cursor::Show).unwrap();
 
         Ok(())
     }
