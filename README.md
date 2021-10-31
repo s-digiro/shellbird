@@ -105,7 +105,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Some way of using color to indicate focus
 - [ ] Update README. Document everything in this todo list. Delete things from list that are documented.
 - [ ] Better logging. Writing directly to stderr just seems old and outdated
-- [ ] Refactor code. Its starting to get a little ugly. There is screen and focus stuff in main.rs. Move most of stuff in main.rs to lib.rs.
+- [x] Refactor code. Its starting to get a little ugly. There is screen and focus stuff in main.rs. Move most of stuff in main.rs to lib.rs.
 - [x] Remove FocusEvent events. Just make ToFocus contain a ComponentEvent that will always go to focus
 - [ ] Better splitter borders
 - [x] component alignment
