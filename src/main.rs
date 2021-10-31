@@ -76,7 +76,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
             Event::ToComponent(name, e) => {
                 if let Some(c) = components.get_mut(&name) {
-                    c.handle_component(&state, &e, tx.clone());
+                    c.handle(&state, &e, tx.clone());
                 }
             },
             Event::ToApp(e) => match e {
@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 AppEvent::DrawScreen => send_draw_screen(&state.screen, &components, &tx),
                 AppEvent::LostMpdConnection => {
                     state.library = Vec::new();
-                    tx.send(Event::ToGlobal(GlobalEvent::LostMpdConnection)).unwrap();
+                    tx.send(Event::ToAllComponents(ComponentEvent::LostMpdConnection)).unwrap();
                 },
                 AppEvent::Database(tracks) => {
                     if let Some(tree) = &mut state.style_tree {
@@ -95,7 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     state.library = tracks.clone();
 
-                    tx.send(Event::ToGlobal(GlobalEvent::Database(tracks))).unwrap();
+                    tx.send(Event::ToAllComponents(ComponentEvent::Database(tracks))).unwrap();
                 },
                 AppEvent::SwitchScreen(name) => {
                     state.screen = name.clone();
@@ -104,7 +104,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 AppEvent::StyleTreeLoaded(tree) => {
                     state.style_tree = tree;
                     tx.send(
-                        Event::ToGlobal(GlobalEvent::UpdateRootStyleMenu)
+                        Event::ToAllComponents(ComponentEvent::UpdateRootStyleMenu)
                     ).unwrap();
                 },
                 AppEvent::Resize => tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap(),
@@ -125,15 +125,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 },
             },
-            Event::ToGlobal(e) => {
+            Event::ToAllComponents(e) => {
                 for c in components.values_mut() {
-                    c.handle_global(&state, &e, tx.clone())
+                    c.handle(&state, &e, tx.clone())
                 }
             },
             Event::ToFocus(e) => {
                 let focus = focus(&state.screen, &components).to_string();
                 if let Some(c) = components.get_mut(&focus) {
-                    c.handle_focus(&state, &e, tx.clone());
+                    c.handle(&state, &e, tx.clone());
                 }
             },
             Event::ToMpd(e) => mpd_tx.send(e).unwrap(),

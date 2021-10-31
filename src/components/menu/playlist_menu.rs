@@ -65,7 +65,7 @@ impl PlaylistMenu {
     }
 
     fn spawn_update_event(&self) -> Event {
-        Event::ToGlobal(GlobalEvent::PlaylistMenuUpdated(
+        Event::ToAllComponents(ComponentEvent::PlaylistMenuUpdated(
             self.name().to_string(),
             match self.playlists.get(self.menu.selection) {
                 Some(pl) => Some(pl.clone()),
@@ -78,14 +78,45 @@ impl PlaylistMenu {
 impl Component for PlaylistMenu {
     fn name(&self) -> &str { &self.menu.name }
 
-    fn handle_focus(
+    fn handle(
         &mut self,
-        state: &GlobalState,
-        e: &FocusEvent,
+        _state: &GlobalState,
+        e: &ComponentEvent,
         tx: mpsc::Sender<Event>
     ) {
         match e {
-            FocusEvent::Select => {
+            ComponentEvent::Start => (),
+            ComponentEvent::Next => {
+                self.menu.next();
+                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Prev => {
+                self.menu.prev();
+                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoToTop => {
+                self.menu.to_top();
+                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoToBottom => {
+                self.menu.to_bottom();
+                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoTo(i) => {
+                self.menu.to(*i);
+                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Search(s) => {
+                self.menu.search(s);
+                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Select => {
                 let playlists = self.playlists.get(self.menu.selection).unwrap()
                     .tracks.clone();
 
@@ -93,35 +124,24 @@ impl Component for PlaylistMenu {
 
                 tx.send(event).unwrap()
             },
-            e => {
-                self.menu.handle_focus(state, e, tx.clone());
-                tx.send(self.spawn_update_event()).unwrap()
-            },
-        }
-
-    }
-
-    fn handle_global(
-        &mut self,
-        _state: &GlobalState,
-        e: &GlobalEvent,
-        tx: mpsc::Sender<Event>
-    ) {
-        match e {
-            GlobalEvent::Playlist(playlists) => {
+            ComponentEvent::Playlist(playlists) => {
                 self.playlists = playlists.clone();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            GlobalEvent::LostMpdConnection => {
+            ComponentEvent::LostMpdConnection => {
                 self.playlists = Vec::new();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
+            ComponentEvent::Draw(x, y, w, h, focus) => {
+                self.draw(*x, *y, *w, *h, focus == self.name());
+            },
             _ => (),
         }
+
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {

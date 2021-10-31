@@ -29,16 +29,32 @@ pub enum Event {
     ToApp(AppEvent),
     ToCommandLine(CommandLineEvent),
     ToScreen(ScreenEvent),
-    ToGlobal(GlobalEvent),
-    ToFocus(FocusEvent),
     ToComponent(String, ComponentEvent),
+    ToFocus(ComponentEvent),
+    ToAllComponents(ComponentEvent),
     ToMpd(MpdEvent),
 }
 
-#[derive(Debug)]
 #[derive(Clone)]
 pub enum ComponentEvent {
     Draw(u16, u16, u16, u16, String),
+    Next,
+    Prev,
+    Select,
+    Start,
+    GoTo(usize),
+    GoToTop,
+    GoToBottom,
+    Search(String),
+    NowPlaying(Option<Song>),
+    Queue(Vec<Song>),
+    Playlist(Vec<Playlist>),
+    Database(Vec<Song>),
+    PlaylistMenuUpdated(String, Option<Playlist>),
+    TagMenuUpdated(String, Vec<usize>),
+    StyleMenuUpdated(String, Vec<usize>),
+    UpdateRootStyleMenu,
+    LostMpdConnection,
 }
 
 #[derive(Clone)]
@@ -73,32 +89,6 @@ pub enum ScreenEvent {
 }
 
 #[derive(Clone)]
-pub enum GlobalEvent {
-    NowPlaying(Option<Song>),
-    Queue(Vec<Song>),
-    Playlist(Vec<Playlist>),
-    Database(Vec<Song>),
-    PlaylistMenuUpdated(String, Option<Playlist>),
-    TagMenuUpdated(String, Vec<usize>),
-    StyleMenuUpdated(String, Vec<usize>),
-    UpdateRootStyleMenu,
-    LostMpdConnection,
-}
-
-#[derive(Debug)]
-#[derive(Clone)]
-pub enum FocusEvent {
-    Next,
-    Prev,
-    Select,
-    Start,
-    GoTo(usize),
-    GoToTop,
-    GoToBottom,
-    Search(String),
-}
-
-#[derive(Clone)]
 pub enum MpdEvent {
     TogglePause,
     ClearQueue,
@@ -108,18 +98,55 @@ pub enum MpdEvent {
     Random,
 }
 
-impl fmt::Debug for GlobalEvent {
+impl fmt::Debug for ComponentEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            GlobalEvent::NowPlaying(i) => write!(f, "GlobalEvent::NowPlaying({:?})", i),
-            GlobalEvent::Queue(s) => write!(f, "GlobalEvent::Queue({} songs)", s.len()),
-            GlobalEvent::Playlist(pl) => write!(f, "GlobalEvent::Playlist({} playlists)", pl.len()),
-            GlobalEvent::Database(s) => write!(f, "GlobalEvent::Database({} songs)", s.len()),
-            GlobalEvent::PlaylistMenuUpdated(t, pl) => write!(f, "GlobalEvent::PlaylistMenuUpdated({}, {} songs)", t, match pl { Some(_) => "Some", None => "None", }),
-            GlobalEvent::TagMenuUpdated(t, s) => write!(f, "GlobalEvent::TagMenuUpdated({}, {} songs)", t, s.len()),
-            GlobalEvent::UpdateRootStyleMenu => write!(f, "GlobalEvent::UpdateRootStyleMenu"),
-            GlobalEvent::StyleMenuUpdated(t, s) => write!(f, "GlobalEvent::StyleMenuUpdated({}, {})", t, s.len()),
-            GlobalEvent::LostMpdConnection => write!(f, "GlobalEvent::LostMpdConnection"),
+            ComponentEvent::NowPlaying(i) =>
+                write!(f, "ComponentEvent::NowPlaying({:?})", i),
+            ComponentEvent::Queue(s) =>
+                write!(f, "ComponentEvent::Queue({} songs)", s.len()),
+            ComponentEvent::Playlist(pl) =>
+                write!(f, "ComponentEvent::Playlist({} playlists)", pl.len()),
+            ComponentEvent::Database(s) =>
+                write!(f, "ComponentEvent::Database({} songs)", s.len()),
+            ComponentEvent::PlaylistMenuUpdated(t, pl) =>
+                write!(f, "ComponentEvent::PlaylistMenuUpdated({}, {} songs)",
+                    t,
+                    match pl {
+                        Some(_) => "Some",
+                        None => "None",
+                    }
+                ),
+            ComponentEvent::TagMenuUpdated(t, s) =>
+                write!(f, "ComponentEvent::TagMenuUpdated({}, {} songs)",
+                    t, s.len()
+                ),
+            ComponentEvent::UpdateRootStyleMenu =>
+                write!(f, "ComponentEvent::UpdateRootStyleMenu"),
+            ComponentEvent::StyleMenuUpdated(t, s) =>
+                write!(f, "ComponentEvent::StyleMenuUpdated({}, {})",
+                    t, s.len()
+                ),
+            ComponentEvent::LostMpdConnection =>
+                write!(f, "ComponentEvent::LostMpdConnection"),
+            ComponentEvent::Draw(x, y, w, h, focus) =>
+                write!(f, "ComponentEvent::Draw({}, {}, {}, {}, {})",
+                    x,
+                    y,
+                    w,
+                    h,
+                    focus,
+                ),
+            ComponentEvent::Next => write!(f, "ComponentEvent::Next"),
+            ComponentEvent::Prev => write!(f, "ComponentEvent::Prev"),
+            ComponentEvent::Select => write!(f, "ComponentEvent::Select"),
+            ComponentEvent::Start => write!(f, "ComponentEvent::Start"),
+            ComponentEvent::GoTo(i) => write!(f, "ComponentEvent::GoTo({})", i),
+            ComponentEvent::GoToTop => write!(f, "ComponentEvent::GoToTop"),
+            ComponentEvent::GoToBottom =>
+                write!(f, "ComponentEvent::GoToBottom"),
+            ComponentEvent::Search(s) =>
+                write!(f, "ComponentEvent::Search({})", s),
         }
     }
 }

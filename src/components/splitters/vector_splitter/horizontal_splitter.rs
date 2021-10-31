@@ -62,27 +62,9 @@ impl Splitter for HorizontalSplitter {
 impl Component for HorizontalSplitter {
     fn name(&self) -> &str { self.splitter.name() }
 
-    fn handle_global(
+    fn handle(
         &mut self,
         state: &GlobalState,
-        e: &GlobalEvent,
-        tx: mpsc::Sender<Event>
-    ) {
-        self.splitter.handle_global(state, e, tx);
-    }
-
-    fn handle_focus(
-        &mut self,
-        state: &GlobalState,
-        e: &FocusEvent,
-        tx: mpsc::Sender<Event>
-    ) {
-        self.splitter.handle_focus(state, e, tx)
-    }
-
-    fn handle_component(
-        &mut self,
-        _state: &GlobalState,
         e: &ComponentEvent,
         tx: mpsc::Sender<Event>
     ) {
@@ -134,6 +116,7 @@ impl Component for HorizontalSplitter {
                     }
                 }
             },
+            e => self.splitter.handle(state, e, tx),
         }
     }
 

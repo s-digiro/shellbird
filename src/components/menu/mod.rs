@@ -4,11 +4,7 @@ pub mod tag_menu;
 pub mod track_menu;
 pub mod style_menu;
 
-use std::sync::mpsc;
-use crate::components::Component;
-use crate::event::*;
 use crate::color::Color;
-use crate::GlobalState;
 use termion::{cursor, style, color};
 use unicode_truncate::{UnicodeTruncateStr, Alignment};
 
@@ -25,36 +21,8 @@ pub struct Menu {
     pub menu_alignment: Alignment,
 }
 
-impl Component for Menu {
-    fn name(&self) -> &str { &self.name }
-
-    fn handle_focus(
-        &mut self,
-        _state: &GlobalState,
-        request: &FocusEvent,
-        tx: mpsc::Sender<Event>
-    ) {
-        match request {
-            FocusEvent::Next => self.next(),
-            FocusEvent::Prev => self.prev(),
-            FocusEvent::GoToTop => self.selection = 0,
-            FocusEvent::GoToBottom => self.selection = std::cmp::max(0, self.items.len() - 1),
-            FocusEvent::GoTo(i) if *i < self.items.len() => self.selection = *i,
-            FocusEvent::Search(s) =>
-                self.selection = *self.items.iter().enumerate()
-                    .skip(self.selection + 1)
-                    .filter(|(_, item)| item.to_lowercase().contains(&s.to_lowercase()))
-                    .map(|(i, _)| i)
-                    .collect::<Vec<usize>>()
-                    .first()
-                    .unwrap_or(&self.selection),
-            _ => (),
-        }
-
-        tx.send(self.spawn_needs_draw_event()).unwrap();
-    }
-
-    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
+impl Menu {
+    pub fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         let mut cur_y = y;
 
         let mut buffer = String::new();
@@ -119,9 +87,6 @@ impl Component for Menu {
 
         print!("{}", buffer);
     }
-}
-
-impl Menu {
     pub fn color(&self, focus: bool) -> Color {
         if focus {
             self.focus_color
@@ -137,6 +102,30 @@ impl Menu {
         }
     }
 
+    pub fn to_top(&mut self) {
+        self.selection = 0;
+    }
+
+    pub fn to_bottom(&mut self) {
+        self.selection = std::cmp::max(0, self.items.len() - 1);
+    }
+
+    pub fn to(&mut self, i: usize) {
+        if i < self.items.len() {
+            self.selection = i;
+        }
+    }
+
+    pub fn search(&mut self, s: &str) {
+        self.selection = *self.items.iter().enumerate()
+            .skip(self.selection + 1)
+            .filter(|(_, item)| item.to_lowercase().contains(&s.to_lowercase()))
+            .map(|(i, _)| i)
+            .collect::<Vec<usize>>()
+            .first()
+            .unwrap_or(&self.selection);
+    }
+
     pub fn next(&mut self) {
         self.selection = if self.items.len() == 0 {
             0
@@ -147,7 +136,7 @@ impl Menu {
         }
     }
 
-    fn prev(&mut self) {
+    pub fn prev(&mut self) {
         self.selection = if self.items.len() == 0 {
             0
         } else if self.selection <= 0 {

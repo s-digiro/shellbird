@@ -1,7 +1,9 @@
 use std::sync::mpsc;
 use termion::{color, cursor};
-use super::*;
 use crate::color::Color;
+use crate::components::{Component, Components};
+use crate::GlobalState;
+use crate::event::*;
 use unicode_truncate::{UnicodeTruncateStr, Alignment};
 
 #[derive(Debug)]
@@ -31,14 +33,14 @@ impl TitleDisplay {
 impl Component for TitleDisplay {
     fn name(&self) -> &str { &self.name }
 
-    fn handle_global(
+    fn handle(
         &mut self,
         _state: &GlobalState,
-        e: &GlobalEvent,
+        e: &ComponentEvent,
         tx: mpsc::Sender<Event>
     ) {
         match e {
-            GlobalEvent::NowPlaying(song) => {
+            ComponentEvent::NowPlaying(song) => {
                 self.contents = match song {
                     Some(song) => match &song.title {
                         Some(title) => title.to_string(),
@@ -48,7 +50,7 @@ impl Component for TitleDisplay {
                 };
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             }
-            GlobalEvent::LostMpdConnection => {
+            ComponentEvent::LostMpdConnection => {
                 self.contents = "<Unavailable>".to_string();
             },
             _ => (),

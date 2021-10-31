@@ -65,33 +65,47 @@ fn spawn_error_msg(msg: &str) -> Event {
 
 fn send_now_playing(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.currentsong() {
-        Ok(song) => tx.send(Event::ToGlobal(GlobalEvent::NowPlaying(song))).unwrap(),
-        _ => tx.send(Event::ToGlobal(GlobalEvent::NowPlaying(None))).unwrap(),
+        Ok(song) =>
+            tx.send(
+                Event::ToAllComponents(ComponentEvent::NowPlaying(song))
+            ).unwrap(),
+        _ =>
+            tx.send(
+                Event::ToAllComponents(ComponentEvent::NowPlaying(None))
+            ).unwrap(),
     }
 }
 
 fn send_queue(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.queue() {
-        Ok(q) => tx.send(Event::ToGlobal(GlobalEvent::Queue(q))).unwrap(),
-        _ => tx.send(Event::ToGlobal(GlobalEvent::Queue(Vec::new()))).unwrap(),
+        Ok(q) =>
+            tx.send(Event::ToAllComponents(ComponentEvent::Queue(q))).unwrap(),
+        _ =>
+            tx.send(
+                Event::ToAllComponents(ComponentEvent::Queue(Vec::new()))
+            ).unwrap(),
     }
 }
 
 fn send_playlists(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.playlists() {
-        Ok(pl) => tx.send(
-            Event::ToGlobal(GlobalEvent::Playlist(
-                pl.iter()
-                    .map(|pl| Playlist {
-                        name: pl.name.clone(),
-                        tracks: match conn.playlist(&pl.name) {
-                            Ok(pl) => pl,
-                            _ => Vec::new(),
-                        },
-                    }).collect()
-            ))
-        ).unwrap(),
-        _ => tx.send(Event::ToGlobal(GlobalEvent::Playlist(Vec::new()))).unwrap(),
+        Ok(pl) =>
+            tx.send(
+                Event::ToAllComponents(ComponentEvent::Playlist(
+                    pl.iter()
+                        .map(|pl| Playlist {
+                            name: pl.name.clone(),
+                            tracks: match conn.playlist(&pl.name) {
+                                Ok(pl) => pl,
+                                _ => Vec::new(),
+                            },
+                        }).collect()
+                ))
+            ).unwrap(),
+        _ =>
+            tx.send(
+                Event::ToAllComponents(ComponentEvent::Playlist(Vec::new()))
+            ).unwrap(),
     }
 }
 
@@ -102,7 +116,8 @@ fn send_database(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     );
 
     match results {
-        Ok(results) => tx.send(Event::ToApp(AppEvent::Database(results))).unwrap(),
+        Ok(results) =>
+            tx.send(Event::ToApp(AppEvent::Database(results))).unwrap(),
         _ => (),
     }
 }

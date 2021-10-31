@@ -38,15 +38,15 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
 
             "focusnext" => Some(Event::ToScreen(ScreenEvent::FocusNext)),
             "focusprev" => Some(Event::ToScreen(ScreenEvent::FocusPrev)),
-            "next" => Some(Event::ToFocus(FocusEvent::Next)),
-            "prev" => Some(Event::ToFocus(FocusEvent::Prev)),
-            "select" => Some(Event::ToFocus(FocusEvent::Select)),
-            "start" => Some(Event::ToFocus(FocusEvent::Start)),
+            "next" => Some(Event::ToFocus(ComponentEvent::Next)),
+            "prev" => Some(Event::ToFocus(ComponentEvent::Prev)),
+            "select" => Some(Event::ToFocus(ComponentEvent::Select)),
+            "start" => Some(Event::ToFocus(ComponentEvent::Start)),
 
             "top"
             | "gotop"
             | "gototop"
-            | "totop" => Some(Event::ToFocus(FocusEvent::GoToTop)),
+            | "totop" => Some(Event::ToFocus(ComponentEvent::GoToTop)),
 
             "bottom"
             | "gobottom"
@@ -55,11 +55,11 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             | "bot"
             | "gobot"
             | "gotobot"
-            | "tobot" => Some(Event::ToFocus(FocusEvent::GoToBottom)),
+            | "tobot" => Some(Event::ToFocus(ComponentEvent::GoToBottom)),
 
             "search"
             | "s" => match get_lowercase(&cmd, 1) {
-                Some(s) => Some(Event::ToFocus(FocusEvent::Search(s.to_string()))),
+                Some(s) => Some(Event::ToFocus(ComponentEvent::Search(s.to_string()))),
                 None => None,
             },
 
@@ -67,7 +67,7 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             | "go"
             | "g"
             | "to" => match get_usize(&cmd, 1) {
-                Some(num) => Some(Event::ToFocus(FocusEvent::GoTo(num))),
+                Some(num) => Some(Event::ToFocus(ComponentEvent::GoTo(num))),
                 None => None,
             }
 

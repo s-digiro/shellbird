@@ -85,43 +85,60 @@ impl Queue {
 impl Component for Queue {
     fn name(&self) -> &str { &self.menu.name }
 
-    fn handle_focus(
+    fn handle(
         &mut self,
-        state: &GlobalState,
-        e: &FocusEvent,
+        _state: &GlobalState,
+        e: &ComponentEvent,
         tx: mpsc::Sender<Event>
     ) {
         match e {
-            FocusEvent::Select => {
+            ComponentEvent::Start => (),
+            ComponentEvent::Next => {
+                self.menu.next();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Prev => {
+                self.menu.prev();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoToTop => {
+                self.menu.to_top();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoToBottom => {
+                self.menu.to_bottom();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoTo(i) => {
+                self.menu.to(*i);
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Search(s) => {
+                self.menu.search(s);
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Select => {
                 if let Some(song) = self.tracks.get(self.menu.selection) {
                     tx.send(Event::ToMpd(
                         MpdEvent::PlayAt(song.clone())
                     )).unwrap()
                 }
             },
-            e => self.menu.handle_focus(state, e, tx.clone()),
-        }
-    }
-
-    fn handle_global(
-        &mut self,
-        _state: &GlobalState,
-        e: &GlobalEvent,
-        tx: mpsc::Sender<Event>
-    ) {
-        match e {
-            GlobalEvent::NowPlaying(song) => {
+            ComponentEvent::NowPlaying(song) => {
                 self.set_now_playing(&song);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            GlobalEvent::Queue(q) => {
+            ComponentEvent::Queue(q) => {
                 self.update_items(q);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            GlobalEvent::LostMpdConnection => {
+            ComponentEvent::LostMpdConnection => {
                 self.now_playing = None;
                 self.update_items(&Vec::new());
                 tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Draw(x, y, w, h, focus) => {
+                self.draw(*x, *y, *w, *h, focus == self.name());
             },
             _ => (),
         }

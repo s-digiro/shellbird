@@ -114,7 +114,7 @@ impl CommandLine {
             },
             Mode::Search => {
                 self.tx.send(
-                    Event::ToFocus(FocusEvent::Search(self.contents.clone()))
+                    Event::ToFocus(ComponentEvent::Search(self.contents.clone()))
                 ).unwrap();
                 self.tx.send(Event::ToCommandLine(CommandLineEvent::Mode(Mode::TUI))).unwrap();
             },

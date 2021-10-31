@@ -35,14 +35,7 @@ pub trait Component: fmt::Debug + PartialEq {
         Event::ToScreen(ScreenEvent::NeedsRedraw(self.name().to_string()))
     }
 
-    fn handle_global(
-        &mut self,
-        _state: &GlobalState,
-        _e: &GlobalEvent,
-        _tx: mpsc::Sender<Event>
-    ) { }
-
-    fn handle_component(
+    fn handle(
         &mut self,
         _state: &GlobalState,
         e: &ComponentEvent,
@@ -51,15 +44,9 @@ pub trait Component: fmt::Debug + PartialEq {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) =>
                 self.draw(*x, *y, *w, *h, focus.as_str() == self.name()),
+            _ => (),
         }
     }
-
-    fn handle_focus(
-        &mut self,
-        _state: &GlobalState,
-        _e: &FocusEvent,
-        _tx: mpsc::Sender<Event>
-    ) { }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool);
 
@@ -126,66 +113,25 @@ pub enum Components {
 }
 
 impl Component for Components {
-    fn handle_global(
-        &mut self,
-        state: &GlobalState,
-        e: &GlobalEvent,
-        tx: mpsc::Sender<Event>
-    ) {
-        match self {
-            Components::PlaceHolder(c) => c.handle_global(state, e, tx),
-            Components::EmptySpace(c) => c.handle_global(state, e, tx),
-            Components::ErrorBox(c) => c.handle_global(state, e, tx),
-            Components::TitleDisplay(c) => c.handle_global(state, e, tx),
-            Components::TagDisplay(c) => c.handle_global(state, e, tx),
-            Components::Queue(c) => c.handle_global(state, e, tx),
-            Components::PlaylistMenu(c) => c.handle_global(state, e, tx),
-            Components::TrackMenu(c) => c.handle_global(state, e, tx),
-            Components::TagMenu(c) => c.handle_global(state, e, tx),
-            Components::StyleMenu(c) => c.handle_global(state, e, tx),
-            Components::Splitter(x) => x.handle_global(state, e, tx),
-        }
-    }
 
-    fn handle_component(
+    fn handle(
         &mut self,
         state: &GlobalState,
         e: &ComponentEvent,
         tx: mpsc::Sender<Event>,
     ) {
         match self {
-            Components::PlaceHolder(c) => c.handle_component(state, e, tx),
-            Components::EmptySpace(c) => c.handle_component(state, e, tx),
-            Components::ErrorBox(c) => c.handle_component(state, e, tx),
-            Components::TitleDisplay(c) => c.handle_component(state, e, tx),
-            Components::TagDisplay(c) => c.handle_component(state, e, tx),
-            Components::Queue(c) => c.handle_component(state, e, tx),
-            Components::PlaylistMenu(c) => c.handle_component(state, e, tx),
-            Components::TrackMenu(c) => c.handle_component(state, e, tx),
-            Components::TagMenu(c) => c.handle_component(state, e, tx),
-            Components::StyleMenu(c) => c.handle_component(state, e, tx),
-            Components::Splitter(x) => x.handle_component(state, e, tx),
-        }
-    }
-
-    fn handle_focus(
-        &mut self,
-        state: &GlobalState,
-        e: &FocusEvent,
-        tx: mpsc::Sender<Event>
-    ) {
-        match self {
-            Components::PlaceHolder(c) => c.handle_focus(state, e, tx),
-            Components::EmptySpace(c) => c.handle_focus(state, e, tx),
-            Components::ErrorBox(c) => c.handle_focus(state, e, tx),
-            Components::TitleDisplay(c) => c.handle_focus(state, e, tx),
-            Components::TagDisplay(c) => c.handle_focus(state, e, tx),
-            Components::Queue(c) => c.handle_focus(state, e, tx),
-            Components::PlaylistMenu(c) => c.handle_focus(state, e, tx),
-            Components::TrackMenu(c) => c.handle_focus(state, e, tx),
-            Components::TagMenu(c) => c.handle_focus(state, e, tx),
-            Components::StyleMenu(c) => c.handle_focus(state, e, tx),
-            Components::Splitter(x) => x.handle_focus(state, e, tx),
+            Components::PlaceHolder(c) => c.handle(state, e, tx),
+            Components::EmptySpace(c) => c.handle(state, e, tx),
+            Components::ErrorBox(c) => c.handle(state, e, tx),
+            Components::TitleDisplay(c) => c.handle(state, e, tx),
+            Components::TagDisplay(c) => c.handle(state, e, tx),
+            Components::Queue(c) => c.handle(state, e, tx),
+            Components::PlaylistMenu(c) => c.handle(state, e, tx),
+            Components::TrackMenu(c) => c.handle(state, e, tx),
+            Components::TagMenu(c) => c.handle(state, e, tx),
+            Components::StyleMenu(c) => c.handle(state, e, tx),
+            Components::Splitter(x) => x.handle(state, e, tx),
         }
     }
 

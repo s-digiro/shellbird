@@ -87,7 +87,7 @@ impl TagMenu {
     pub fn spawn_update_event(&self, library: &Vec<Song>) -> Event {
         let event_tracks = self.selection(library);
 
-        Event::ToGlobal(GlobalEvent::TagMenuUpdated(self.name().to_string(), event_tracks))
+        Event::ToAllComponents(ComponentEvent::TagMenuUpdated(self.name().to_string(), event_tracks))
     }
 
     pub fn set_menu_items(&mut self, library: &Vec<Song>) {
@@ -168,35 +168,52 @@ impl TagMenu {
 impl Component for TagMenu {
     fn name(&self) -> &str { &self.menu.name }
 
-    fn handle_focus(
+    fn handle(
         &mut self,
         state: &GlobalState,
-        e: &FocusEvent,
+        e: &ComponentEvent,
         tx: mpsc::Sender<Event>
     ) {
         match e {
-            FocusEvent::Select => {
+            ComponentEvent::Start => (),
+            ComponentEvent::Next => {
+                self.menu.next();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Prev => {
+                self.menu.prev();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoToTop => {
+                self.menu.to_top();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoToBottom => {
+                self.menu.to_bottom();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::GoTo(i) => {
+                self.menu.to(*i);
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Search(s) => {
+                self.menu.search(s);
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Select => {
                 tx.send(
                     Event::ToMpd(MpdEvent::AddToQueue(
                             self.selected_tracks(&state.library))
                     )
                 ).unwrap()
             },
-            e => {
-                self.menu.handle_focus(state, e, tx.clone());
-                tx.send(self.spawn_update_event(&state.library)).unwrap();
-            },
-        }
-    }
-
-    fn handle_global(
-        &mut self,
-        state: &GlobalState,
-        e: &GlobalEvent,
-        tx: mpsc::Sender<Event>
-    ) {
-        match e {
-            GlobalEvent::StyleMenuUpdated(origin, styles) if self.parent.is(origin) => {
+            ComponentEvent::StyleMenuUpdated(origin, styles) if self.parent.is(origin) => {
                 if let Some(style_tree) = &state.style_tree {
                     let genres: HashSet<&str> = styles.iter()
                         .map(|id| style_tree.name(*id))
@@ -216,14 +233,14 @@ impl Component for TagMenu {
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
             },
-            GlobalEvent::TagMenuUpdated(origin, tracks) if self.parent.is(origin) => {
+            ComponentEvent::TagMenuUpdated(origin, tracks) if self.parent.is(origin) => {
                 self.tracks = tracks.clone();
 
                 self.set_menu_items(&state.library);
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            GlobalEvent::Database(tracks) if self.parent.is_none() => {
+            ComponentEvent::Database(tracks) if self.parent.is_none() => {
                 self.tracks = (0..tracks.len()).collect();
 
                 self.set_menu_items(&tracks);
@@ -231,11 +248,14 @@ impl Component for TagMenu {
                 tx.send(self.spawn_update_event(&tracks)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            GlobalEvent::LostMpdConnection => {
+            ComponentEvent::LostMpdConnection => {
                 self.tracks = Vec::new();
                 self.set_menu_items(&Vec::new());
                 tx.send(self.spawn_update_event(&Vec::new())).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            ComponentEvent::Draw(x, y, w, h, focus) => {
+                self.draw(*x, *y, *w, *h, focus == self.name());
             },
             _ => (),
         }
