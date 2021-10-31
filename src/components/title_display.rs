@@ -40,6 +40,9 @@ impl Component for TitleDisplay {
         tx: mpsc::Sender<Event>
     ) {
         match e {
+            ComponentEvent::Draw(x, y, w, h, focus) => {
+                self.draw(*x, *y, *w, *h, focus == self.name());
+            },
             ComponentEvent::NowPlaying(song) => {
                 self.contents = match song {
                     Some(song) => match &song.title {
