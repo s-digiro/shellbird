@@ -1,6 +1,6 @@
 bind <space> select
-bind j next
-bind k prev
+bind j down
+bind k up
 bind gg top
 bind G bot
 bind h focusprev

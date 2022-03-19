@@ -57,10 +57,13 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
 
             "focusnext" => Some(Event::ToScreen(ScreenEvent::FocusNext)),
             "focusprev" => Some(Event::ToScreen(ScreenEvent::FocusPrev)),
-            "next" => Some(Event::ToFocus(ComponentEvent::Next)),
-            "prev" => Some(Event::ToFocus(ComponentEvent::Prev)),
+            "down" => Some(Event::ToFocus(ComponentEvent::Next)),
+            "up" => Some(Event::ToFocus(ComponentEvent::Prev)),
             "select" => Some(Event::ToFocus(ComponentEvent::Select)),
             "start" => Some(Event::ToFocus(ComponentEvent::Start)),
+
+            "next" => Some(Event::ToMpd(MpdEvent::Next)),
+            "prev" => Some(Event::ToMpd(MpdEvent::Prev)),
 
             "top"
             | "gotop"

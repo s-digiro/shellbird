@@ -36,7 +36,7 @@ struct Opts {
     sbrc: Option<String>,
     layout: Option<String>,
     #[clap(short)]
-    debug: bool
+    debug: bool,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

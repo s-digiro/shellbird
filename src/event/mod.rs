@@ -116,6 +116,8 @@ pub enum MpdEvent {
     AddStyleToQueue(Vec<String>),
     PlayAt(Song),
     Random,
+    Next,
+    Prev,
 }
 
 impl fmt::Debug for ComponentEvent {
@@ -180,6 +182,8 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::AddStyleToQueue(genres) => write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len()),
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
             MpdEvent::Random => write!(f, "MpdEvent::Random"),
+            MpdEvent::Next => write!(f, "MpdEvent::Next"),
+            MpdEvent::Prev => write!(f, "MpdEvent::Prev"),
         }
     }
 }
