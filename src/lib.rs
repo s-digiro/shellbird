@@ -25,6 +25,9 @@ extern crate unicode_width;
 extern crate unicode_truncate;
 extern crate json;
 
+#[macro_use]
+extern crate lazy_static;
+
 pub mod event;
 pub mod components;
 pub mod music;

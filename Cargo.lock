@@ -224,6 +224,7 @@ dependencies = [
  "clap-v3",
  "home",
  "json",
+ "lazy_static",
  "mpd",
  "signal-hook",
  "termion",

@@ -1,4 +1,4 @@
-/* Contains functionality related to application modality
+/* Contains modal options
    Copyright (C) 2020-2021 Sean DiGirolamo
 
 This file is part of Shellbird.
@@ -21,7 +21,8 @@ along with Shellbird; see the file COPYING.  If not see
 #[derive(Debug)]
 #[derive(Copy)]
 pub enum Mode {
-    Command,
     TUI,
+    Command,
     Search,
 }
+

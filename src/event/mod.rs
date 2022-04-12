@@ -44,7 +44,7 @@ use crate::mode::Mode;
 pub enum Event {
     Dummy,
 
-    BindKey(String, NestableEvent),
+    BindKey(Vec<Key>, NestableEvent),
 
     ToApp(AppEvent),
     ToCommandLine(CommandLineEvent),

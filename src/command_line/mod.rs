@@ -21,17 +21,24 @@ mod command;
 
 use std::collections::HashMap;
 use std::sync::mpsc;
+use std::mem;
 use termion::{cursor, clear, event::Key};
 
 use crate::event::*;
 use crate::mode::Mode;
 
+#[derive(Debug)]
+enum ContentType {
+    Chars(String),
+    Keys(Vec<Key>),
+}
+
 pub struct CommandLine {
-    contents: String,
+    content: ContentType,
     statusline: String,
     text: String,
     mode: Mode,
-    keybinds: HashMap<String, Event>,
+    keybinds: HashMap<Vec<Key>, Event>,
     tx: mpsc::Sender<Event>,
 
     last_search: Option<String>,
@@ -40,7 +47,7 @@ pub struct CommandLine {
 impl CommandLine {
     pub fn new(tx: mpsc::Sender<Event>) -> CommandLine {
         CommandLine {
-            contents: String::new(),
+            content: ContentType::Keys(Vec::new()),
             statusline: String::new(),
             text: String::new(),
             mode: Mode::TUI,
@@ -59,18 +66,15 @@ impl CommandLine {
         self.text = "".to_string();
     }
 
-    pub fn back(&mut self) -> Option<Event> {
-        if self.contents.is_empty() {
-            Some(spawn_mode_event(Mode::TUI))
-        } else {
-            self.contents.pop();
-            None
-        }
-    }
-
     pub fn mode(&mut self, m: Mode) {
         self.clear();
         self.mode = m;
+
+        self.content = match self.mode {
+            Mode::TUI => ContentType::Keys(Vec::new()),
+            Mode::Command
+            | Mode::Search => ContentType::Chars(String::new()),
+        }
     }
 
     pub fn next_search(&mut self) {
@@ -90,116 +94,121 @@ impl CommandLine {
     }
 
 
-    pub fn add(&mut self, c: char) {
+    pub fn input(&mut self, key: &Key) {
         self.clear_text();
-        match self.mode {
-            Mode::TUI => {
-                if c != '\n' {
-                    self.contents.push(c);
-                }
+        match (self.mode, &mut self.content) {
+            (Mode::TUI, ContentType::Keys(keys)) => match key {
+                Key::Char(':') => self.mode(Mode::Command),
+                Key::Char('/') => self.mode(Mode::Search),
+                Key::Esc => self.clear(),
+                key => {
+                    keys.push(key.clone());
+                    if let Some(event) = self.keybinds.get(keys) {
+                        self.tx.send(event.clone()).unwrap();
+                        self.clear();
+                    } else {
+                        let has_match = self.keybinds.keys()
+                            .any(
+                                |kb| keys.iter()
+                                     .zip(kb.iter())
+                                     .all(|(a, b)| a == b)
+                            );
 
-                if let Some(event) = self.keybinds.get(&self.contents) {
-                    self.tx.send(event.clone()).unwrap();
-                    self.clear();
-                } else if !self.keybinds.keys()
-                    .any(|s| s.starts_with(&self.contents))
-                {
-                    self.clear();
-                }
+                        if !has_match {
+                            self.clear();
+                        }
+                    }
+                },
             },
-            _ => match c {
-                '\n' => self.run(),
-                _ => self.contents.push(c),
+            (Mode::Command, ContentType::Chars(s))
+            | (Mode::Search, ContentType::Chars(s)) => match key {
+                Key::Char('\n') => self.run(),
+                Key::Esc => self.mode(Mode::TUI),
+                Key::Backspace =>
+                    if s.is_empty() {
+                        self.mode(Mode::TUI);
+                    } else {
+                        s.pop();
+                    },
+                Key::Char(c) => s.push(*c),
+                _ => (),
             },
+            bad => panic!("Command line reached invalid state {:?}", bad),
         }
     }
 
     pub fn clear(&mut self) {
-        self.contents = "".to_string();
+        self.content = match self.content {
+            ContentType::Chars(_) => ContentType::Chars(String::new()),
+            ContentType::Keys(_) => ContentType::Keys(Vec::new()),
+        }
     }
 
-    pub fn bind(&mut self, key: String, e: Event) {
-        self.keybinds.insert(key, e);
+    pub fn bind(&mut self, keys: Vec<Key>, e: Event) {
+        self.keybinds.insert(keys, e);
     }
 
     pub fn run(&mut self) {
-        match self.mode {
-            Mode::Command => {
-                let contents = self.contents.clone();
-                let args: Vec<&str> = contents.split(" ").collect();
+        let content = mem::replace(
+            &mut self.content,
+            ContentType::Keys(Vec::new())
+        );
 
-                let events = match command::parse(&args) {
+        match (self.mode, content) {
+            (Mode::Command, ContentType::Chars(cmd)) => {
+                let args: Vec<&str> = cmd.split(" ").collect();
+
+                match command::parse(&args) {
                     Some(e) => match e {
-                        Event::ToCommandLine(CommandLineEvent::Echo(_)) => vec![
-                            spawn_mode_event(Mode::TUI),
-                            e
-                        ],
-                        e => vec![
-                            spawn_mode_event(Mode::TUI),
-                            e.clone(),
-                            spawn_respond_event(&e),
-                        ],
+                        Event::ToCommandLine(CommandLineEvent::Echo(s)) => {
+                            self.mode(Mode::TUI);
+                            self.put_text(s.to_string());
+                        },
+                        e => {
+                            self.tx.send(spawn_mode_event(Mode::TUI)).unwrap();
+                            self.tx.send(e.clone()).unwrap();
+                            self.tx.send(spawn_respond_event(&e)).unwrap();
+                        },
                     },
-                    None => vec![
-                        spawn_mode_event(Mode::TUI),
-                        spawn_invalid_event(&self.contents),
-                    ],
+                    None => {
+                        self.mode(Mode::TUI);
+                        self.tx.send(spawn_invalid_event(&cmd)).unwrap();
+                    },
                 };
-
-                for event in events {
-                    self.tx.send(event).unwrap();
-                }
-
             },
-            Mode::Search => {
-                self.last_search = Some(self.contents.clone());
+            (Mode::Search, ContentType::Chars(term)) => {
+                self.last_search = Some(term.clone());
+                self.mode(Mode::TUI);
+
                 self.tx.send(
-                    Event::ToFocus(ComponentEvent::Search(self.contents.clone()))
+                    Event::ToFocus(ComponentEvent::Search(term.clone()))
                 ).unwrap();
-                self.tx.send(Event::ToCommandLine(CommandLineEvent::Mode(Mode::TUI))).unwrap();
             },
-            _ => (),
+            (Mode::TUI, _) => panic!("Invalid State: CommandLine called run while in Mode::TUI)"),
+            state => panic!("Invalid State: {:?}", state),
         }
     }
 
 
     pub fn draw(&self) {
-        let (w, h) = termion::terminal_size().unwrap();
+        let (_, h) = termion::terminal_size().unwrap();
 
-        let prefix = match self.mode {
-            Mode::Command => ":",
-            Mode::Search => "/",
-            _ => "",
-        };
-
-        match self.mode {
-            Mode::Command | Mode::Search => print!(
-                "{}{}{}{}",
-               cursor::Goto(1, h),
-               clear::CurrentLine,
-               prefix,
-               self.contents
-            ),
-            Mode::TUI if self.text.is_empty() => print!(
-                "{}{}{}{}{}",
-                cursor::Goto(1, h),
-                clear::CurrentLine,
-                self.statusline,
-                cursor::Goto(w - self.contents.len() as u16, h),
-                self.contents,
-            ),
-            Mode::TUI => print!(
-                "{}{}{}{}{}",
-                cursor::Goto(1, h),
-                clear::CurrentLine,
-                self.text,
-                cursor::Goto(w - self.contents.len() as u16, h),
-                self.contents,
-            ),
-        }
+        print!("{}{}{}{}",
+            cursor::Goto(1, h),
+            clear::CurrentLine,
+            match self.mode {
+                Mode::Command => ":",
+                Mode::Search => "/",
+                Mode::TUI => "",
+            },
+            match &self.content {
+                ContentType::Chars(cmd) => &cmd,
+                ContentType::Keys(_) => "",
+            }
+        );
     }
 
-    pub fn handle(&mut self, e: &CommandLineEvent, tx: mpsc::Sender<Event>) {
+    pub fn handle(&mut self, e: &CommandLineEvent, _tx: mpsc::Sender<Event>) {
         match e {
             CommandLineEvent::Echo(s) => self.put_text(s.to_string()),
             CommandLineEvent::NextSearch => self.next_search(),
@@ -212,22 +221,7 @@ impl CommandLine {
                     msg.to_string()
                 )
             ),
-            CommandLineEvent::Input(key) => match key {
-                Key::Char(':') => tx.send(
-                    Event::ToCommandLine(CommandLineEvent::Mode(Mode::Command))
-                ).unwrap(),
-                Key::Char('/') => tx.send(
-                    Event::ToCommandLine(CommandLineEvent::Mode(Mode::Search))
-                ).unwrap(),
-                Key::Esc => tx.send(
-                    Event::ToCommandLine(CommandLineEvent::Mode(Mode::TUI))
-                ).unwrap(),
-                Key::Backspace => if let Some(event) = self.back() {
-                    tx.send(event).unwrap();
-                },
-                Key::Char(c) => self.add(*c),
-                _ => (),
-            },
+            CommandLineEvent::Input(key) => self.input(&key),
             CommandLineEvent::SbrcNotFound => self.put_text(
                 "Sbrc not found. :q to quit.".to_string()
             ),
