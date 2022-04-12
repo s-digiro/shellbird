@@ -1,7 +1,6 @@
 [package]
 name = "shellbird"
 license = "GPL-3.0-or-later"
-license-file = "COPYING"
 version = "0.1.0"
 authors = ["Sean DiGirolamo <s.digirolamo218@gmail.com>"]
 edition = "2018"
