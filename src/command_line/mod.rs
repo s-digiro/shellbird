@@ -203,7 +203,7 @@ impl CommandLine {
             },
             match &self.content {
                 ContentType::Chars(cmd) => &cmd,
-                ContentType::Keys(_) => "",
+                ContentType::Keys(_) => &self.text,
             }
         );
     }
