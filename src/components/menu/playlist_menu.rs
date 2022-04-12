@@ -135,6 +135,11 @@ impl Component for PlaylistMenu {
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
+            ComponentEvent::SearchPrev(s) => {
+                self.menu.search_prev(s);
+                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
             ComponentEvent::Select => {
                 let playlists = self.playlists.get(self.menu.selection).unwrap()
                     .tracks.clone();

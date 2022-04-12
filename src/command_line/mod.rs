@@ -33,6 +33,8 @@ pub struct CommandLine {
     mode: Mode,
     keybinds: HashMap<String, Event>,
     tx: mpsc::Sender<Event>,
+
+    last_search: Option<String>,
 }
 
 impl CommandLine {
@@ -44,6 +46,8 @@ impl CommandLine {
             mode: Mode::TUI,
             keybinds: HashMap::new(),
             tx,
+
+            last_search: None,
         }
     }
 
@@ -67,6 +71,22 @@ impl CommandLine {
     pub fn mode(&mut self, m: Mode) {
         self.clear();
         self.mode = m;
+    }
+
+    pub fn next_search(&mut self) {
+        if let Some(last_search) = self.last_search.clone() {
+            self.tx.send(
+                Event::ToFocus(ComponentEvent::Search(last_search))
+            ).unwrap();
+        }
+    }
+
+    pub fn prev_search(&mut self) {
+        if let Some(last_search) = self.last_search.clone() {
+            self.tx.send(
+                Event::ToFocus(ComponentEvent::SearchPrev(last_search))
+            ).unwrap();
+        }
     }
 
 
@@ -132,6 +152,7 @@ impl CommandLine {
 
             },
             Mode::Search => {
+                self.last_search = Some(self.contents.clone());
                 self.tx.send(
                     Event::ToFocus(ComponentEvent::Search(self.contents.clone()))
                 ).unwrap();
@@ -181,6 +202,8 @@ impl CommandLine {
     pub fn handle(&mut self, e: &CommandLineEvent, tx: mpsc::Sender<Event>) {
         match e {
             CommandLineEvent::Echo(s) => self.put_text(s.to_string()),
+            CommandLineEvent::NextSearch => self.next_search(),
+            CommandLineEvent::PrevSearch => self.prev_search(),
             CommandLineEvent::Mode(m) => self.mode(*m),
             CommandLineEvent::SbrcError(line, msg) => self.put_text(
                 format!(

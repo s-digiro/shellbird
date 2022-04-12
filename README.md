@@ -55,6 +55,8 @@ An example can be found in the root directory of this project called genres.txt
 * Go to top of menu: gg
 * Go to bottom of menu: G
 * Search: /
+* Next Search Result: n
+* Previous Search Result: N
 * Focus Next: l
 * Focus Prev: h
 * Toggle Pause: p
@@ -65,7 +67,7 @@ An example can be found in the root directory of this project called genres.txt
 	- In most other menus, such as tag menus, it will add all tracks under that option to the queue
 	- Enter command: : (Currently the only command is :pause)
 
-Note: These are all temporary controls. Eventually controls will be fully configurable in a vim-like rc file
+Note: Controls are fully configurable in a sbrc file
 
 ## Commands
 A commandline can be brought up with the ':' key. Some available commands are:
@@ -81,6 +83,8 @@ A commandline can be brought up with the ':' key. Some available commands are:
 * `top`: Go to top of focused menu
 * `bot`: Go to bottom of focused menu
 * `search <term>`: search for given \<term\> and go to it in focused menu. Always case insensitive.
+* `nextsearch`: Go to previous search result
+* `prevsearch`: Go to next search result
 * `goto <number>`: Go to line number \<number\> in focused menu
 * `pause`: toggles music pause/playing state
 * `clear`: clears playback queue
@@ -111,6 +115,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Restore cursor after application exits. Termion seems to be bugged and isn't doing it right.
 - [x] Screen Map
 - [x] Redraw Event
+- [x] Search Navigation
 - [ ] Update README. Document everything in this todo list. Delete things from list that are documented.
 - [ ] Better logging. Writing directly to stderr just seems old and outdated
 - [ ] Better splitter borders

@@ -142,6 +142,10 @@ impl Component for TrackMenu {
                 self.menu.search(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
+            ComponentEvent::SearchPrev(s) => {
+                self.menu.search_prev(s);
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
             ComponentEvent::Draw(x, y, w, h, focus) =>
                 self.draw(*x, *y, *w, *h, focus == self.name()),
             ComponentEvent::Start => {

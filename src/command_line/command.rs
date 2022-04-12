@@ -84,6 +84,8 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
                 Some(s) => Some(Event::ToFocus(ComponentEvent::Search(s.to_string()))),
                 None => None,
             },
+            "prevsearch" => Some(Event::ToCommandLine(CommandLineEvent::PrevSearch)),
+            "nextsearch" => Some(Event::ToCommandLine(CommandLineEvent::NextSearch)),
 
             "goto"
             | "go"

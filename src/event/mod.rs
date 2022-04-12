@@ -66,6 +66,7 @@ pub enum ComponentEvent {
     GoToTop,
     GoToBottom,
     Search(String),
+    SearchPrev(String),
     NowPlaying(Option<Song>),
     Queue(Vec<Song>),
     Playlist(Vec<Playlist>),
@@ -96,6 +97,8 @@ pub enum CommandLineEvent {
     Echo(String),
     Mode(Mode),
     Input(Key),
+    PrevSearch,
+    NextSearch,
     SbrcError(usize, String),
     SbrcNotFound,
 }
@@ -169,6 +172,8 @@ impl fmt::Debug for ComponentEvent {
                 write!(f, "ComponentEvent::GoToBottom"),
             ComponentEvent::Search(s) =>
                 write!(f, "ComponentEvent::Search({})", s),
+            ComponentEvent::SearchPrev(s) =>
+                write!(f, "ComponentEvent::SearchPrev({})", s),
         }
     }
 }

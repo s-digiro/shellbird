@@ -136,6 +136,10 @@ impl Component for Queue {
                 self.menu.search(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
+            ComponentEvent::SearchPrev(s) => {
+                self.menu.search_prev(s);
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
             ComponentEvent::Select => {
                 if let Some(song) = self.tracks.get(self.menu.selection) {
                     tx.send(Event::ToMpd(

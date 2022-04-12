@@ -145,6 +145,19 @@ impl Menu {
             .unwrap_or(&self.selection);
     }
 
+    pub fn search_prev(&mut self, s: &str) {
+        let len = self.items.len();
+
+        self.selection = *self.items.iter().enumerate()
+            .rev()
+            .skip(len - self.selection)
+            .filter(|(_, item)| item.to_lowercase().contains(&s.to_lowercase()))
+            .map(|(i, _)| i)
+            .collect::<Vec<usize>>()
+            .first()
+            .unwrap_or(&self.selection);
+    }
+
     pub fn next(&mut self) {
         self.selection = if self.items.len() == 0 {
             0

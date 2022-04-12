@@ -225,6 +225,10 @@ impl Component for TagMenu {
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
+            ComponentEvent::SearchPrev(s) => {
+                self.menu.search_prev(s);
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
             ComponentEvent::Select => {
                 tx.send(
                     Event::ToMpd(MpdEvent::AddToQueue(
