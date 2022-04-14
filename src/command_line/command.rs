@@ -141,7 +141,10 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "clear"
             | "clearqueue" => Some(Event::ToMpd(MpdEvent::ClearQueue)),
 
+            "repeat" => Some(Event::ToMpd(MpdEvent::Repeat)),
             "random" => Some(Event::ToMpd(MpdEvent::Random)),
+            "single" => Some(Event::ToMpd(MpdEvent::Single)),
+            "consume" => Some(Event::ToMpd(MpdEvent::Consume)),
 
             "bind"
             | "bindkey" => cmd.get(1)

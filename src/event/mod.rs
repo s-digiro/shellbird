@@ -101,6 +101,7 @@ pub enum CommandLineEvent {
     NextSearch,
     SbrcError(usize, String),
     SbrcNotFound,
+    MpdOptionChange(mpd::status::Status),
 }
 
 #[derive(Debug)]
@@ -118,7 +119,10 @@ pub enum MpdEvent {
     AddToQueue(Vec<Song>),
     AddStyleToQueue(Vec<String>),
     PlayAt(Song),
+    Repeat,
     Random,
+    Single,
+    Consume,
     Next,
     Prev,
 }
@@ -186,7 +190,10 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::AddToQueue(songs) => write!(f, "MpdEvent::AddToQueue({} songs)", songs.len()),
             MpdEvent::AddStyleToQueue(genres) => write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len()),
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
+            MpdEvent::Repeat => write!(f, "MpdEvent::Repeat"),
             MpdEvent::Random => write!(f, "MpdEvent::Random"),
+            MpdEvent::Single => write!(f, "MpdEvent::Single"),
+            MpdEvent::Consume => write!(f, "MpdEvent::Consume"),
             MpdEvent::Next => write!(f, "MpdEvent::Next"),
             MpdEvent::Prev => write!(f, "MpdEvent::Prev"),
         }

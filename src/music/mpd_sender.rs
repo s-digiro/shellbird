@@ -56,7 +56,10 @@ pub fn init_mpd_sender_thread(
 
                 let result = match request.clone() {
                     MpdEvent::TogglePause => c.toggle_pause(),
+                    MpdEvent::Repeat => toggle_repeat(c),
                     MpdEvent::Random => toggle_random(c),
+                    MpdEvent::Single => toggle_single(c),
+                    MpdEvent::Consume => toggle_consume(c),
                     MpdEvent::ClearQueue => c.clear(),
                     MpdEvent::AddToQueue(songs) => push_all(c, songs),
                     MpdEvent::PlayAt(song) => play_at(c, song),
@@ -81,12 +84,24 @@ pub fn init_mpd_sender_thread(
     ret_tx
 }
 
+fn toggle_repeat(conn: &mut Client) -> Result<(), Error> {
+    let status = conn.status()?;
+    conn.repeat(!status.repeat)
+}
+
 fn toggle_random(conn: &mut Client) -> Result<(), Error> {
-    let stats = conn.status()?;
+    let status = conn.status()?;
+    conn.random(!status.random)
+}
 
-    conn.random(!stats.random)?;
+fn toggle_single(conn: &mut Client) -> Result<(), Error> {
+    let status = conn.status()?;
+    conn.single(!status.single)
+}
 
-    Ok(())
+fn toggle_consume(conn: &mut Client) -> Result<(), Error> {
+    let status = conn.status()?;
+    conn.consume(!status.consume)
 }
 
 fn push_all(conn: &mut Client, songs: Vec<Song>) -> Result<(), Error> {

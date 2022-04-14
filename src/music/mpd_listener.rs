@@ -46,6 +46,7 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                 send_queue(c, &tx);
                 send_now_playing(c, &tx);
                 send_playlists(c, &tx);
+                send_status(c, &tx);
 
                 loop {
                     if let Ok(systems) = c.wait(&[]) {
@@ -55,6 +56,7 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                                 Subsystem::Queue => send_queue(c, &tx),
                                 Subsystem::Playlist => send_playlists(c, &tx),
                                 Subsystem::Database => send_database(c, &tx),
+                                Subsystem::Options => send_status(c,  &tx),
                                 _ => (),
                             }
                         }
@@ -138,5 +140,15 @@ fn send_database(conn: &mut Client, tx: &mpsc::Sender<Event>) {
         Ok(results) =>
             tx.send(Event::ToApp(AppEvent::Database(results))).unwrap(),
         _ => (),
+    }
+}
+
+fn send_status(conn: &mut Client, tx: &mpsc::Sender<Event>) {
+    match conn.status() {
+        Ok(status) =>
+            tx.send(
+                Event::ToCommandLine(CommandLineEvent::MpdOptionChange(status))
+            ).unwrap(),
+        err => eprintln!("{:?}", err),
     }
 }

@@ -48,7 +48,7 @@ impl CommandLine {
     pub fn new(tx: mpsc::Sender<Event>) -> CommandLine {
         CommandLine {
             content: ContentType::Keys(Vec::new()),
-            statusline: String::new(),
+            statusline: "[----]".into(),
             text: String::new(),
             mode: Mode::TUI,
             keybinds: HashMap::new(),
@@ -191,9 +191,9 @@ impl CommandLine {
 
 
     pub fn draw(&self) {
-        let (_, h) = termion::terminal_size().unwrap();
+        let (w, h) = termion::terminal_size().unwrap();
 
-        print!("{}{}{}{}",
+        print!("{}{}{}{}{}{}",
             cursor::Goto(1, h),
             clear::CurrentLine,
             match self.mode {
@@ -204,7 +204,9 @@ impl CommandLine {
             match &self.content {
                 ContentType::Chars(cmd) => &cmd,
                 ContentType::Keys(_) => &self.text,
-            }
+            },
+            cursor::Goto(w - 6, h),
+            self.statusline,
         );
     }
 
@@ -225,6 +227,14 @@ impl CommandLine {
             CommandLineEvent::SbrcNotFound => self.put_text(
                 "Sbrc not found. :q to quit.".to_string()
             ),
+            CommandLineEvent::MpdOptionChange(status) => 
+                self.statusline = format!(
+                    "[{}{}{}{}]",
+                    if status.repeat  { "r" } else { "-" },
+                    if status.random  { "z" } else { "-" },
+                    if status.single  { "s" } else { "-" },
+                    if status.consume { "c" } else { "-" },
+                ),
         }
     }
 }

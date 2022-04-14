@@ -1,4 +1,5 @@
 bind <space> select
+bind <return> select
 bind j down
 bind k up
 bind gg top
@@ -6,8 +7,10 @@ bind G bot
 bind h focusprev
 bind l focusnext
 bind p pause
-bind <return> play
-bind z random
+bind or repeat
+bind oz random
+bind os single
+bind oc consume
 bind c clear
 bind 1 switchscreen NowPlayingScreen
 bind 2 switchscreen QueueScreen
