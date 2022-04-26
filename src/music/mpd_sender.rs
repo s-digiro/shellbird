@@ -66,6 +66,7 @@ pub fn init_mpd_sender_thread(
                     MpdEvent::AddStyleToQueue(genres) => add_style_to_queue(c, genres),
                     MpdEvent::Next => c.next(),
                     MpdEvent::Prev => c.prev(),
+                    MpdEvent::SetVolume(vol) => c.volume(vol),
                 };
 
                 if let Err(_) = result {

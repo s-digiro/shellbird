@@ -12,6 +12,8 @@ bind oz random
 bind os single
 bind oc consume
 bind c clear
+bind <up> volume up 5
+bind <down> volume down 5
 bind 1 switchscreen NowPlayingScreen
 bind 2 switchscreen QueueScreen
 bind 3 switchscreen PlaylistViewScreen

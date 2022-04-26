@@ -116,6 +116,7 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [x] Screen Map
 - [x] Redraw Event
 - [x] Search Navigation
+- [x] Volume Control
 - [ ] Update README. Document everything in this todo list. Delete things from list that are documented.
 - [ ] Better logging. Writing directly to stderr just seems old and outdated
 - [ ] Better splitter borders

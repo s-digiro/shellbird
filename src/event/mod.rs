@@ -101,7 +101,10 @@ pub enum CommandLineEvent {
     NextSearch,
     SbrcError(usize, String),
     SbrcNotFound,
-    MpdOptionChange(mpd::status::Status),
+    MpdStatus(mpd::status::Status),
+    VolumeMv(i8),
+    VolumeUp(i8),
+    VolumeDown(i8),
 }
 
 #[derive(Debug)]
@@ -125,6 +128,7 @@ pub enum MpdEvent {
     Consume,
     Next,
     Prev,
+    SetVolume(i8),
 }
 
 impl fmt::Debug for ComponentEvent {
@@ -196,6 +200,7 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::Consume => write!(f, "MpdEvent::Consume"),
             MpdEvent::Next => write!(f, "MpdEvent::Next"),
             MpdEvent::Prev => write!(f, "MpdEvent::Prev"),
+            MpdEvent::SetVolume(vol) => write!(f, "MpdEvent::SetVolume({})", vol),
         }
     }
 }

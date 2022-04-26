@@ -18,6 +18,7 @@ along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 use std::collections::HashMap;
+use std::cmp::{min, max};
 
 use crate::event::*;
 
@@ -29,6 +30,10 @@ lazy_static! {
         m.insert("<space>", Key::Char(' '));
         m.insert("<return>", Key::Char('\n'));
         m.insert("<enter>", Key::Char('\n'));
+        m.insert("<up>", Key::Up);
+        m.insert("<down>", Key::Down);
+        m.insert("<left>", Key::Left);
+        m.insert("<right>", Key::Right);
         m
     };
 }
@@ -146,6 +151,25 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "single" => Some(Event::ToMpd(MpdEvent::Single)),
             "consume" => Some(Event::ToMpd(MpdEvent::Consume)),
 
+            "volume" => get_lowercase(cmd, 1).and_then(|s| match s.as_str() {
+                "set" => get_i8(cmd, 2).and_then(
+                    |x| Some(
+                        Event::ToMpd(MpdEvent::SetVolume(min(100, max(0, x))))
+                    )
+                ),
+                "up" => get_i8(cmd, 2).and_then(
+                    |x| Some(
+                        Event::ToCommandLine(CommandLineEvent::VolumeUp(x))
+                    )
+                ),
+                "down" => get_i8(cmd, 2).and_then(
+                    |x| Some(
+                        Event::ToCommandLine(CommandLineEvent::VolumeDown(x))
+                    )
+                ),
+                _ => None
+            }),
+
             "bind"
             | "bindkey" => cmd.get(1)
                 .and_then(|key| {
@@ -176,13 +200,11 @@ fn get_lowercase(cmd: &Vec<&str>, i: usize) -> Option<String> {
 }
 
 fn get_usize(cmd: &Vec<&str>, i: usize) -> Option<usize> {
-    match cmd.get(i) {
-        Some(s) => match s.parse::<usize>() {
-            Ok(num) => Some(num),
-            _ => None,
-        },
-        None => None,
-    }
+    cmd.get(i).and_then(|s| s.parse::<usize>().ok())
+}
+
+fn get_i8(cmd: &Vec<&str>, i: usize) -> Option<i8> {
+    cmd.get(i).and_then(|s| s.parse::<i8>().ok())
 }
 
 fn _get_boolean(cmd: &Vec<&str>, i: usize) -> Option<bool> {

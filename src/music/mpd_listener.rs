@@ -42,11 +42,11 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
             tx.send(spawn_error_msg("Mpd Connection established!")).unwrap();
 
             if let Some(c) = &mut conn {
-                send_database(c, &tx);
-                send_queue(c, &tx);
-                send_now_playing(c, &tx);
-                send_playlists(c, &tx);
                 send_status(c, &tx);
+                send_database(c, &tx);
+                send_now_playing(c, &tx);
+                send_queue(c, &tx);
+                send_playlists(c, &tx);
 
                 loop {
                     if let Ok(systems) = c.wait(&[]) {
@@ -57,6 +57,7 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                                 Subsystem::Playlist => send_playlists(c, &tx),
                                 Subsystem::Database => send_database(c, &tx),
                                 Subsystem::Options => send_status(c,  &tx),
+                                Subsystem::Mixer => send_status(c, &tx),
                                 _ => (),
                             }
                         }
@@ -66,8 +67,7 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                         ).unwrap();
 
                         tx.send(spawn_error_msg(
-                            "Mpd Connection dropped. Reestablishing \
-                                connection..."
+                            "Mpd Connection dropped. Reestablishing connection..."
                         )).unwrap();
 
                         conn = None;
@@ -147,7 +147,7 @@ fn send_status(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.status() {
         Ok(status) =>
             tx.send(
-                Event::ToCommandLine(CommandLineEvent::MpdOptionChange(status))
+                Event::ToCommandLine(CommandLineEvent::MpdStatus(status))
             ).unwrap(),
         err => eprintln!("{:?}", err),
     }

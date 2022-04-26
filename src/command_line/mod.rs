@@ -22,6 +22,7 @@ mod command;
 use std::collections::HashMap;
 use std::sync::mpsc;
 use std::mem;
+use std::cmp::{min, max};
 use termion::{cursor, clear, event::Key};
 
 use crate::event::*;
@@ -42,19 +43,21 @@ pub struct CommandLine {
     tx: mpsc::Sender<Event>,
 
     last_search: Option<String>,
+    volume: i8,
 }
 
 impl CommandLine {
     pub fn new(tx: mpsc::Sender<Event>) -> CommandLine {
         CommandLine {
             content: ContentType::Keys(Vec::new()),
-            statusline: "[----]".into(),
+            statusline: "[----] Vol: %".into(),
             text: String::new(),
             mode: Mode::TUI,
             keybinds: HashMap::new(),
             tx,
 
             last_search: None,
+            volume: -1,
         }
     }
 
@@ -91,6 +94,13 @@ impl CommandLine {
                 Event::ToFocus(ComponentEvent::SearchPrev(last_search))
             ).unwrap();
         }
+    }
+
+    pub fn vol_mv(&mut self, amount: i8) {
+        // Force volume in range 0 <= vol <= 100
+        let new_vol = min(100, max(0, self.volume + amount));
+
+        self.tx.send(Event::ToMpd(MpdEvent::SetVolume(new_vol))).unwrap();
     }
 
 
@@ -205,7 +215,7 @@ impl CommandLine {
                 ContentType::Chars(cmd) => &cmd,
                 ContentType::Keys(_) => &self.text,
             },
-            cursor::Goto(w - 6, h),
+            cursor::Goto(w - (self.statusline.len() as u16), h),
             self.statusline,
         );
     }
@@ -227,14 +237,20 @@ impl CommandLine {
             CommandLineEvent::SbrcNotFound => self.put_text(
                 "Sbrc not found. :q to quit.".to_string()
             ),
-            CommandLineEvent::MpdOptionChange(status) => 
+            CommandLineEvent::MpdStatus(status) =>  {
                 self.statusline = format!(
-                    "[{}{}{}{}]",
+                    "[{}{}{}{}] Vol: {}%",
                     if status.repeat  { "r" } else { "-" },
                     if status.random  { "z" } else { "-" },
                     if status.single  { "s" } else { "-" },
                     if status.consume { "c" } else { "-" },
-                ),
+                    status.volume,
+                );
+                self.volume = status.volume;
+            },
+            CommandLineEvent::VolumeMv(by) => self.vol_mv(*by),
+            CommandLineEvent::VolumeUp(by) => self.vol_mv(max(0, *by)),
+            CommandLineEvent::VolumeDown(by) => self.vol_mv(-(max(0, *by))),
         }
     }
 }
