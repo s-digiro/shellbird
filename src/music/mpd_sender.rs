@@ -71,8 +71,7 @@ pub fn init_mpd_sender_thread(
 
                 if let Err(_) = result {
                     tx.send(Event::ToApp(AppEvent::Error(format!(
-                        "Mpd Sender Thread: Mpd Connection dropped. Resending \
-                            MpdRequest {:?}",
+                        "Mpd Sender Thread: Mpd Connection dropped. Resending MpdRequest {:?}",
                         request
                     )))).unwrap();
                     conn = None;

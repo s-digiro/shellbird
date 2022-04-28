@@ -153,7 +153,10 @@ impl<'a> Shellbird<'a> {
                 },
                 Event::ToApp(e) => match e {
                     AppEvent::Quit => break,
-                    AppEvent::Error(s) => eprintln!("{}", s),
+                    AppEvent::Error(s) =>
+                        tx.send(
+                            Event::ToCommandLine(CommandLineEvent::Echo(s))
+                        ).unwrap(),
                     AppEvent::ClearScreen => print!("{}", clear::All),
                     AppEvent::DrawScreen =>
                         tx.send(
