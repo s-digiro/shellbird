@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::collections::{VecDeque, HashMap};
+use crate::components::{Component, Components, MoveFocusResult, Splitter};
+use std::collections::{HashMap, VecDeque};
 use std::fmt;
-use crate::components::{Splitter, Components, Component, MoveFocusResult};
 
 pub struct Screen {
     name: String,
@@ -46,10 +46,7 @@ impl Screen {
         self.name = name.to_string();
     }
 
-    pub fn focus<'a>(
-        &self,
-        components: &'a HashMap<String, Components>
-    ) -> String {
+    pub fn focus<'a>(&self, components: &'a HashMap<String, Components>) -> String {
         let stack = construct_focus_stack(&self.name, components);
 
         let key = stack.back().unwrap().to_string();
@@ -99,11 +96,7 @@ impl Screen {
         }
     }
 
-    pub fn contains(
-        &self,
-        key: &str,
-        components: &HashMap<String, Components>
-    ) -> bool {
+    pub fn contains(&self, key: &str, components: &HashMap<String, Components>) -> bool {
         if self.name == key {
             true
         } else {
@@ -128,22 +121,19 @@ fn splitter_contains(
                 for child in splitter.children() {
                     if let Some(component) = components.get(child) {
                         if splitter_contains(component, key, components) {
-                            return true
+                            return true;
                         }
                     }
                 }
 
                 false
             }
-        },
+        }
         _ => component.name() == key,
     }
 }
 
-fn construct_focus_stack(
-    root: &str,
-    components: &HashMap<String, Components>
-) -> VecDeque<String> {
+fn construct_focus_stack(root: &str, components: &HashMap<String, Components>) -> VecDeque<String> {
     let mut stack: VecDeque<String> = VecDeque::new();
     stack.push_back(root.to_string());
     loop {
@@ -159,7 +149,7 @@ fn construct_focus_stack(
                 break;
             }
         } else {
-            break
+            break;
         }
     }
 

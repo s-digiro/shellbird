@@ -21,14 +21,13 @@ use std::sync::mpsc;
 
 use unicode_truncate::Alignment;
 
-use crate::event::*;
-use crate::GlobalState;
-use crate::playlist::Playlist;
-use crate::components::{Component, Components, menu::Menu};
 use crate::color::Color;
+use crate::components::{menu::Menu, Component, Components};
+use crate::event::*;
+use crate::playlist::Playlist;
+use crate::GlobalState;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct PlaylistMenu {
     menu: Menu,
     playlists: Vec<Playlist>,
@@ -43,16 +42,14 @@ impl PlaylistMenu {
         title_alignment: Alignment,
         menu_alignment: Alignment,
     ) -> Components {
-        Components::PlaylistMenu(
-            PlaylistMenu::new(
-                name,
-                color,
-                focus_color,
-                title,
-                title_alignment,
-                menu_alignment,
-            )
-        )
+        Components::PlaylistMenu(PlaylistMenu::new(
+            name,
+            color,
+            focus_color,
+            title,
+            title_alignment,
+            menu_alignment,
+        ))
     }
 
     pub fn new(
@@ -79,8 +76,7 @@ impl PlaylistMenu {
     }
 
     fn update_menu_items(&mut self) {
-        self.menu.items = self.playlists.iter()
-            .map(|pl| pl.name.clone()).collect();
+        self.menu.items = self.playlists.iter().map(|pl| pl.name.clone()).collect();
     }
 
     fn spawn_update_event(&self) -> Event {
@@ -95,77 +91,77 @@ impl PlaylistMenu {
 }
 
 impl Component for PlaylistMenu {
-    fn name(&self) -> &str { &self.menu.name }
+    fn name(&self) -> &str {
+        &self.menu.name
+    }
 
-    fn handle(
-        &mut self,
-        _state: &GlobalState,
-        e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
-    ) {
+    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
         match e {
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::Prev => {
                 self.menu.prev();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::GoToTop => {
                 self.menu.to_top();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::GoToBottom => {
                 self.menu.to_bottom();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::GoTo(i) => {
                 self.menu.to(*i);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::Search(s) => {
                 self.menu.search(s);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::SearchPrev(s) => {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::Select => {
-                let playlists = self.playlists.get(self.menu.selection).unwrap()
-                    .tracks.clone();
+                let playlists = self
+                    .playlists
+                    .get(self.menu.selection)
+                    .unwrap()
+                    .tracks
+                    .clone();
 
                 let event = Event::ToMpd(MpdEvent::AddToQueue(playlists));
 
                 tx.send(event).unwrap()
-            },
+            }
             ComponentEvent::Playlist(playlists) => {
                 self.playlists = playlists.clone();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::LostMpdConnection => {
                 self.playlists = Vec::new();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            },
+            }
             _ => (),
         }
-
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {

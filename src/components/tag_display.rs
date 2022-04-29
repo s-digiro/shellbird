@@ -17,16 +17,15 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::sync::mpsc;
-use termion::{cursor, color};
-use unicode_truncate::{UnicodeTruncateStr, Alignment};
-use crate::GlobalState;
 use crate::color::Color;
-use crate::event::*;
 use crate::components::{Component, Components};
+use crate::event::*;
+use crate::GlobalState;
+use std::sync::mpsc;
+use termion::{color, cursor};
+use unicode_truncate::{Alignment, UnicodeTruncateStr};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct TagDisplay {
     name: String,
     tag: String,
@@ -36,23 +35,11 @@ pub struct TagDisplay {
 }
 
 impl TagDisplay {
-    pub fn enumed(
-        name: &str,
-        color: Color,
-        alignment: Alignment,
-        tag: &str
-    ) -> Components {
-        Components::TagDisplay(
-            TagDisplay::new(name, color, alignment, tag)
-        )
+    pub fn enumed(name: &str, color: Color, alignment: Alignment, tag: &str) -> Components {
+        Components::TagDisplay(TagDisplay::new(name, color, alignment, tag))
     }
 
-    pub fn new(
-        name: &str,
-        color: Color,
-        alignment: Alignment,
-        tag: &str
-    ) -> TagDisplay {
+    pub fn new(name: &str, color: Color, alignment: Alignment, tag: &str) -> TagDisplay {
         TagDisplay {
             name: name.to_string(),
             tag: tag.to_string(),
@@ -64,18 +51,15 @@ impl TagDisplay {
 }
 
 impl Component for TagDisplay {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str {
+        &self.name
+    }
 
-    fn handle(
-        &mut self,
-        _state: &GlobalState,
-        e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
-    ) {
+    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            },
+            }
             ComponentEvent::NowPlaying(song) => {
                 self.contents = match song {
                     Some(song) => match song.tags.get(&self.tag) {
@@ -85,10 +69,10 @@ impl Component for TagDisplay {
                     None => "<Unavailable>".to_string(),
                 };
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::LostMpdConnection => {
                 self.contents = "<Unavailable>".to_string();
-            },
+            }
             _ => (),
         }
     }

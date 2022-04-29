@@ -19,8 +19,7 @@ along with Shellbird; see the file COPYING.  If not see
 
 use super::*;
 
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum NestableEvent {
     ToApp(AppEvent),
     ToScreen(ScreenEvent),
@@ -56,5 +55,4 @@ impl NestableEvent {
             NestableEvent::ToComponent(s, e) => Event::ToComponent(s, e),
         }
     }
-
 }

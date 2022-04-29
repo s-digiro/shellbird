@@ -17,22 +17,22 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::sync::mpsc;
 use std::borrow::Cow;
+use std::sync::mpsc;
 use std::thread;
 
 use crate::event::*;
 
-use mpd::Query;
-use mpd::Term;
-use mpd::Client;
 use mpd::error::Error;
+use mpd::Client;
+use mpd::Query;
 use mpd::Song;
+use mpd::Term;
 
 pub fn init_mpd_sender_thread(
     ip: &str,
     port: &str,
-    tx: mpsc::Sender<Event>
+    tx: mpsc::Sender<Event>,
 ) -> mpsc::Sender<MpdEvent> {
     let (ret_tx, rx) = mpsc::channel();
 
@@ -73,7 +73,8 @@ pub fn init_mpd_sender_thread(
                     tx.send(Event::ToApp(AppEvent::Error(format!(
                         "Mpd Sender Thread: Mpd Connection dropped. Resending MpdRequest {:?}",
                         request
-                    )))).unwrap();
+                    ))))
+                    .unwrap();
                     conn = None;
                     rethrow_tx.send(request).unwrap();
                 }
@@ -107,7 +108,7 @@ fn toggle_consume(conn: &mut Client) -> Result<(), Error> {
 fn push_all(conn: &mut Client, songs: Vec<Song>) -> Result<(), Error> {
     for song in songs {
         if let Err(e) = conn.push(song) {
-            return Err(e)
+            return Err(e);
         }
     }
 
@@ -123,19 +124,15 @@ fn play_at(conn: &mut Client, song: Song) -> Result<(), Error> {
             conn.switch(q.last().unwrap().place.unwrap().pos).unwrap();
 
             Ok(())
-        },
+        }
     }
 }
 
 fn add_style_to_queue(conn: &mut Client, genres: Vec<String>) -> Result<(), Error> {
     for genre in genres {
         let songs = conn.search(
-            Query::new()
-                .and(
-                    Term::Tag(Cow::Borrowed("Genre")),
-                    genre
-                ),
-                None
+            Query::new().and(Term::Tag(Cow::Borrowed("Genre")), genre),
+            None,
         )?;
 
         push_all(conn, songs)?;

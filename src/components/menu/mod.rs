@@ -17,18 +17,17 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-pub mod queue;
 pub mod playlist_menu;
+pub mod queue;
+pub mod style_menu;
 pub mod tag_menu;
 pub mod track_menu;
-pub mod style_menu;
 
 use crate::color::Color;
-use termion::{cursor, style, color};
-use unicode_truncate::{UnicodeTruncateStr, Alignment};
+use termion::{color, cursor, style};
+use unicode_truncate::{Alignment, UnicodeTruncateStr};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Menu {
     pub name: String,
     pub selection: usize,
@@ -46,21 +45,18 @@ impl Menu {
 
         let mut buffer = String::new();
 
-
         let mut i = self.first_visible(h);
 
         if let Some(title) = &self.title {
-            buffer.push_str(
-                &format!(
-                    "{}{}{}{}{}{}",
-                    color::Fg(self.color(focus)),
-                    cursor::Goto(x, y),
-                    title.unicode_pad(w as usize, self.title_alignment, true),
-                    cursor::Goto(x, y + 1),
-                    "─".repeat(w as usize),
-                    style::Reset,
-                )
-            );
+            buffer.push_str(&format!(
+                "{}{}{}{}{}{}",
+                color::Fg(self.color(focus)),
+                cursor::Goto(x, y),
+                title.unicode_pad(w as usize, self.title_alignment, true),
+                cursor::Goto(x, y + 1),
+                "─".repeat(w as usize),
+                style::Reset,
+            ));
 
             cur_y = cur_y + 2;
         }
@@ -70,33 +66,27 @@ impl Menu {
         for line in cur_y..(y + h) {
             if let Some(s) = self.items.get(i) {
                 if self.selection == i {
-                    buffer.push_str(
-                        &format!(
-                            "{}{}{}{}{}",
-                            style::Invert,
-                            cursor::Goto(x, line),
-                            s.unicode_pad(w as usize, self.menu_alignment, true),
-                            style::Reset,
-                            color::Fg(self.color(focus)),
-                        )
-                    );
+                    buffer.push_str(&format!(
+                        "{}{}{}{}{}",
+                        style::Invert,
+                        cursor::Goto(x, line),
+                        s.unicode_pad(w as usize, self.menu_alignment, true),
+                        style::Reset,
+                        color::Fg(self.color(focus)),
+                    ));
                 } else {
-                    buffer.push_str(
-                        &format!(
-                            "{}{}",
-                            cursor::Goto(x, line),
-                            s.unicode_pad(w as usize, self.menu_alignment, true),
-                        )
-                    );
-                }
-            } else {
-                buffer.push_str(
-                    &format!(
+                    buffer.push_str(&format!(
                         "{}{}",
                         cursor::Goto(x, line),
-                        " ".unicode_pad(w as usize, self.menu_alignment, true),
-                    ),
-                );
+                        s.unicode_pad(w as usize, self.menu_alignment, true),
+                    ));
+                }
+            } else {
+                buffer.push_str(&format!(
+                    "{}{}",
+                    cursor::Goto(x, line),
+                    " ".unicode_pad(w as usize, self.menu_alignment, true),
+                ));
             }
 
             i = i + 1;
@@ -136,7 +126,10 @@ impl Menu {
     }
 
     pub fn search(&mut self, s: &str) {
-        self.selection = *self.items.iter().enumerate()
+        self.selection = *self
+            .items
+            .iter()
+            .enumerate()
             .skip(self.selection + 1)
             .filter(|(_, item)| item.to_lowercase().contains(&s.to_lowercase()))
             .map(|(i, _)| i)
@@ -148,7 +141,10 @@ impl Menu {
     pub fn search_prev(&mut self, s: &str) {
         let len = self.items.len();
 
-        self.selection = *self.items.iter().enumerate()
+        self.selection = *self
+            .items
+            .iter()
+            .enumerate()
             .rev()
             .skip(len - self.selection)
             .filter(|(_, item)| item.to_lowercase().contains(&s.to_lowercase()))
@@ -178,10 +174,7 @@ impl Menu {
         }
     }
 
-    pub fn first_visible(
-        &self,
-        h: u16,
-    ) -> usize {
+    pub fn first_visible(&self, h: u16) -> usize {
         let h = match self.title {
             Some(_) => h - 2,
             None => h,
@@ -198,20 +191,15 @@ impl Menu {
         // If item is close to bottom
         } else if self.selection as i32 >= self.items.len() as i32 - center as i32 {
             // Set first drawn item to either 0 or half screen above middle
-            std::cmp::max(
-                0,
-                self.items.len() as i32 - h as i32
-            ) as usize
+            std::cmp::max(0, self.items.len() as i32 - h as i32) as usize
         // If item is in middle
         } else {
             (self.selection - center as usize) as usize
         }
     }
-
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Parent {
     parent: Option<String>,
 }
@@ -235,5 +223,3 @@ impl Parent {
         }
     }
 }
-
-

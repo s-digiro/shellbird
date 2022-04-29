@@ -17,12 +17,11 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+use crate::components::{Component, Components};
 use termion::color;
 use termion::cursor;
-use crate::components::{Component, Components};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct ErrorBox;
 
 impl ErrorBox {
@@ -31,24 +30,23 @@ impl ErrorBox {
     }
 
     pub fn new() -> ErrorBox {
-        ErrorBox { }
+        ErrorBox {}
     }
 }
 
 impl Component for ErrorBox {
-    fn name(&self) -> &str { "Error" }
+    fn name(&self) -> &str {
+        "Error"
+    }
 
-    fn draw(
-        &self,
-        x: u16, y: u16, w: u16, h: u16,
-        _focus: bool,
-    ) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, _focus: bool) {
         let mut text = "Error".to_string();
         text.truncate((w - 2).into());
 
         print!("{}", color::Fg(color::Red));
         self.border(x, y, w, h);
-        print!("{}{}{}",
+        print!(
+            "{}{}{}",
             cursor::Goto(x + 1, y + 1),
             text,
             color::Fg(color::Reset),

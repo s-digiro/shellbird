@@ -17,48 +17,48 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-extern crate mpd;
-extern crate termion;
-extern crate signal_hook;
 extern crate home;
-extern crate unicode_width;
-extern crate unicode_truncate;
 extern crate json;
+extern crate mpd;
+extern crate signal_hook;
+extern crate termion;
+extern crate unicode_truncate;
+extern crate unicode_width;
 
 #[macro_use]
 extern crate lazy_static;
 
-pub mod event;
-pub mod components;
-pub mod music;
-pub mod layout_config;
-pub mod signals;
 pub mod color;
-pub mod playlist;
-pub mod styles;
 pub mod command_line;
+pub mod components;
+pub mod event;
+pub mod layout_config;
 pub mod mode;
+pub mod music;
+pub mod playlist;
 pub mod screen;
+pub mod signals;
+pub mod styles;
 
-use std::error::Error;
-use std::io::{self, Stdout, Write, BufRead, BufReader};
 use std::collections::HashMap;
+use std::error::Error;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader, Stdout, Write};
 use std::sync::mpsc;
 use std::thread;
-use std::fs::File;
 
 use mpd::Song;
 
+use termion::input::TermRead;
 use termion::raw::RawTerminal;
 use termion::{clear, cursor};
-use termion::input::TermRead;
 
-use event::*;
-use styles::StyleTree;
-use music::{mpd_sender, mpd_listener};
 use command_line::CommandLine;
-use components::{Components, Component};
+use components::{Component, Components};
+use event::*;
+use music::{mpd_listener, mpd_sender};
 use screen::Screen;
+use styles::StyleTree;
 
 pub struct GlobalState {
     pub style_tree: Option<StyleTree>,
@@ -91,7 +91,7 @@ impl<'a> Shellbird<'a> {
         mpd_ip: &'a str,
         mpd_port: &'a str,
         debug: bool,
-    )  -> Shellbird<'a> {
+    ) -> Shellbird<'a> {
         Shellbird {
             genres_path,
             sbrc_path,
@@ -102,10 +102,7 @@ impl<'a> Shellbird<'a> {
         }
     }
 
-    pub fn run(
-        &mut self,
-        mut stdout: RawTerminal<Stdout>
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn run(&mut self, mut stdout: RawTerminal<Stdout>) -> Result<(), Box<dyn Error>> {
         let mut state = GlobalState::new();
 
         let mut components = self.init_components();
@@ -116,11 +113,7 @@ impl<'a> Shellbird<'a> {
 
         let mut command_line = CommandLine::new(tx.clone());
 
-        let mpd_tx =  mpd_sender::init_mpd_sender_thread(
-            self.mpd_ip,
-            self.mpd_port,
-            tx.clone()
-        );
+        let mpd_tx = mpd_sender::init_mpd_sender_thread(self.mpd_ip, self.mpd_port, tx.clone());
 
         self.init_stdin_thread(tx.clone());
         self.run_sbrc(tx.clone());
@@ -150,24 +143,21 @@ impl<'a> Shellbird<'a> {
                     if let Some(c) = components.get_mut(&name) {
                         c.handle(&state, &e, tx.clone());
                     }
-                },
+                }
                 Event::ToApp(e) => match e {
                     AppEvent::Quit => break,
-                    AppEvent::Error(s) =>
-                        tx.send(
-                            Event::ToCommandLine(CommandLineEvent::Echo(s))
-                        ).unwrap(),
+                    AppEvent::Error(s) => tx
+                        .send(Event::ToCommandLine(CommandLineEvent::Echo(s)))
+                        .unwrap(),
                     AppEvent::ClearScreen => print!("{}", clear::All),
-                    AppEvent::DrawScreen =>
-                        tx.send(
-                            spawn_draw_screen_event(&screen, &components)
-                        ).unwrap(),
+                    AppEvent::DrawScreen => tx
+                        .send(spawn_draw_screen_event(&screen, &components))
+                        .unwrap(),
                     AppEvent::LostMpdConnection => {
                         state.library = Vec::new();
-                        tx.send(Event::ToAllComponents(
-                            ComponentEvent::LostMpdConnection
-                        )).unwrap();
-                    },
+                        tx.send(Event::ToAllComponents(ComponentEvent::LostMpdConnection))
+                            .unwrap();
+                    }
                     AppEvent::Database(tracks) => {
                         if let Some(tree) = &mut state.style_tree {
                             tree.set_tracks(tracks.clone());
@@ -175,58 +165,60 @@ impl<'a> Shellbird<'a> {
 
                         state.library = tracks.clone();
 
-                        tx.send(Event::ToAllComponents(
-                                ComponentEvent::Database(tracks))
-                        ).unwrap();
-                    },
+                        tx.send(Event::ToAllComponents(ComponentEvent::Database(tracks)))
+                            .unwrap();
+                    }
                     AppEvent::SwitchScreen(name) => {
                         screen.set(&name);
                         tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap();
-                    },
+                    }
                     AppEvent::StyleTreeLoaded(tree) => {
                         state.style_tree = tree;
-                        tx.send(Event::ToAllComponents(
-                            ComponentEvent::UpdateRootStyleMenu
-                        )).unwrap();
-                    },
-                    AppEvent::Resize =>
-                        tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap(),
+                        tx.send(Event::ToAllComponents(ComponentEvent::UpdateRootStyleMenu))
+                            .unwrap();
+                    }
+                    AppEvent::Resize => tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap(),
                 },
                 Event::ToCommandLine(e) => command_line.handle(&e, tx.clone()),
                 Event::ToScreen(e) => match e {
                     ScreenEvent::FocusNext => {
                         screen.focus_next(&mut components);
                         tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap();
-                    },
+                    }
                     ScreenEvent::FocusPrev => {
                         screen.focus_prev(&mut components);
                         tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap();
-                    },
+                    }
                     ScreenEvent::NeedsRedraw(name) => {
                         if screen.contains(&name, &components) {
-                            tx.send(
-                                Event::ToApp(AppEvent::DrawScreen)
-                            ).unwrap();
+                            tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap();
                         }
-                    },
+                    }
                 },
                 Event::ToAllComponents(e) => {
                     for c in components.values_mut() {
                         c.handle(&state, &e, tx.clone())
                     }
-                },
+                }
                 Event::ToFocus(e) => {
                     let focus = screen.focus(&components).to_string();
                     if let Some(c) = components.get_mut(&focus) {
                         c.handle(&state, &e, tx.clone());
                     }
-                },
+                }
                 Event::ToMpd(e) => mpd_tx.send(e).unwrap(),
                 _ => (),
             }
         }
 
-        write!(stdout, "{}{}{}", clear::All, cursor::Goto(1,1), cursor::Show).unwrap();
+        write!(
+            stdout,
+            "{}{}{}",
+            clear::All,
+            cursor::Goto(1, 1),
+            cursor::Show
+        )
+        .unwrap();
 
         Ok(())
     }
@@ -247,9 +239,8 @@ impl<'a> Shellbird<'a> {
             let stdin = io::stdin();
             for key in stdin.keys() {
                 if let Ok(key) = key {
-                    tx.send(
-                        Event::ToCommandLine(CommandLineEvent::Input(key))
-                    ).unwrap();
+                    tx.send(Event::ToCommandLine(CommandLineEvent::Input(key)))
+                        .unwrap();
                 }
             }
         });
@@ -264,25 +255,21 @@ impl<'a> Shellbird<'a> {
                 let line = line.unwrap();
                 match command_line::run_headless(&line, tx.clone()) {
                     Ok(_) => (),
-                    _ => tx.send(
-                        Event::ToCommandLine(
-                            CommandLineEvent::SbrcError(i + 1, line.to_string())
-                        )
-                    ).unwrap(),
+                    _ => tx
+                        .send(Event::ToCommandLine(CommandLineEvent::SbrcError(
+                            i + 1,
+                            line.to_string(),
+                        )))
+                        .unwrap(),
                 }
             }
         } else {
-            tx.send(
-                Event::ToCommandLine(CommandLineEvent::SbrcNotFound)
-            ).unwrap();
+            tx.send(Event::ToCommandLine(CommandLineEvent::SbrcNotFound))
+                .unwrap();
         }
     }
-
 }
-fn spawn_draw_screen_event(
-    screen: &Screen,
-    components: &HashMap<String, Components>,
-) -> Event {
+fn spawn_draw_screen_event(screen: &Screen, components: &HashMap<String, Components>) -> Event {
     let (w, h) = termion::terminal_size().unwrap();
     let h = h - 1;
     if let Some(_) = components.get(screen.name()) {

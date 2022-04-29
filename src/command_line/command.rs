@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+use std::cmp::{max, min};
 use std::collections::HashMap;
-use std::cmp::{min, max};
 
 use crate::event::*;
 
@@ -75,7 +75,6 @@ pub fn str_to_keys(s: &str) -> Vec<Key> {
     eprintln!("ret: {:?}", ret);
     eprintln!("sym: {}", sym);
 
-
     ret
 }
 
@@ -89,12 +88,9 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
 
             "draw" => draw(cmd),
 
-            "quit"
-            | "q"
-            | "exit" => Some(Event::ToApp(AppEvent::Quit)),
+            "quit" | "q" | "exit" => Some(Event::ToApp(AppEvent::Quit)),
 
-            "switchscreen"
-            | "screen" => match cmd.get(1) {
+            "switchscreen" | "screen" => match cmd.get(1) {
                 Some(s) => Some(Event::ToApp(AppEvent::SwitchScreen(s.to_string()))),
                 None => None,
             },
@@ -109,42 +105,26 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "next" => Some(Event::ToMpd(MpdEvent::Next)),
             "prev" => Some(Event::ToMpd(MpdEvent::Prev)),
 
-            "top"
-            | "gotop"
-            | "gototop"
-            | "totop" => Some(Event::ToFocus(ComponentEvent::GoToTop)),
+            "top" | "gotop" | "gototop" | "totop" => Some(Event::ToFocus(ComponentEvent::GoToTop)),
 
-            "bottom"
-            | "gobottom"
-            | "gotobottom"
-            | "tobottom"
-            | "bot"
-            | "gobot"
-            | "gotobot"
+            "bottom" | "gobottom" | "gotobottom" | "tobottom" | "bot" | "gobot" | "gotobot"
             | "tobot" => Some(Event::ToFocus(ComponentEvent::GoToBottom)),
 
-            "search"
-            | "s" => match get_lowercase(cmd, 1) {
+            "search" | "s" => match get_lowercase(cmd, 1) {
                 Some(s) => Some(Event::ToFocus(ComponentEvent::Search(s.to_string()))),
                 None => None,
             },
             "prevsearch" => Some(Event::ToCommandLine(CommandLineEvent::PrevSearch)),
             "nextsearch" => Some(Event::ToCommandLine(CommandLineEvent::NextSearch)),
 
-            "goto"
-            | "go"
-            | "g"
-            | "to" => match get_usize(cmd, 1) {
+            "goto" | "go" | "g" | "to" => match get_usize(cmd, 1) {
                 Some(num) => Some(Event::ToFocus(ComponentEvent::GoTo(num))),
                 None => None,
-            }
+            },
 
-            "togglepause"
-            | "pause"
-            | "toggle" => Some(Event::ToMpd(MpdEvent::TogglePause)),
+            "togglepause" | "pause" | "toggle" => Some(Event::ToMpd(MpdEvent::TogglePause)),
 
-            "clear"
-            | "clearqueue" => Some(Event::ToMpd(MpdEvent::ClearQueue)),
+            "clear" | "clearqueue" => Some(Event::ToMpd(MpdEvent::ClearQueue)),
 
             "repeat" => Some(Event::ToMpd(MpdEvent::Repeat)),
             "random" => Some(Event::ToMpd(MpdEvent::Random)),
@@ -152,42 +132,28 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "consume" => Some(Event::ToMpd(MpdEvent::Consume)),
 
             "volume" => get_lowercase(cmd, 1).and_then(|s| match s.as_str() {
-                "set" => get_i8(cmd, 2).and_then(
-                    |x| Some(
-                        Event::ToMpd(MpdEvent::SetVolume(min(100, max(0, x))))
-                    )
-                ),
-                "up" => get_i8(cmd, 2).and_then(
-                    |x| Some(
-                        Event::ToCommandLine(CommandLineEvent::VolumeUp(x))
-                    )
-                ),
-                "down" => get_i8(cmd, 2).and_then(
-                    |x| Some(
-                        Event::ToCommandLine(CommandLineEvent::VolumeDown(x))
-                    )
-                ),
-                _ => None
+                "set" => get_i8(cmd, 2)
+                    .and_then(|x| Some(Event::ToMpd(MpdEvent::SetVolume(min(100, max(0, x)))))),
+                "up" => get_i8(cmd, 2)
+                    .and_then(|x| Some(Event::ToCommandLine(CommandLineEvent::VolumeUp(x)))),
+                "down" => get_i8(cmd, 2)
+                    .and_then(|x| Some(Event::ToCommandLine(CommandLineEvent::VolumeDown(x)))),
+                _ => None,
             }),
 
-            "bind"
-            | "bindkey" => cmd.get(1)
-                .and_then(|key| {
-                    eprintln!("Parsing a bind");
-                    let keybind = str_to_keys(key);
+            "bind" | "bindkey" => cmd.get(1).and_then(|key| {
+                eprintln!("Parsing a bind");
+                let keybind = str_to_keys(key);
 
-                    let cmd = cmd.iter()
-                        .skip(2)
-                        .map(|s| *s)
-                        .collect();
-                    
-                    parse(&cmd)
-                        .and_then(|e| NestableEvent::from_event(e))
-                        .and_then(|ne| Some(Event::BindKey(keybind, ne)))
-                }),
+                let cmd = cmd.iter().skip(2).map(|s| *s).collect();
+
+                parse(&cmd)
+                    .and_then(|e| NestableEvent::from_event(e))
+                    .and_then(|ne| Some(Event::BindKey(keybind, ne)))
+            }),
 
             _ => None,
-        }
+        },
         None => None,
     }
 }
@@ -232,12 +198,10 @@ fn draw(cmd: &Vec<&str>) -> Option<Event> {
             None => "<None>".to_string(),
         };
 
-        Some(
-            Event::ToComponent(
-                component.to_string(),
-                ComponentEvent::Draw(x, y, w, h, focus)
-            )
-        )
+        Some(Event::ToComponent(
+            component.to_string(),
+            ComponentEvent::Draw(x, y, w, h, focus),
+        ))
     } else {
         None
     }

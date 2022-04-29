@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::{fs, thread, sync::mpsc};
 use std::collections::HashMap;
-use std::io::{self, BufReader, BufRead};
+use std::io::{self, BufRead, BufReader};
+use std::{fs, sync::mpsc, thread};
 
 use mpd::Song;
 
@@ -33,12 +33,12 @@ pub fn load_style_tree_async(path: &str, tx: mpsc::Sender<Event>) {
             Ok(tree) => Some(tree),
             _ => None,
         };
-        tx.send(Event::ToApp(AppEvent::StyleTreeLoaded(tree))).unwrap();
+        tx.send(Event::ToApp(AppEvent::StyleTreeLoaded(tree)))
+            .unwrap();
     });
 }
 
-#[derive(Clone)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Style {
     name: String,
     depth: usize,
@@ -55,8 +55,7 @@ impl Style {
     }
 }
 
-#[derive(Clone)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct StyleTree {
     styles: Vec<Style>,
     tracks: HashMap<Option<String>, Vec<Song>>,
@@ -65,13 +64,11 @@ pub struct StyleTree {
 impl StyleTree {
     fn new() -> StyleTree {
         StyleTree {
-            styles: vec![
-                Style {
-                    name: "Base".to_string(),
-                    depth: 0,
-                    children: Vec::new(),
-                }
-            ],
+            styles: vec![Style {
+                name: "Base".to_string(),
+                depth: 0,
+                children: Vec::new(),
+            }],
             tracks: HashMap::new(),
         }
     }
@@ -118,7 +115,7 @@ impl StyleTree {
                 None => {
                     self.tracks.insert(key.clone(), Vec::new());
                     self.tracks.get_mut(&key).unwrap()
-                },
+                }
             };
 
             bucket.push(track);

@@ -21,7 +21,7 @@ use std::sync::mpsc;
 use std::thread;
 
 use mpd::idle::{Idle, Subsystem};
-use mpd::{Query, Client, Term};
+use mpd::{Client, Query, Term};
 
 use super::*;
 use crate::event::*;
@@ -39,7 +39,8 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                 conn = get_mpd_conn(&ip, &port);
             }
 
-            tx.send(spawn_error_msg("Mpd Connection established!")).unwrap();
+            tx.send(spawn_error_msg("Mpd Connection established!"))
+                .unwrap();
 
             if let Some(c) = &mut conn {
                 send_status(c, &tx);
@@ -56,19 +57,18 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                                 Subsystem::Queue => send_queue(c, &tx),
                                 Subsystem::Playlist => send_playlists(c, &tx),
                                 Subsystem::Database => send_database(c, &tx),
-                                Subsystem::Options => send_status(c,  &tx),
+                                Subsystem::Options => send_status(c, &tx),
                                 Subsystem::Mixer => send_status(c, &tx),
                                 _ => (),
                             }
                         }
                     } else {
-                        tx.send(
-                            Event::ToApp(AppEvent::LostMpdConnection)
-                        ).unwrap();
+                        tx.send(Event::ToApp(AppEvent::LostMpdConnection)).unwrap();
 
                         tx.send(spawn_error_msg(
-                            "Mpd Connection dropped. Reestablishing connection..."
-                        )).unwrap();
+                            "Mpd Connection dropped. Reestablishing connection...",
+                        ))
+                        .unwrap();
 
                         conn = None;
                         break;
@@ -86,69 +86,61 @@ fn spawn_error_msg(msg: &str) -> Event {
 
 fn send_now_playing(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.currentsong() {
-        Ok(song) =>
-            tx.send(
-                Event::ToAllComponents(ComponentEvent::NowPlaying(song))
-            ).unwrap(),
-        _ =>
-            tx.send(
-                Event::ToAllComponents(ComponentEvent::NowPlaying(None))
-            ).unwrap(),
+        Ok(song) => tx
+            .send(Event::ToAllComponents(ComponentEvent::NowPlaying(song)))
+            .unwrap(),
+        _ => tx
+            .send(Event::ToAllComponents(ComponentEvent::NowPlaying(None)))
+            .unwrap(),
     }
 }
 
 fn send_queue(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.queue() {
-        Ok(q) =>
-            tx.send(Event::ToAllComponents(ComponentEvent::Queue(q))).unwrap(),
-        _ =>
-            tx.send(
-                Event::ToAllComponents(ComponentEvent::Queue(Vec::new()))
-            ).unwrap(),
+        Ok(q) => tx
+            .send(Event::ToAllComponents(ComponentEvent::Queue(q)))
+            .unwrap(),
+        _ => tx
+            .send(Event::ToAllComponents(ComponentEvent::Queue(Vec::new())))
+            .unwrap(),
     }
 }
 
 fn send_playlists(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.playlists() {
-        Ok(pl) =>
-            tx.send(
-                Event::ToAllComponents(ComponentEvent::Playlist(
-                    pl.iter()
-                        .map(|pl| Playlist {
-                            name: pl.name.clone(),
-                            tracks: match conn.playlist(&pl.name) {
-                                Ok(pl) => pl,
-                                _ => Vec::new(),
-                            },
-                        }).collect()
-                ))
-            ).unwrap(),
-        _ =>
-            tx.send(
-                Event::ToAllComponents(ComponentEvent::Playlist(Vec::new()))
-            ).unwrap(),
+        Ok(pl) => tx
+            .send(Event::ToAllComponents(ComponentEvent::Playlist(
+                pl.iter()
+                    .map(|pl| Playlist {
+                        name: pl.name.clone(),
+                        tracks: match conn.playlist(&pl.name) {
+                            Ok(pl) => pl,
+                            _ => Vec::new(),
+                        },
+                    })
+                    .collect(),
+            )))
+            .unwrap(),
+        _ => tx
+            .send(Event::ToAllComponents(ComponentEvent::Playlist(Vec::new())))
+            .unwrap(),
     }
 }
 
 fn send_database(conn: &mut Client, tx: &mpsc::Sender<Event>) {
-    let results = conn.search(
-        Query::new().and(Term::Any, ""),
-        None,
-    );
+    let results = conn.search(Query::new().and(Term::Any, ""), None);
 
     match results {
-        Ok(results) =>
-            tx.send(Event::ToApp(AppEvent::Database(results))).unwrap(),
+        Ok(results) => tx.send(Event::ToApp(AppEvent::Database(results))).unwrap(),
         _ => (),
     }
 }
 
 fn send_status(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.status() {
-        Ok(status) =>
-            tx.send(
-                Event::ToCommandLine(CommandLineEvent::MpdStatus(status))
-            ).unwrap(),
+        Ok(status) => tx
+            .send(Event::ToCommandLine(CommandLineEvent::MpdStatus(status)))
+            .unwrap(),
         err => eprintln!("{:?}", err),
     }
 }

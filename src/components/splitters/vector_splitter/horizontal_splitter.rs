@@ -17,41 +17,32 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use super::*;
 use super::super::Splitters;
+use super::*;
 use crate::components::Components;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct HorizontalSplitter {
     splitter: VectorSplitter,
 }
 
 impl HorizontalSplitter {
-    pub fn enumed(
-        name: &str,
-        draw_borders: bool,
-        panels: Vec<Panel>,
-    ) -> Components {
-        Components::Splitter(
-            Splitters::HorizontalSplitter(
-                HorizontalSplitter::new(name, draw_borders, panels)
-            )
-        )
+    pub fn enumed(name: &str, draw_borders: bool, panels: Vec<Panel>) -> Components {
+        Components::Splitter(Splitters::HorizontalSplitter(HorizontalSplitter::new(
+            name,
+            draw_borders,
+            panels,
+        )))
     }
 
-    pub fn new(
-        name: &str,
-        draw_borders: bool,
-        panels: Vec<Panel>
-    ) -> HorizontalSplitter {
+    pub fn new(name: &str, draw_borders: bool, panels: Vec<Panel>) -> HorizontalSplitter {
         HorizontalSplitter {
             splitter: VectorSplitter {
                 draw_borders,
                 name: name.to_string(),
                 sel: 0,
                 panels,
-            }
+            },
         }
     }
 }
@@ -79,14 +70,11 @@ impl Splitter for HorizontalSplitter {
 }
 
 impl Component for HorizontalSplitter {
-    fn name(&self) -> &str { self.splitter.name() }
+    fn name(&self) -> &str {
+        self.splitter.name()
+    }
 
-    fn handle(
-        &mut self,
-        state: &GlobalState,
-        e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
-    ) {
+    fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, false);
@@ -115,18 +103,11 @@ impl Component for HorizontalSplitter {
                         },
                     };
 
-                    tx.send(
-                        Event::ToComponent(
-                            panel.key.to_string(),
-                            ComponentEvent::Draw(
-                                inner_x,
-                                inner_y,
-                                inner_w,
-                                inner_h,
-                                focus.to_string(),
-                            ),
-                        ),
-                    ).unwrap();
+                    tx.send(Event::ToComponent(
+                        panel.key.to_string(),
+                        ComponentEvent::Draw(inner_x, inner_y, inner_w, inner_h, focus.to_string()),
+                    ))
+                    .unwrap();
 
                     inner_x = inner_x + inner_w;
 
@@ -134,7 +115,7 @@ impl Component for HorizontalSplitter {
                         inner_x = inner_x + 1;
                     }
                 }
-            },
+            }
             e => self.splitter.handle(state, e, tx),
         }
     }

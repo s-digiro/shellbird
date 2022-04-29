@@ -21,14 +21,16 @@ use std::sync::mpsc;
 
 use unicode_truncate::Alignment;
 
-use crate::event::*;
-use crate::components::{Component, Components, menu::{Parent, Menu}};
 use crate::color::Color;
+use crate::components::{
+    menu::{Menu, Parent},
+    Component, Components,
+};
+use crate::event::*;
 use crate::styles::StyleTree;
 use crate::GlobalState;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct StyleMenu {
     parent: Parent,
     menu: Menu,
@@ -46,17 +48,15 @@ impl StyleMenu {
         menu_alignment: Alignment,
         parent: Option<String>,
     ) -> Components {
-        Components::StyleMenu(
-            StyleMenu::new(
-                name,
-                color,
-                focus_color,
-                title,
-                title_alignment,
-                menu_alignment,
-                parent,
-            )
-        )
+        Components::StyleMenu(StyleMenu::new(
+            name,
+            color,
+            focus_color,
+            title,
+            title_alignment,
+            menu_alignment,
+            parent,
+        ))
     }
 
     pub fn new(
@@ -66,7 +66,7 @@ impl StyleMenu {
         title: Option<String>,
         title_alignment: Alignment,
         menu_alignment: Alignment,
-        parent: Option<String>
+        parent: Option<String>,
     ) -> StyleMenu {
         StyleMenu {
             parent: Parent::new(parent),
@@ -80,7 +80,7 @@ impl StyleMenu {
                 color,
                 focus_color,
                 selection: 0,
-                items: vec![ "<All>".to_string()],
+                items: vec!["<All>".to_string()],
             },
         }
     }
@@ -102,9 +102,11 @@ impl StyleMenu {
 
         for style in self.selection() {
             ret.append(
-                &mut tree.leaf_names(style).iter()
+                &mut tree
+                    .leaf_names(style)
+                    .iter()
                     .map(|s| s.to_string())
-                    .collect()
+                    .collect(),
             );
         }
 
@@ -127,9 +129,11 @@ impl StyleMenu {
         self.menu.selection = 0;
         self.menu.items = vec!["<All>".to_string()];
         self.menu.items.append(
-            &mut self.styles.iter()
+            &mut self
+                .styles
+                .iter()
                 .map(|s| style_tree.name(*s).to_string())
-                .collect()
+                .collect(),
         );
     }
 
@@ -146,56 +150,50 @@ impl Component for StyleMenu {
         &self.menu.name
     }
 
-    fn handle(
-        &mut self,
-        state: &GlobalState,
-        e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
-    ) {
+    fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
         match e {
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::Prev => {
                 self.menu.prev();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::GoToTop => {
                 self.menu.to_top();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::GoToBottom => {
                 self.menu.to_bottom();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::GoTo(i) => {
                 self.menu.to(*i);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::Search(s) => {
                 self.menu.search(s);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::SearchPrev(s) => {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::Select => {
                 if let Some(tree) = &state.style_tree {
-                    tx.send(
-                        Event::ToMpd(MpdEvent::AddStyleToQueue(
-                            self.selection_leaf_names(tree)
-                        ))
-                    ).unwrap();
+                    tx.send(Event::ToMpd(MpdEvent::AddStyleToQueue(
+                        self.selection_leaf_names(tree),
+                    )))
+                    .unwrap();
                 }
             }
             ComponentEvent::UpdateRootStyleMenu if self.parent.is_none() => {
@@ -204,21 +202,21 @@ impl Component for StyleMenu {
                     tx.send(self.spawn_update_event()).unwrap();
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
-            },
+            }
             ComponentEvent::StyleMenuUpdated(menu, styles) if self.parent.is(menu) => {
                 if let Some(tree) = &state.style_tree {
                     self.set_items(tree, styles);
                     tx.send(self.spawn_update_event()).unwrap();
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
-            },
+            }
             ComponentEvent::Database(_tracks) => {
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            },
+            }
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            },
+            }
             _ => (),
         }
     }

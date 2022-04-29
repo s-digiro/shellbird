@@ -55,15 +55,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "127.0.0.1",
         "6600",
         opts.debug,
-    ).run(stdout)?;
+    )
+    .run(stdout)?;
 
     Ok(())
 }
 
-
 fn get_sbrc(path_override: Option<String>) -> Option<String> {
     if let Some(path) = path_override {
-        return Some(path)
+        return Some(path);
     }
 
     if let Some(mut home) = home::home_dir() {
@@ -79,16 +79,16 @@ fn get_sbrc(path_override: Option<String>) -> Option<String> {
         };
 
         if free_desktop.as_path().exists() {
-            return Some(free_desktop.to_str().unwrap().to_string())
+            return Some(free_desktop.to_str().unwrap().to_string());
         } else if homedir.as_path().exists() {
-            return Some(homedir.to_str().unwrap().to_string())
+            return Some(homedir.to_str().unwrap().to_string());
         }
     }
 
     let default = Path::new("/etc/shellbird/sbrc");
 
     if default.exists() {
-        return Some(default.to_str().unwrap().to_string())
+        return Some(default.to_str().unwrap().to_string());
     }
 
     None
@@ -96,7 +96,7 @@ fn get_sbrc(path_override: Option<String>) -> Option<String> {
 
 fn get_layout_path(path_override: Option<String>) -> Option<String> {
     if let Some(path) = path_override {
-        return Some(path)
+        return Some(path);
     }
 
     if let Some(mut home) = home::home_dir() {
@@ -112,16 +112,16 @@ fn get_layout_path(path_override: Option<String>) -> Option<String> {
         };
 
         if free_desktop.as_path().exists() {
-            return Some(free_desktop.to_str().unwrap().to_string())
+            return Some(free_desktop.to_str().unwrap().to_string());
         } else if homedir.as_path().exists() {
-            return Some(homedir.to_str().unwrap().to_string())
+            return Some(homedir.to_str().unwrap().to_string());
         }
     }
 
     let default = Path::new("/etc/shellbird/layout.json");
 
     if default.exists() {
-        return Some(default.to_str().unwrap().to_string())
+        return Some(default.to_str().unwrap().to_string());
     }
 
     None
@@ -129,7 +129,7 @@ fn get_layout_path(path_override: Option<String>) -> Option<String> {
 
 fn get_genre_path(path_override: Option<String>) -> Option<String> {
     if let Some(path) = path_override {
-        return Some(path)
+        return Some(path);
     }
 
     if let Some(mut home) = home::home_dir() {
@@ -145,16 +145,16 @@ fn get_genre_path(path_override: Option<String>) -> Option<String> {
         };
 
         if free_desktop.as_path().exists() {
-            return Some(free_desktop.to_str().unwrap().to_string())
+            return Some(free_desktop.to_str().unwrap().to_string());
         } else if homedir.as_path().exists() {
-            return Some(homedir.to_str().unwrap().to_string())
+            return Some(homedir.to_str().unwrap().to_string());
         }
     }
 
     let default = Path::new("/etc/shellbird/genres.txt");
 
     if default.exists() {
-        return Some(default.to_str().unwrap().to_string())
+        return Some(default.to_str().unwrap().to_string());
     }
 
     None

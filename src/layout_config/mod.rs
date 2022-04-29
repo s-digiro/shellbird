@@ -17,17 +17,17 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use json::JsonValue;
 use json::object::Object;
+use json::JsonValue;
 
 use unicode_truncate::Alignment;
 
 use std::collections::HashMap;
-use std::fs;
 use std::error::Error;
+use std::fs;
 
-use crate::components::*;
 use crate::color::Color;
+use crate::components::*;
 
 #[cfg(test)]
 mod tests;
@@ -67,7 +67,7 @@ pub fn load(path: &str) -> Result<HashMap<String, Components>, Box<dyn Error>> {
 
 fn parse_component(
     obj: &Object,
-    map: &mut HashMap<String, Components>
+    map: &mut HashMap<String, Components>,
 ) -> (String, Option<Components>) {
     if let Some(component) = obj.get("component") {
         let c = match component.as_str() {
@@ -88,7 +88,7 @@ fn parse_component(
                         invalid value for component. Creating ErrorBox."
                 );
                 ErrorBox::enumed()
-            },
+            }
         };
 
         (c.name().to_string(), Some(c))
@@ -122,7 +122,7 @@ fn parse_style_menu(obj: &Object) -> Components {
         parse_optional_string(obj, "title"),
         parse_alignment(obj, "title_alignment"),
         parse_alignment(obj, "menu_alignment"),
-        parse_optional_string(obj, "parent")
+        parse_optional_string(obj, "parent"),
     )
 }
 
@@ -184,7 +184,7 @@ fn parse_title_display(obj: &Object) -> Components {
 
 fn parse_tag_display(obj: &Object) -> Components {
     TagDisplay::enumed(
-        parse_string(obj, "name").unwrap_or( "TagDisplay"),
+        parse_string(obj, "name").unwrap_or("TagDisplay"),
         parse_color(obj, "color"),
         parse_alignment(obj, "alignment"),
         parse_string(obj, "tag").unwrap_or("Artist"),
@@ -213,9 +213,7 @@ fn parse_place_holder(obj: &Object) -> Components {
 }
 
 fn parse_empty_space(obj: &Object) -> Components {
-    EmptySpace::enumed(
-        parse_string(obj, "name").unwrap_or("EmptySpace"),
-    )
+    EmptySpace::enumed(parse_string(obj, "name").unwrap_or("EmptySpace"))
 }
 
 fn parse_vector_splitter_children(
@@ -239,7 +237,7 @@ fn parse_vector_splitter_children(
 
                             let panel = Panel::new(size, name);
                             children.push(panel);
-                        },
+                        }
                         _ => eprintln!(
                             "Error: parse_vector_splitter_children: child is \
                                 not an object"
@@ -248,23 +246,20 @@ fn parse_vector_splitter_children(
                 }
 
                 children
-            },
+            }
             _ => {
                 eprintln!(
                     "Error: parse_vector_splitter_children: child is not an \
                         array. Initializing splitter with no children"
                 );
                 Vec::new()
-            },
+            }
         },
         None => Vec::new(),
     }
 }
 
-fn parse_horizontal_splitter(
-    obj: &Object,
-    map: &mut HashMap<String, Components>
-) -> Components {
+fn parse_horizontal_splitter(obj: &Object, map: &mut HashMap<String, Components>) -> Components {
     HorizontalSplitter::enumed(
         parse_string(obj, "name").unwrap_or("HorizontalSplitter"),
         parse_bool(obj, "borders").unwrap_or(true),
@@ -279,10 +274,7 @@ fn parse_bool(obj: &Object, key: &str) -> Option<bool> {
     }
 }
 
-fn parse_vertical_splitter(
-    obj: &Object,
-    map: &mut HashMap<String, Components>,
-) -> Components {
+fn parse_vertical_splitter(obj: &Object, map: &mut HashMap<String, Components>) -> Components {
     VerticalSplitter::enumed(
         parse_string(obj, "name").unwrap_or("VerticalSplitter"),
         parse_bool(obj, "borders").unwrap_or(true),
@@ -292,34 +284,36 @@ fn parse_vertical_splitter(
 
 fn parse_size(obj: &Object) -> Size {
     match obj.get("size") {
-        Some(val) => match val.as_str() {
-            Some(s) => {
-                if s.ends_with("%") {
-                    let mut s = s.to_string();
-                    s.pop();
+        Some(val) => {
+            match val.as_str() {
+                Some(s) => {
+                    if s.ends_with("%") {
+                        let mut s = s.to_string();
+                        s.pop();
 
-                    if let Ok(val) = s.parse::<u8>() {
-                        Size::Percent(val)
-                    } else {
-                        eprintln!("Error: parse_size: String cannot be parsed into u8. Defaulting to Remainder.");
+                        if let Ok(val) = s.parse::<u8>() {
+                            Size::Percent(val)
+                        } else {
+                            eprintln!("Error: parse_size: String cannot be parsed into u8. Defaulting to Remainder.");
+                            Size::Remainder
+                        }
+                    } else if s == "Remainder" {
                         Size::Remainder
-                    }
-                } else if s == "Remainder" {
-                    Size::Remainder
-                } else {
-                    if let Ok(val) = s.parse::<u16>() {
-                        Size::Absolute(val)
                     } else {
-                        eprintln!("Error: parse_size: String cannot be parsed into u16. Defaulting to Remainder");
-                        Size::Remainder
+                        if let Ok(val) = s.parse::<u16>() {
+                            Size::Absolute(val)
+                        } else {
+                            eprintln!("Error: parse_size: String cannot be parsed into u16. Defaulting to Remainder");
+                            Size::Remainder
+                        }
                     }
                 }
-            },
-            _ => {
-                eprintln!("Error: parse_size: Size cannot be parsed into string. Defaulting to Remainder");
-                Size::Remainder
-            },
-        },
+                _ => {
+                    eprintln!("Error: parse_size: Size cannot be parsed into string. Defaulting to Remainder");
+                    Size::Remainder
+                }
+            }
+        }
         None => Size::Remainder,
     }
 }
@@ -345,9 +339,12 @@ fn parse_color(obj: &Object, key: &str) -> Color {
             "BrightWhite" => Color::BrightWhite,
             "Reset" => Color::Reset,
             bad => {
-                eprintln!("Error: parse_color: invalid color {:?}. Defaulting to Color::Reset", bad);
+                eprintln!(
+                    "Error: parse_color: invalid color {:?}. Defaulting to Color::Reset",
+                    bad
+                );
                 Color::Reset
-            },
+            }
         },
         Some(JsonValue::String(s)) => match s.as_str() {
             "Black" => Color::Black,
@@ -368,17 +365,23 @@ fn parse_color(obj: &Object, key: &str) -> Color {
             "BrightWhite" => Color::BrightWhite,
             "Reset" => Color::Reset,
             bad => {
-                eprintln!("Error: parse_color: invalid color {:?}. Defaulting to Color::Reset", bad);
+                eprintln!(
+                    "Error: parse_color: invalid color {:?}. Defaulting to Color::Reset",
+                    bad
+                );
                 Color::Reset
-            },
+            }
         },
         Some(JsonValue::Object(obj)) => match parse_color_rgb(obj) {
             Some(color) => color,
             None => {
-                eprintln!("Error: parse_color: bad rgb color '{:?}'. Defaulting to Color::Reset", obj);
+                eprintln!(
+                    "Error: parse_color: bad rgb color '{:?}'. Defaulting to Color::Reset",
+                    obj
+                );
                 Color::Reset
-            },
-        }
+            }
+        },
         _ => Color::Reset,
     }
 }
@@ -424,7 +427,7 @@ fn parse_alignment(obj: &Object, key: &str) -> Alignment {
             _ => {
                 eprintln!("Error: parse_alignment: invalid value for text_align. Defaulting to Alignment::Left");
                 Alignment::Left
-            },
+            }
         },
         Some(JsonValue::Short(s)) => match s.as_str() {
             "Center" => Alignment::Center,
@@ -433,12 +436,12 @@ fn parse_alignment(obj: &Object, key: &str) -> Alignment {
             _ => {
                 eprintln!("Error: parse_alignment: invalid value for text_align. Defaulting to Alignment::Left");
                 Alignment::Left
-            },
+            }
         },
         Some(_) => {
             eprintln!("Error: parse_alignment: text_align is not a string");
             Alignment::Left
-        },
+        }
         None => Alignment::Left,
     }
 }

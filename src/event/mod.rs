@@ -23,12 +23,12 @@ mod nestable_event;
 pub use nestable_event::NestableEvent;
 
 use mpd::Song;
-use termion::event::Key;
 use std::fmt;
+use termion::event::Key;
 
+use crate::mode::Mode;
 use crate::playlist::Playlist;
 use crate::styles::StyleTree;
-use crate::mode::Mode;
 
 /* Events are sorted into different enums based on their destination
  *
@@ -39,8 +39,7 @@ use crate::mode::Mode;
  * Mpd: Goes to mpd thread to give instructions to mpd
  */
 
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Event {
     Dummy,
 
@@ -91,8 +90,7 @@ pub enum AppEvent {
     Quit,
 }
 
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum CommandLineEvent {
     Echo(String),
     Mode(Mode),
@@ -107,8 +105,7 @@ pub enum CommandLineEvent {
     VolumeDown(i8),
 }
 
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum ScreenEvent {
     FocusNext,
     FocusPrev,
@@ -134,54 +131,46 @@ pub enum MpdEvent {
 impl fmt::Debug for ComponentEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ComponentEvent::NowPlaying(i) =>
-                write!(f, "ComponentEvent::NowPlaying({:?})", i),
-            ComponentEvent::Queue(s) =>
-                write!(f, "ComponentEvent::Queue({} songs)", s.len()),
-            ComponentEvent::Playlist(pl) =>
-                write!(f, "ComponentEvent::Playlist({} playlists)", pl.len()),
-            ComponentEvent::Database(s) =>
-                write!(f, "ComponentEvent::Database({} songs)", s.len()),
-            ComponentEvent::PlaylistMenuUpdated(t, pl) =>
-                write!(f, "ComponentEvent::PlaylistMenuUpdated({}, {} songs)",
-                    t,
-                    match pl {
-                        Some(_) => "Some",
-                        None => "None",
-                    }
-                ),
-            ComponentEvent::TagMenuUpdated(t, s) =>
-                write!(f, "ComponentEvent::TagMenuUpdated({}, {} songs)",
-                    t, s.len()
-                ),
-            ComponentEvent::UpdateRootStyleMenu =>
-                write!(f, "ComponentEvent::UpdateRootStyleMenu"),
-            ComponentEvent::StyleMenuUpdated(t, s) =>
-                write!(f, "ComponentEvent::StyleMenuUpdated({}, {})",
-                    t, s.len()
-                ),
-            ComponentEvent::LostMpdConnection =>
-                write!(f, "ComponentEvent::LostMpdConnection"),
-            ComponentEvent::Draw(x, y, w, h, focus) =>
-                write!(f, "ComponentEvent::Draw({}, {}, {}, {}, {})",
-                    x,
-                    y,
-                    w,
-                    h,
-                    focus,
-                ),
+            ComponentEvent::NowPlaying(i) => write!(f, "ComponentEvent::NowPlaying({:?})", i),
+            ComponentEvent::Queue(s) => write!(f, "ComponentEvent::Queue({} songs)", s.len()),
+            ComponentEvent::Playlist(pl) => {
+                write!(f, "ComponentEvent::Playlist({} playlists)", pl.len())
+            }
+            ComponentEvent::Database(s) => write!(f, "ComponentEvent::Database({} songs)", s.len()),
+            ComponentEvent::PlaylistMenuUpdated(t, pl) => write!(
+                f,
+                "ComponentEvent::PlaylistMenuUpdated({}, {} songs)",
+                t,
+                match pl {
+                    Some(_) => "Some",
+                    None => "None",
+                }
+            ),
+            ComponentEvent::TagMenuUpdated(t, s) => write!(
+                f,
+                "ComponentEvent::TagMenuUpdated({}, {} songs)",
+                t,
+                s.len()
+            ),
+            ComponentEvent::UpdateRootStyleMenu => write!(f, "ComponentEvent::UpdateRootStyleMenu"),
+            ComponentEvent::StyleMenuUpdated(t, s) => {
+                write!(f, "ComponentEvent::StyleMenuUpdated({}, {})", t, s.len())
+            }
+            ComponentEvent::LostMpdConnection => write!(f, "ComponentEvent::LostMpdConnection"),
+            ComponentEvent::Draw(x, y, w, h, focus) => write!(
+                f,
+                "ComponentEvent::Draw({}, {}, {}, {}, {})",
+                x, y, w, h, focus,
+            ),
             ComponentEvent::Next => write!(f, "ComponentEvent::Next"),
             ComponentEvent::Prev => write!(f, "ComponentEvent::Prev"),
             ComponentEvent::Select => write!(f, "ComponentEvent::Select"),
             ComponentEvent::Start => write!(f, "ComponentEvent::Start"),
             ComponentEvent::GoTo(i) => write!(f, "ComponentEvent::GoTo({})", i),
             ComponentEvent::GoToTop => write!(f, "ComponentEvent::GoToTop"),
-            ComponentEvent::GoToBottom =>
-                write!(f, "ComponentEvent::GoToBottom"),
-            ComponentEvent::Search(s) =>
-                write!(f, "ComponentEvent::Search({})", s),
-            ComponentEvent::SearchPrev(s) =>
-                write!(f, "ComponentEvent::SearchPrev({})", s),
+            ComponentEvent::GoToBottom => write!(f, "ComponentEvent::GoToBottom"),
+            ComponentEvent::Search(s) => write!(f, "ComponentEvent::Search({})", s),
+            ComponentEvent::SearchPrev(s) => write!(f, "ComponentEvent::SearchPrev({})", s),
         }
     }
 }
@@ -192,7 +181,9 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::TogglePause => write!(f, "MpdEvent::TogglePause"),
             MpdEvent::ClearQueue => write!(f, "MpdEvent::ClearQueue"),
             MpdEvent::AddToQueue(songs) => write!(f, "MpdEvent::AddToQueue({} songs)", songs.len()),
-            MpdEvent::AddStyleToQueue(genres) => write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len()),
+            MpdEvent::AddStyleToQueue(genres) => {
+                write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len())
+            }
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
             MpdEvent::Repeat => write!(f, "MpdEvent::Repeat"),
             MpdEvent::Random => write!(f, "MpdEvent::Random"),

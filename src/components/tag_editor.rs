@@ -1,0 +1,194 @@
+/* TUI Component for a tag editor. It's big and not very customizable
+   Copyright (C) 2020-2021 Sean DiGirolamo
+
+This file is part of Shellbird.
+
+Shellbird is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 3, or (at your option) any
+later version.
+
+Shellbird is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Shellbird; see the file COPYING.  If not see
+<http://www.gnu.org/licenses/>.  */
+
+use itertools::Itertools;
+use mpd::song::Song;
+use termion::{color, cursor, style};
+
+use crate::color::Color;
+use crate::components::{Component, Components};
+
+#[derive(Debug, PartialEq)]
+pub struct TagEditor {
+    name: String,
+    color: Color,
+    songs: Vec<Song>,
+    focus: usize,
+
+    tags: Vec<(String, TagVal)>,
+    sel: usize,
+}
+
+#[derive(PartialEq, Debug)]
+enum TagVal {
+    Some(String),
+    None,
+    Various,
+}
+
+impl TagVal {
+    fn from(tag: &str, songs: &Vec<Song>) -> TagVal {
+        if songs.is_empty() {
+            return TagVal::None;
+        }
+
+        let first = songs[0].tags.get(tag);
+
+        if songs.iter().all(|s| s.tags.get(tag) == first) {
+            match first {
+                None => TagVal::None,
+                Some(val) => TagVal::Some(val.into()),
+            }
+        } else {
+            TagVal::Various
+        }
+    }
+}
+
+impl std::fmt::Display for TagVal {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                TagVal::Some(s) => s,
+                TagVal::None => "<None>",
+                TagVal::Various => "<Various>",
+            }
+        )
+    }
+}
+
+impl TagEditor {
+    pub fn enumed(name: &str, color: Color, songs: Vec<Song>) -> Components {
+        Components::TagEditor(TagEditor::new(name, color, songs))
+    }
+
+    pub fn new(name: &str, color: Color, songs: Vec<Song>) -> TagEditor {
+        let tags = vec![
+            ("Artist".into(), TagVal::from("Artist", &songs)),
+            ("Album".into(), TagVal::from("Album", &songs)),
+        ];
+
+        TagEditor {
+            name: name.into(),
+            color,
+            songs,
+            focus: 0,
+
+            tags,
+            sel: 0,
+        }
+    }
+
+    fn header(&self, x: u16, y: u16, w: u16) -> String {
+        let mut header = self.songs.iter().map(|s| &s.file).format(", ").to_string();
+
+        if header.len() > w.into() {
+            header.truncate((w - 3).into());
+            header.push_str("...");
+        }
+
+        format!("{}{}", cursor::Goto(x, y), header,)
+    }
+
+    fn tags(&self, x: u16, y: u16, w: u16, h: u16) -> String {
+        let mut ret = String::new();
+
+        let max_tag_len = self.tags.iter().map(|(tag, _)| tag.len()).max().unwrap();
+
+        let max_val_len = self
+            .tags
+            .iter()
+            .map(|(_, val)| val.to_string().len())
+            .max()
+            .unwrap();
+
+        let bar_pos = if max_tag_len + max_val_len > w.into() {
+            if w % 2 == 0 {
+                (w / 2) - 1
+            } else {
+                w / 2
+            }
+        } else {
+            max_tag_len as u16
+        };
+
+        for (i, (tag, val)) in self.tags.iter().enumerate() {
+            if x + (i as u16) > h {
+                break;
+            }
+
+            ret.push_str(&self.tag(x, y + (i as u16), w, tag, bar_pos, val, i == self.sel));
+        }
+
+        ret
+    }
+
+    fn tag(
+        &self,
+        x: u16,
+        y: u16,
+        w: u16,
+        tag: &str,
+        bar_pos: u16,
+        val: &TagVal,
+        sel: bool,
+    ) -> String {
+        let left_len = bar_pos;
+        let right_len = w - bar_pos;
+
+        let mut tag = tag.to_string();
+        tag.truncate(left_len.into());
+
+        let mut val = val.to_string();
+        val.truncate(right_len.into());
+
+        let left_pad_len = std::cmp::max(0, left_len as usize - tag.len());
+        let right_pad_len = std::cmp::max(0, right_len as usize - val.len());
+
+        let s = format!(
+            "{}{}{}│{}{}",
+            cursor::Goto(x, y),
+            tag,
+            " ".repeat(left_pad_len as usize),
+            val,
+            " ".repeat(right_pad_len as usize),
+        );
+
+        if sel {
+            format!("{}{}", style::Invert, s)
+        } else {
+            format!("{}{}", style::NoInvert, s)
+        }
+    }
+}
+
+impl Component for TagEditor {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, _focus: bool) {
+        print!("{}", color::Fg(self.color));
+        print!("{}", self.header(x, y, w));
+        print!("{}", "─".repeat((w).into()));
+        print!("{}", self.tags(x + 2, y, w, h));
+    }
+}
