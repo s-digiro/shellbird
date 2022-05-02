@@ -102,7 +102,10 @@ impl TagEditor {
     }
 
     fn header(&self, x: u16, y: u16, w: u16) -> String {
-        let mut header = self.songs.iter().map(|s| &s.file).format(", ").to_string();
+        let mut header = self.songs.iter()
+            .map(|s| &s.file)
+            .format(", ")
+            .to_string();
 
         if header.len() > w.into() {
             header.truncate((w - 3).into());
@@ -190,10 +193,11 @@ impl Component for TagEditor {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, _focus: bool) {
+        self.clear(x, y, w, h);
         print!("{}", color::Fg(self.color));
         print!("{}", self.header(x, y, w));
-        print!("{}", "─".repeat((w).into()));
-        print!("{}", self.tags(x + 2, y, w, h));
+        print!("{}{}", cursor::Goto(x, y + 1), "─".repeat((w).into()));
+        print!("{}", self.tags(x, y + 2, w, h));
     }
 
     fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {

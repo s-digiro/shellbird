@@ -24,3 +24,4 @@ bind s start
 bind n nextsearch
 bind N prevsearch
 switchscreen NowPlayingScreen
+bind t opentags
