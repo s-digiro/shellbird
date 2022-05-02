@@ -111,6 +111,10 @@ impl Component for TrackMenu {
 
     fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
         match e {
+            ComponentEvent::OpenTags =>
+                tx.send(
+                    Event::ToApp(AppEvent::TagUI(self.selected_tracks()))
+                ).unwrap(),
             ComponentEvent::Select => {
                 tx.send(Event::ToMpd(MpdEvent::AddToQueue(self.selected_tracks())))
                     .unwrap();

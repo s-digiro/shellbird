@@ -55,10 +55,13 @@ use termion::{clear, cursor};
 
 use command_line::CommandLine;
 use components::{Component, Components};
+use color::Color;
 use event::*;
 use music::{mpd_listener, mpd_sender};
 use screen::Screen;
 use styles::StyleTree;
+
+use components::TagEditor;
 
 pub struct GlobalState {
     pub style_tree: Option<StyleTree>,
@@ -177,6 +180,18 @@ impl<'a> Shellbird<'a> {
                         tx.send(Event::ToAllComponents(ComponentEvent::UpdateRootStyleMenu))
                             .unwrap();
                     }
+                    AppEvent::TagUI(songs) => {
+                        let cname = "TagEditor".to_string();
+
+                        components.insert(
+                            cname.clone(),
+                            TagEditor::enumed(&cname, Color::Cyan, songs)
+                        );
+
+                        tx.send(
+                            Event::ToApp(AppEvent::SwitchScreen(cname))
+                        ).unwrap()
+                    }
                     AppEvent::Resize => tx.send(Event::ToApp(AppEvent::DrawScreen)).unwrap(),
                 },
                 Event::ToCommandLine(e) => command_line.handle(&e, tx.clone()),
@@ -272,6 +287,7 @@ impl<'a> Shellbird<'a> {
 fn spawn_draw_screen_event(screen: &Screen, components: &HashMap<String, Components>) -> Event {
     let (w, h) = termion::terminal_size().unwrap();
     let h = h - 1;
+
     if let Some(_) = components.get(screen.name()) {
         Event::ToComponent(
             screen.to_string(),

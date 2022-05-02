@@ -58,6 +58,7 @@ pub enum Event {
 pub enum ComponentEvent {
     ReturnText(String),
     Draw(u16, u16, u16, u16, String),
+    OpenTags,
     Next,
     Prev,
     Select,
@@ -80,6 +81,7 @@ pub enum ComponentEvent {
 
 #[derive(Clone)]
 pub enum AppEvent {
+    TagUI(Vec<Song>),
     ClearScreen,
     Resize,
     StyleTreeLoaded(Option<StyleTree>),
@@ -166,6 +168,7 @@ impl fmt::Debug for ComponentEvent {
                 x, y, w, h, focus,
             ),
             ComponentEvent::Next => write!(f, "ComponentEvent::Next"),
+            ComponentEvent::OpenTags => write!(f, "ComponentEvent::OpenTags"),
             ComponentEvent::Prev => write!(f, "ComponentEvent::Prev"),
             ComponentEvent::Select => write!(f, "ComponentEvent::Select"),
             ComponentEvent::Start => write!(f, "ComponentEvent::Start"),
@@ -203,6 +206,8 @@ impl fmt::Debug for AppEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AppEvent::Resize => write!(f, "AppEvent::Resize"),
+            AppEvent::TagUI(songs) =>
+                write!(f, "AppEvent::TagUI({} songs)", songs.len()),
             AppEvent::Error(s) => write!(f, "AppEvent::Error({:?})", s),
             AppEvent::DrawScreen => write!(f, "AppEvent::DrawScreen"),
             AppEvent::StyleTreeLoaded(_) => write!(f, "AppEvent::StyleTreeLoaded"),
