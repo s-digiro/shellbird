@@ -22,4 +22,5 @@ pub enum Mode {
     TUI,
     Command,
     Search,
+    GetText,
 }

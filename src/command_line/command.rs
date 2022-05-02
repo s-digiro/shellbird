@@ -39,26 +39,14 @@ lazy_static! {
 }
 
 pub fn str_to_keys(s: &str) -> Vec<Key> {
-    eprintln!("Called str_to_keys");
     let mut ret = Vec::new();
 
     let mut sym = String::new();
 
     for c in s.chars() {
-        eprintln!("c: {}", c);
-        eprintln!("ret: {:?}", ret);
-        eprintln!("sym: {}", sym);
-        eprintln!();
         if !sym.is_empty() {
             sym.push(c);
             if c == '>' {
-                eprintln!("Found >, checking map");
-                for key in SYM_MAP.keys() {
-                    eprintln!("{:?}: {:?}", key, SYM_MAP.get(key));
-                }
-                eprintln!("sym.as_str(): {:?}", sym.as_str());
-                let val = SYM_MAP.get(sym.as_str());
-                eprintln!("val: {:?}", val);
                 match SYM_MAP.get(sym.as_str()) {
                     Some(key) => ret.push(*key),
                     None => sym.chars().for_each(|c| ret.push(Key::Char(c))),
@@ -71,9 +59,6 @@ pub fn str_to_keys(s: &str) -> Vec<Key> {
             ret.push(Key::Char(c));
         }
     }
-
-    eprintln!("ret: {:?}", ret);
-    eprintln!("sym: {}", sym);
 
     ret
 }
@@ -141,8 +126,18 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
                 _ => None,
             }),
 
+            "gettext" =>
+                cmd.get(1)
+                    .map(|s| s.to_string())
+                    .and_then(
+                        |prompt| Some(
+                            Event::ToCommandLine(
+                                CommandLineEvent::RequestText(prompt)
+                            )
+                        )
+                    ),
+
             "bind" | "bindkey" => cmd.get(1).and_then(|key| {
-                eprintln!("Parsing a bind");
                 let keybind = str_to_keys(key);
 
                 let cmd = cmd.iter().skip(2).map(|s| *s).collect();

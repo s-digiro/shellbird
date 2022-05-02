@@ -42,6 +42,8 @@ pub struct CommandLine {
     keybinds: HashMap<Vec<Key>, Event>,
     tx: mpsc::Sender<Event>,
 
+    prompt: Option<String>,
+
     last_search: Option<String>,
     volume: i8,
 }
@@ -55,6 +57,8 @@ impl CommandLine {
             mode: Mode::TUI,
             keybinds: HashMap::new(),
             tx,
+
+            prompt: None,
 
             last_search: None,
             volume: -1,
@@ -75,7 +79,9 @@ impl CommandLine {
 
         self.content = match self.mode {
             Mode::TUI => ContentType::Keys(Vec::new()),
-            Mode::Command | Mode::Search => ContentType::Chars(String::new()),
+            Mode::Command
+            | Mode::Search
+            | Mode::GetText => ContentType::Chars(String::new()),
         }
     }
 
@@ -128,7 +134,9 @@ impl CommandLine {
                     }
                 }
             },
-            (Mode::Command, ContentType::Chars(s)) | (Mode::Search, ContentType::Chars(s)) => {
+            (Mode::Command, ContentType::Chars(s))
+            | (Mode::Search, ContentType::Chars(s))
+            | (Mode::GetText, ContentType::Chars(s)) => {
                 match key {
                     Key::Char('\n') => self.run(),
                     Key::Esc => self.mode(Mode::TUI),
@@ -148,6 +156,8 @@ impl CommandLine {
     }
 
     pub fn clear(&mut self) {
+        self.prompt = None;
+
         self.content = match self.content {
             ContentType::Chars(_) => ContentType::Chars(String::new()),
             ContentType::Keys(_) => ContentType::Keys(Vec::new()),
@@ -190,7 +200,15 @@ impl CommandLine {
                 self.tx
                     .send(Event::ToFocus(ComponentEvent::Search(term.clone())))
                     .unwrap();
-            }
+            },
+            (Mode::GetText, ContentType::Chars(term)) => {
+                self.tx
+                    .send(
+                        Event::ToFocus(ComponentEvent::ReturnText(term.clone()))
+                    )
+                    .unwrap();
+                self.mode(Mode::TUI);
+            },
             (Mode::TUI, _) => panic!("Invalid State: CommandLine called run while in Mode::TUI)"),
             state => panic!("Invalid State: {:?}", state),
         }
@@ -198,6 +216,13 @@ impl CommandLine {
 
     pub fn draw(&self) {
         let (w, h) = termion::terminal_size().unwrap();
+
+        let prompt =
+            if let Some(s) = &self.prompt {
+                format!("{}: ", s)
+            } else {
+                "Text: ".to_string()
+            };
 
         print!(
             "{}{}{}{}{}{}",
@@ -207,6 +232,7 @@ impl CommandLine {
                 Mode::Command => ":",
                 Mode::Search => "/",
                 Mode::TUI => "",
+                Mode::GetText => &prompt,
             },
             match &self.content {
                 ContentType::Chars(cmd) => &cmd,
@@ -220,6 +246,10 @@ impl CommandLine {
     pub fn handle(&mut self, e: &CommandLineEvent, _tx: mpsc::Sender<Event>) {
         match e {
             CommandLineEvent::Echo(s) => self.put_text(s.to_string()),
+            CommandLineEvent::RequestText(prompt) => {
+                self.mode(Mode::GetText);
+                self.prompt = Some(prompt.to_string());
+            },
             CommandLineEvent::NextSearch => self.next_search(),
             CommandLineEvent::PrevSearch => self.prev_search(),
             CommandLineEvent::Mode(m) => self.mode(*m),

@@ -56,6 +56,7 @@ pub enum Event {
 
 #[derive(Clone)]
 pub enum ComponentEvent {
+    ReturnText(String),
     Draw(u16, u16, u16, u16, String),
     Next,
     Prev,
@@ -93,6 +94,7 @@ pub enum AppEvent {
 #[derive(Debug, Clone)]
 pub enum CommandLineEvent {
     Echo(String),
+    RequestText(String),
     Mode(Mode),
     Input(Key),
     PrevSearch,
@@ -132,6 +134,7 @@ impl fmt::Debug for ComponentEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ComponentEvent::NowPlaying(i) => write!(f, "ComponentEvent::NowPlaying({:?})", i),
+            ComponentEvent::ReturnText(prompt) => write!(f, "ComponentEvent::ReturnText({:?})", prompt),
             ComponentEvent::Queue(s) => write!(f, "ComponentEvent::Queue({} songs)", s.len()),
             ComponentEvent::Playlist(pl) => {
                 write!(f, "ComponentEvent::Playlist({} playlists)", pl.len())

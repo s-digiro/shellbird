@@ -17,12 +17,16 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+use std::sync::mpsc;
+
 use itertools::Itertools;
 use mpd::song::Song;
 use termion::{color, cursor, style};
 
 use crate::color::Color;
 use crate::components::{Component, Components};
+use crate::event::*;
+use crate::GlobalState;
 
 #[derive(Debug, PartialEq)]
 pub struct TagEditor {
@@ -190,5 +194,27 @@ impl Component for TagEditor {
         print!("{}", self.header(x, y, w));
         print!("{}", "─".repeat((w).into()));
         print!("{}", self.tags(x + 2, y, w, h));
+    }
+
+    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+        match e {
+            ComponentEvent::Select => {
+                let prompt = self.tags[self.sel].0.to_string();
+                tx.send(
+                    Event::ToCommandLine(CommandLineEvent::RequestText(prompt))
+                ).unwrap();
+            },
+            ComponentEvent::Draw(x, y, w, h, focus) =>
+                self.draw(*x, *y, *w, *h, focus == self.name()),
+            ComponentEvent::ReturnText(s) => {
+                let old_pair = &self.tags[self.sel];
+                let new_pair = (old_pair.0.clone(), TagVal::from(s, &self.songs));
+
+                self.tags[self.sel] = new_pair;
+
+                tx.send(self.spawn_needs_draw_event()).unwrap();
+            },
+            _ => (),
+        }
     }
 }
