@@ -27,7 +27,7 @@ use mpd::Song;
 
 use id3::{Tag, TagLike, Version};
 
-use crate::event::{Event, MpdEvent, TaggerEvent, CommandLineEvent};
+use crate::event::{CommandLineEvent, Event, MpdEvent, TaggerEvent};
 
 pub fn init_tagger_thread(
     mut tx: mpsc::Sender<Event>,
@@ -228,13 +228,13 @@ fn tag(
                 },
                 "Date" => match val {
                     Some(val) => tag.set_text("TYER", val),
-                    None =>  {
+                    None => {
                         tag.remove("TYER");
                     },
                 },
                 "Track" => match val {
                     Some(val) => tag.set_text("TRCK", val),
-                    None =>  {
+                    None => {
                         tag.remove("TRCK");
                     },
                 },
@@ -244,13 +244,13 @@ fn tag(
                 },
                 "Composer" => match val {
                     Some(val) => tag.set_text("TCOM", val),
-                    None =>  {
+                    None => {
                         tag.remove("TCOM");
                     },
                 },
                 "Disc" => match val {
                     Some(val) => tag.set_text("TPOS", val),
-                    None =>  {
+                    None => {
                         tag.remove("TPOS");
                     },
                 },
@@ -283,7 +283,10 @@ fn tag(
         }
     }
 
-    tx.send(Event::ToCommandLine(CommandLineEvent::Echo("Saved tags!".to_owned()))).unwrap();
+    tx.send(Event::ToCommandLine(CommandLineEvent::Echo(
+        "Saved tags!".to_owned(),
+    )))
+    .unwrap();
     tx.send(Event::ToMpd(MpdEvent::Update)).unwrap();
 }
 

@@ -145,7 +145,10 @@ impl TagEditor {
 
         tx.send(Event::ToTagger(TaggerEvent::Tag(self.songs.clone(), tags)))
             .unwrap();
-        tx.send(Event::ToCommandLine(CommandLineEvent::Echo("Started tag update...".to_owned()))).unwrap();
+        tx.send(Event::ToCommandLine(CommandLineEvent::Echo(
+            "Started tag update...".to_owned(),
+        )))
+        .unwrap();
     }
 
     pub fn next(&mut self, tx: mpsc::Sender<Event>) {
@@ -256,12 +259,33 @@ impl TagEditor {
         val_str.truncate(right_len.into());
 
         let left_pad_len = std::cmp::max(0, left_len as usize - tag.len());
-        let right_pad_len = std::cmp::max(0, right_len as usize - val_str.len());
+        let right_pad_len =
+            std::cmp::max(0, right_len as usize - val_str.len());
 
         val_str = match (val, sel) {
-            (_, true) => format!("{}{}{}{}", style::Invert, val_str, " ".repeat(right_pad_len as usize), style::NoInvert),
-            (TagVal::None, false) => format!("{}{}{}{}{}", color::Fg(color::Red), style::Invert, val_str, color::Fg(self.color), style::NoInvert),
-            (TagVal::Various, false) => format!("{}{}{}{}{}", color::Fg(color::Yellow), style::Invert, val_str, color::Fg(self.color), style::NoInvert),
+            (_, true) => format!(
+                "{}{}{}{}",
+                style::Invert,
+                val_str,
+                " ".repeat(right_pad_len as usize),
+                style::NoInvert
+            ),
+            (TagVal::None, false) => format!(
+                "{}{}{}{}{}",
+                color::Fg(color::Red),
+                style::Invert,
+                val_str,
+                color::Fg(self.color),
+                style::NoInvert
+            ),
+            (TagVal::Various, false) => format!(
+                "{}{}{}{}{}",
+                color::Fg(color::Yellow),
+                style::Invert,
+                val_str,
+                color::Fg(self.color),
+                style::NoInvert
+            ),
 
             (TagVal::Some(_), false) => val_str,
         };
@@ -281,7 +305,13 @@ impl TagEditor {
         let s = format!("{}Save", cursor::Goto(x, y));
 
         if let None = self.sel {
-            format!("{}{}{}{}", style::Invert, s, " ".repeat(w as usize - 4), style::NoInvert,)
+            format!(
+                "{}{}{}{}",
+                style::Invert,
+                s,
+                " ".repeat(w as usize - 4),
+                style::NoInvert,
+            )
         } else {
             s
         }
@@ -301,7 +331,11 @@ impl Component for TagEditor {
         print!("{}", self.header(x, y, w));
         print!("{}{}", cursor::Goto(x, y + 1), "─".repeat((w).into()));
         print!("{}", self.tags(x, y + 2, w, h));
-        print!("{}{}", cursor::Goto(x, y + 2 + tag_len), "─".repeat((w).into()));
+        print!(
+            "{}{}",
+            cursor::Goto(x, y + 2 + tag_len),
+            "─".repeat((w).into())
+        );
         print!("{}", self.save_button(x, y + 3 + tag_len, w));
     }
 
@@ -327,7 +361,7 @@ impl Component for TagEditor {
                     match s.as_str() {
                         "" => TagVal::None,
                         s => TagVal::Some(s.to_string()),
-                    }
+                    },
                 );
 
                 self.tags[sel] = new_pair;
