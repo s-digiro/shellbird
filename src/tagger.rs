@@ -210,13 +210,49 @@ fn tag(
 
         for (key, val) in tags.iter() {
             match key.as_str() {
+                "Title" => match val {
+                    Some(val) => tag.set_title(val),
+                    None => tag.remove_title(),
+                },
                 "Artist" => match val {
                     Some(val) => tag.set_artist(val),
                     None => tag.remove_artist(),
                 },
+                "AlbumArtist" => match val {
+                    Some(val) => tag.set_album_artist(val),
+                    None => tag.remove_album_artist(),
+                },
                 "Album" => match val {
                     Some(val) => tag.set_album(val),
                     None => tag.remove_album(),
+                },
+                "Date" => match val {
+                    Some(val) => tag.set_text("TYER", val),
+                    None =>  {
+                        tag.remove("TYER");
+                    },
+                },
+                "Track" => match val {
+                    Some(val) => tag.set_text("TRCK", val),
+                    None =>  {
+                        tag.remove("TRCK");
+                    },
+                },
+                "Genre" => match val {
+                    Some(val) => tag.set_genre(val),
+                    None => tag.remove_genre(),
+                },
+                "Composer" => match val {
+                    Some(val) => tag.set_text("TCOM", val),
+                    None =>  {
+                        tag.remove("TCOM");
+                    },
+                },
+                "Disc" => match val {
+                    Some(val) => tag.set_text("TPOS", val),
+                    None =>  {
+                        tag.remove("TPOS");
+                    },
                 },
                 other => {
                     tx.send(Event::err(format!(

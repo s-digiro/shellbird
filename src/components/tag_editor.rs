@@ -52,10 +52,17 @@ impl TagVal {
             return TagVal::None;
         }
 
-        let first = songs[0].tags.get(tag);
+        fn get_tag<'a>(tag: &str, song: &'a Song) -> Option<&'a String> {
+            match tag {
+                "Title" => song.title.as_ref(),
+                key => song.tags.get(key),
+            }
+        }
 
-        if songs.iter().all(|s| s.tags.get(tag) == first) {
-            match first {
+        let first_tag_val = get_tag(tag, &songs[0]);
+
+        if songs.iter().all(|s| get_tag(tag, s) == first_tag_val) {
+            match first_tag_val {
                 None => TagVal::None,
                 Some(val) => TagVal::Some(val.into()),
             }
@@ -85,13 +92,22 @@ impl TagEditor {
     }
 
     pub fn new(name: &str, color: Color, songs: Vec<Song>) -> TagEditor {
+        let to_pair = |s: &str| (s.to_owned(), TagVal::from(s, &songs));
+
         let tags = vec![
-            ("Artist".into(), TagVal::from("Artist", &songs)),
-            ("Album".into(), TagVal::from("Album", &songs)),
+            to_pair("Title"),
+            to_pair("Artist"),
+            to_pair("AlbumArtist"),
+            to_pair("Album"),
+            to_pair("Date"),
+            to_pair("Track"),
+            to_pair("Genre"),
+            to_pair("Composer"),
+            to_pair("Disc"),
         ];
 
         TagEditor {
-            name: name.into(),
+            name: name.to_owned(),
             color,
             songs,
             focus: 0,
@@ -235,33 +251,36 @@ impl TagEditor {
         let mut tag = tag.to_string();
         tag.truncate(left_len.into());
 
-        let mut val = val.to_string();
-        val.truncate(right_len.into());
+        let mut val_str = val.to_string();
+        val_str.truncate(right_len.into());
 
         let left_pad_len = std::cmp::max(0, left_len as usize - tag.len());
-        let right_pad_len = std::cmp::max(0, right_len as usize - val.len());
+        let right_pad_len = std::cmp::max(0, right_len as usize - val_str.len());
+
+        val_str = match (val, sel) {
+            (_, true) => format!("{}{}{}{}", style::Invert, val_str, " ".repeat(right_pad_len as usize), style::NoInvert),
+            (TagVal::None, false) => format!("{}{}{}{}{}", color::Fg(color::Red), style::Invert, val_str, color::Fg(self.color), style::NoInvert),
+            (TagVal::Various, false) => format!("{}{}{}{}{}", color::Fg(color::Yellow), style::Invert, val_str, color::Fg(self.color), style::NoInvert),
+
+            (TagVal::Some(_), false) => val_str,
+        };
 
         let s = format!(
-            "{}{}{}│{}{}",
+            "{}{}{}│{}",
             cursor::Goto(x, y),
             tag,
             " ".repeat(left_pad_len as usize),
-            val,
-            " ".repeat(right_pad_len as usize),
+            val_str,
         );
 
-        if sel {
-            format!("{}{}{}", style::Invert, s, style::NoInvert)
-        } else {
-            s
-        }
+        s
     }
 
-    fn save_button(&self, x: u16, y: u16) -> String {
+    fn save_button(&self, x: u16, y: u16, w: u16) -> String {
         let s = format!("{}Save", cursor::Goto(x, y));
 
         if let None = self.sel {
-            format!("{}{}{}", style::Invert, s, style::NoInvert,)
+            format!("{}{}{}{}", style::Invert, s, " ".repeat(w as usize - 4), style::NoInvert,)
         } else {
             s
         }
@@ -281,7 +300,8 @@ impl Component for TagEditor {
         print!("{}", self.header(x, y, w));
         print!("{}{}", cursor::Goto(x, y + 1), "─".repeat((w).into()));
         print!("{}", self.tags(x, y + 2, w, h));
-        print!("{}", self.save_button(x, y + 2 + tag_len));
+        print!("{}{}", cursor::Goto(x, y + 2 + tag_len), "─".repeat((w).into()));
+        print!("{}", self.save_button(x, y + 3 + tag_len, w));
     }
 
     fn handle(
@@ -301,8 +321,13 @@ impl Component for TagEditor {
                 let sel = self.sel.unwrap();
 
                 let old_pair = &self.tags[sel];
-                let new_pair =
-                    (old_pair.0.clone(), TagVal::Some(s.to_string()));
+                let new_pair = (
+                    old_pair.0.clone(),
+                    match s.as_str() {
+                        "" => TagVal::None,
+                        s => TagVal::Some(s.to_string()),
+                    }
+                );
 
                 self.tags[sel] = new_pair;
 

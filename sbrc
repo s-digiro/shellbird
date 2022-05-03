@@ -1,0 +1,31 @@
+set tagdir ~/music/
+set tagtempdir /tmp/shellbird/tagger
+
+bind <space> select
+bind <return> select
+bind j down
+bind k up
+bind gg top
+bind G bot
+bind h focusprev
+bind l focusnext
+bind p pause
+bind or repeat
+bind oz random
+bind os single
+bind oc consume
+bind c clear
+bind <up> volume up 5
+bind <down> volume down 5
+bind 1 switchscreen NowPlayingScreen
+bind 2 switchscreen QueueScreen
+bind 3 switchscreen PlaylistViewScreen
+bind 4 switchscreen LibraryViewScreen
+bind 5 switchscreen StyleViewScreen
+bind q quit
+bind s start
+bind n nextsearch
+bind N prevsearch
+bind t opentags
+
+switchscreen NowPlayingScreen
