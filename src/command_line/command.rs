@@ -148,6 +148,7 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "gettext" => cmd.get(1).map(|s| s.to_string()).and_then(|prompt| {
                 Some(Event::ToCommandLine(CommandLineEvent::RequestText(
                     prompt,
+                    cmd.get(2).map(|s| s.to_string()),
                 )))
             }),
 

@@ -245,9 +245,11 @@ impl CommandLine {
     pub fn handle(&mut self, e: &CommandLineEvent, _tx: mpsc::Sender<Event>) {
         match e {
             CommandLineEvent::Echo(s) => self.put_text(s.to_string()),
-            CommandLineEvent::RequestText(prompt) => {
+            CommandLineEvent::RequestText(prompt, def) => {
                 self.mode(Mode::GetText);
                 self.prompt = Some(prompt.to_string());
+                self.content =
+                    ContentType::Chars(def.clone().unwrap_or("".to_owned()));
             },
             CommandLineEvent::NextSearch => self.next_search(),
             CommandLineEvent::PrevSearch => self.prev_search(),

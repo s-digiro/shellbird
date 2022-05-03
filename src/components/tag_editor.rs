@@ -120,9 +120,14 @@ impl TagEditor {
     pub fn select(&self, tx: mpsc::Sender<Event>) {
         if let Some(sel) = self.sel {
             let prompt = self.tags[sel].0.to_string();
+            let val = match &self.tags[sel].1 {
+                TagVal::Some(s) => Some(s.clone()),
+                TagVal::None => None,
+                TagVal::Various => None,
+            };
 
             tx.send(Event::ToCommandLine(CommandLineEvent::RequestText(
-                prompt,
+                prompt, val,
             )))
             .unwrap();
         } else {

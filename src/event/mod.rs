@@ -111,7 +111,7 @@ pub enum AppEvent {
 #[derive(Debug, Clone)]
 pub enum CommandLineEvent {
     Echo(String),
-    RequestText(String),
+    RequestText(String, Option<String>),
     Mode(Mode),
     Input(Key),
     PrevSearch,
