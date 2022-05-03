@@ -133,9 +133,19 @@ impl CommandLine {
                     }
                 },
             },
+            (Mode::GetText, ContentType::Chars(s)) => match key {
+                Key::Char('\n') => self.run(),
+                Key::Esc => self.mode(Mode::TUI),
+                Key::Backspace => {
+                    if !s.is_empty() {
+                        s.pop();
+                    }
+                },
+                Key::Char(c) => s.push(*c),
+                _ => (),
+            },
             (Mode::Command, ContentType::Chars(s))
-            | (Mode::Search, ContentType::Chars(s))
-            | (Mode::GetText, ContentType::Chars(s)) => match key {
+            | (Mode::Search, ContentType::Chars(s)) => match key {
                 Key::Char('\n') => self.run(),
                 Key::Esc => self.mode(Mode::TUI),
                 Key::Backspace => {
