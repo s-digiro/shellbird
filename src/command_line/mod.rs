@@ -240,6 +240,24 @@ impl CommandLine {
             cursor::Goto(w - (self.statusline.len() as u16), h),
             self.statusline,
         );
+
+        let content_len = match &self.content {
+            ContentType::Chars(s) => s.len(),
+            ContentType::Keys(_) => 0,
+        };
+
+        match self.mode {
+            Mode::Command | Mode::Search => {
+                print!("{}🭰", cursor::Goto(1 + content_len as u16 + 1, h),)
+            },
+
+            Mode::GetText => print!(
+                "{}🭰",
+                cursor::Goto(prompt.len() as u16 + content_len as u16 + 1, h),
+            ),
+
+            _ => print!("{}", cursor::Hide),
+        }
     }
 
     pub fn handle(&mut self, e: &CommandLineEvent, _tx: mpsc::Sender<Event>) {
