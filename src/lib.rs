@@ -127,6 +127,7 @@ impl<'a> Shellbird<'a> {
             tx.clone(),
         );
 
+        let mut last_screen = None; // Used for returning to screen after tagger
         let tag_tx = tagger::init_tagger_thread(tx.clone());
 
         self.init_stdin_thread(tx.clone());
@@ -203,6 +204,14 @@ impl<'a> Shellbird<'a> {
                         ))
                         .unwrap();
                     },
+                    AppEvent::Back => {
+                        if let Some(screen_name) = last_screen.take() {
+                            tx.send(Event::ToApp(AppEvent::SwitchScreen(
+                                screen_name,
+                            )))
+                            .unwrap();
+                        }
+                    },
                     AppEvent::TagUI(songs) => {
                         let cname = "TagEditor".to_string();
 
@@ -210,6 +219,8 @@ impl<'a> Shellbird<'a> {
                             cname.clone(),
                             TagEditor::enumed(&cname, Color::Cyan, songs),
                         );
+
+                        last_screen = Some(screen.name().to_owned());
 
                         tx.send(Event::ToApp(AppEvent::SwitchScreen(cname)))
                             .unwrap()

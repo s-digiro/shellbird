@@ -22,7 +22,7 @@ bind 2 switchscreen QueueScreen
 bind 3 switchscreen PlaylistViewScreen
 bind 4 switchscreen LibraryViewScreen
 bind 5 switchscreen StyleViewScreen
-bind q quit
+bind q appback
 bind s start
 bind n nextsearch
 bind N prevsearch

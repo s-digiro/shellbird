@@ -176,6 +176,8 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
 
             "opentags" => Some(Event::ToFocus(ComponentEvent::OpenTags)),
 
+            "appback" => Some(Event::ToApp(AppEvent::Back)),
+
             "bind" | "bindkey" => cmd.get(1).and_then(|key| {
                 let keybind = str_to_keys(key);
 
