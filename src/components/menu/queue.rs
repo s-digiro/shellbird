@@ -99,6 +99,14 @@ impl Queue {
             })
             .collect();
     }
+
+    fn selected_tracks(&self) -> Vec<Song> {
+        if let Some(track) = self.tracks.get(self.menu.selection) {
+            vec![track.clone()]
+        } else {
+            Vec::new()
+        }
+    }
 }
 
 impl Component for Queue {
@@ -113,6 +121,10 @@ impl Component for Queue {
         tx: mpsc::Sender<Event>,
     ) {
         match e {
+            ComponentEvent::OpenTags => {
+                tx.send(Event::ToApp(AppEvent::TagUI(self.selected_tracks())))
+                    .unwrap();
+            },
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
