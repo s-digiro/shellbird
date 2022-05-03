@@ -17,20 +17,22 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::sync::mpsc;
 use std::collections::HashSet;
+use std::sync::mpsc;
 
 use mpd::Song;
 
 use unicode_truncate::Alignment;
 
-use crate::components::{Component, Components, menu::{Menu, Parent}};
+use crate::color::Color;
+use crate::components::{
+    menu::{Menu, Parent},
+    Component, Components,
+};
 use crate::event::*;
 use crate::GlobalState;
-use crate::color::Color;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct TagMenu {
     tag: String,
     parent: Parent,
@@ -49,21 +51,19 @@ impl TagMenu {
         menu_alignment: Alignment,
         tag: &str,
         multitag_separator: Option<String>,
-        parent: Option<String>
+        parent: Option<String>,
     ) -> Components {
-        Components::TagMenu(
-            TagMenu::new(
-                name,
-                color,
-                focus_color,
-                title,
-                title_alignment,
-                menu_alignment,
-                tag,
-                multitag_separator,
-                parent,
-            )
-        )
+        Components::TagMenu(TagMenu::new(
+            name,
+            color,
+            focus_color,
+            title,
+            title_alignment,
+            menu_alignment,
+            tag,
+            multitag_separator,
+            parent,
+        ))
     }
 
     pub fn new(
@@ -75,7 +75,7 @@ impl TagMenu {
         menu_alignment: Alignment,
         tag: &str,
         multitag_separator: Option<String>,
-        parent: Option<String>
+        parent: Option<String>,
     ) -> TagMenu {
         TagMenu {
             parent: Parent::new(parent),
@@ -106,28 +106,34 @@ impl TagMenu {
     pub fn spawn_update_event(&self, library: &Vec<Song>) -> Event {
         let event_tracks = self.selection(library);
 
-        Event::ToAllComponents(ComponentEvent::TagMenuUpdated(self.name().to_string(), event_tracks))
+        Event::ToAllComponents(ComponentEvent::TagMenuUpdated(
+            self.name().to_string(),
+            event_tracks,
+        ))
     }
 
     pub fn set_menu_items(&mut self, library: &Vec<Song>) {
         self.menu.selection = 0;
         self.menu.items = vec!["<All>".to_string()];
 
-        let items: Vec<String> = self.tracks.clone().iter()
+        let items: Vec<String> = self
+            .tracks
+            .clone()
+            .iter()
             .filter(|id| library.get(**id) != None)
             .map(|id| match library.get(*id).unwrap().tags.get(&self.tag) {
                 Some(val) => val.to_string(),
                 None => "<Empty>".to_string(),
-            }).collect();
+            })
+            .collect();
 
         let mut final_items = Vec::new();
 
         if let Some(sep) = &self.multitag_separator {
             for item in items.iter() {
                 if item.contains(sep) {
-                    let mut new_tags = item.split(sep)
-                        .map(|s| s.to_string())
-                        .collect();
+                    let mut new_tags =
+                        item.split(sep).map(|s| s.to_string()).collect();
 
                     final_items.append(&mut new_tags);
                 } else {
@@ -148,7 +154,8 @@ impl TagMenu {
         if self.menu.selection == 0 {
             self.tracks.clone()
         } else {
-            self.tracks.iter()
+            self.tracks
+                .iter()
                 .filter(|id| match library.get(**id) {
                     Some(song) => match self.menu.selection() {
                         Some(tag) => match tag.as_str() {
@@ -161,20 +168,26 @@ impl TagMenu {
                         None => false,
                     },
                     None => false,
-                }).map(|u| *u)
+                })
+                .map(|u| *u)
                 .collect()
         }
     }
 
     pub fn selected_tracks(&self, library: &Vec<Song>) -> Vec<Song> {
-        self.tracks.iter()
+        self.tracks
+            .iter()
             .filter(|id| None != library.get(**id))
             .filter(|id| match self.menu.selection() {
                 Some(sel_tag) => match sel_tag.as_str() {
-                    "<Empty>" => library.get(**id).unwrap().tags.get(&self.tag) == None,
-                    sel_tag => match library.get(**id).unwrap().tags.get(&self.tag) {
-                        Some(tag) => self.tag_is(tag, sel_tag),
-                        None => false,
+                    "<Empty>" => {
+                        library.get(**id).unwrap().tags.get(&self.tag) == None
+                    },
+                    sel_tag => {
+                        match library.get(**id).unwrap().tags.get(&self.tag) {
+                            Some(tag) => self.tag_is(tag, sel_tag),
+                            None => false,
+                        }
                     },
                 },
                 None => false,
@@ -185,13 +198,15 @@ impl TagMenu {
 }
 
 impl Component for TagMenu {
-    fn name(&self) -> &str { &self.menu.name }
+    fn name(&self) -> &str {
+        &self.menu.name
+    }
 
     fn handle(
         &mut self,
         state: &GlobalState,
         e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>,
     ) {
         match e {
             ComponentEvent::Start => (),
@@ -229,24 +244,27 @@ impl Component for TagMenu {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            ComponentEvent::Select => {
-                tx.send(
-                    Event::ToMpd(MpdEvent::AddToQueue(
-                            self.selected_tracks(&state.library))
-                    )
-                ).unwrap()
-            },
-            ComponentEvent::StyleMenuUpdated(origin, styles) if self.parent.is(origin) => {
+            ComponentEvent::Select => tx
+                .send(Event::ToMpd(MpdEvent::AddToQueue(
+                    self.selected_tracks(&state.library),
+                )))
+                .unwrap(),
+            ComponentEvent::StyleMenuUpdated(origin, styles)
+                if self.parent.is(origin) =>
+            {
                 if let Some(style_tree) = &state.style_tree {
-                    let genres: HashSet<&str> = styles.iter()
-                        .map(|id| style_tree.name(*id))
-                        .collect();
+                    let genres: HashSet<&str> =
+                        styles.iter().map(|id| style_tree.name(*id)).collect();
 
-                    let tracks = state.library.iter().enumerate()
+                    let tracks = state
+                        .library
+                        .iter()
+                        .enumerate()
                         .filter(|(_, song)| match &song.tags.get("Genre") {
                             Some(g) => genres.contains(g.as_str()),
                             None => false,
-                        }).map(|(i, _)| i)
+                        })
+                        .map(|(i, _)| i)
                         .collect();
 
                     self.tracks = tracks;
@@ -256,7 +274,9 @@ impl Component for TagMenu {
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
             },
-            ComponentEvent::TagMenuUpdated(origin, tracks) if self.parent.is(origin) => {
+            ComponentEvent::TagMenuUpdated(origin, tracks)
+                if self.parent.is(origin) =>
+            {
                 self.tracks = tracks.clone();
 
                 self.set_menu_items(&state.library);

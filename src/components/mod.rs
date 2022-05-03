@@ -20,35 +20,37 @@ along with Shellbird; see the file COPYING.  If not see
 
 use crate::event::*;
 use crate::GlobalState;
-use std::sync::mpsc;
 use std::fmt;
+use std::sync::mpsc;
 use termion::cursor;
 
-mod splitters;
-mod place_holder;
-mod error_box;
-mod title_display;
-mod tag_display;
-mod menu;
 mod empty_space;
+mod error_box;
+mod menu;
+mod place_holder;
+mod splitters;
+mod tag_display;
+mod tag_editor;
+mod title_display;
 
-pub use place_holder::PlaceHolder;
 pub use empty_space::EmptySpace;
 pub use error_box::ErrorBox;
-pub use title_display::TitleDisplay;
-pub use tag_display::TagDisplay;
-pub use menu::queue::Queue;
 pub use menu::playlist_menu::PlaylistMenu;
-pub use menu::track_menu::TrackMenu;
-pub use menu::tag_menu::TagMenu;
+pub use menu::queue::Queue;
 pub use menu::style_menu::StyleMenu;
+pub use menu::tag_menu::TagMenu;
+pub use menu::track_menu::TrackMenu;
+pub use place_holder::PlaceHolder;
 pub use splitters::HorizontalSplitter;
-pub use splitters::VerticalSplitter;
+pub use splitters::MoveFocusResult;
+pub use splitters::Panel;
+pub use splitters::Size;
 pub use splitters::Splitter;
 pub use splitters::Splitters;
-pub use splitters::Size;
-pub use splitters::Panel;
-pub use splitters::MoveFocusResult;
+pub use splitters::VerticalSplitter;
+pub use tag_display::TagDisplay;
+pub use tag_editor::TagEditor;
+pub use title_display::TitleDisplay;
 
 pub trait Component: fmt::Debug + PartialEq {
     fn spawn_needs_draw_event(&self) -> Event {
@@ -62,8 +64,9 @@ pub trait Component: fmt::Debug + PartialEq {
         _tx: mpsc::Sender<Event>,
     ) {
         match e {
-            ComponentEvent::Draw(x, y, w, h, focus) =>
-                self.draw(*x, *y, *w, *h, focus.as_str() == self.name()),
+            ComponentEvent::Draw(x, y, w, h, focus) => {
+                self.draw(*x, *y, *w, *h, focus.as_str() == self.name())
+            },
             _ => (),
         }
     }
@@ -71,29 +74,25 @@ pub trait Component: fmt::Debug + PartialEq {
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool);
 
     fn border(&self, x: u16, y: u16, w: u16, h: u16) {
-        print!("{}{}{}{}",
-               cursor::Goto(x, y),
-               "┌",
-               "─".to_string().repeat((w - 2).into()),
-               "┐",
+        print!(
+            "{}{}{}{}",
+            cursor::Goto(x, y),
+            "┌",
+            "─".to_string().repeat((w - 2).into()),
+            "┐",
         );
 
         for line in (y + 1)..(y + h - 1) {
-            print!("{}{}",
-               cursor::Goto(x, line),
-               "│",
-            );
-            print!("{}{}",
-                cursor::Goto(x + w - 1, line),
-               "│",
-            );
+            print!("{}{}", cursor::Goto(x, line), "│",);
+            print!("{}{}", cursor::Goto(x + w - 1, line), "│",);
         }
 
-        print!("{}{}{}{}",
-               cursor::Goto(x, y + h - 1),
-               "└",
-               "─".repeat((w - 2).into()),
-               "┘",
+        print!(
+            "{}{}{}{}",
+            cursor::Goto(x, y + h - 1),
+            "└",
+            "─".repeat((w - 2).into()),
+            "┘",
         );
     }
 
@@ -101,13 +100,11 @@ pub trait Component: fmt::Debug + PartialEq {
         let mut buffer = String::new();
 
         for line in y..(y + h) {
-            buffer.push_str(
-                &format!(
-                    "{}{}",
-                    cursor::Goto(x, line),
-                    " ".repeat(w as usize),
-                ),
-            );
+            buffer.push_str(&format!(
+                "{}{}",
+                cursor::Goto(x, line),
+                " ".repeat(w as usize),
+            ));
         }
 
         print!("{}", buffer);
@@ -116,10 +113,10 @@ pub trait Component: fmt::Debug + PartialEq {
     fn name(&self) -> &str;
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Components {
     PlaceHolder(PlaceHolder),
+    TagEditor(TagEditor),
     EmptySpace(EmptySpace),
     ErrorBox(ErrorBox),
     TitleDisplay(TitleDisplay),
@@ -133,7 +130,6 @@ pub enum Components {
 }
 
 impl Component for Components {
-
     fn handle(
         &mut self,
         state: &GlobalState,
@@ -142,6 +138,7 @@ impl Component for Components {
     ) {
         match self {
             Components::PlaceHolder(c) => c.handle(state, e, tx),
+            Components::TagEditor(c) => c.handle(state, e, tx),
             Components::EmptySpace(c) => c.handle(state, e, tx),
             Components::ErrorBox(c) => c.handle(state, e, tx),
             Components::TitleDisplay(c) => c.handle(state, e, tx),
@@ -158,6 +155,7 @@ impl Component for Components {
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         match self {
             Components::PlaceHolder(c) => c.draw(x, y, w, h, focus),
+            Components::TagEditor(c) => c.draw(x, y, w, h, focus),
             Components::EmptySpace(c) => c.draw(x, y, w, h, focus),
             Components::ErrorBox(c) => c.draw(x, y, w, h, focus),
             Components::TitleDisplay(c) => c.draw(x, y, w, h, focus),
@@ -174,6 +172,7 @@ impl Component for Components {
     fn border(&self, x: u16, y: u16, w: u16, h: u16) {
         match self {
             Components::PlaceHolder(c) => c.border(x, y, w, h),
+            Components::TagEditor(c) => c.border(x, y, w, h),
             Components::EmptySpace(c) => c.border(x, y, w, h),
             Components::ErrorBox(c) => c.border(x, y, w, h),
             Components::TitleDisplay(c) => c.border(x, y, w, h),
@@ -190,6 +189,7 @@ impl Component for Components {
     fn name(&self) -> &str {
         match self {
             Components::PlaceHolder(c) => c.name(),
+            Components::TagEditor(c) => c.name(),
             Components::EmptySpace(c) => c.name(),
             Components::ErrorBox(c) => c.name(),
             Components::TitleDisplay(c) => c.name(),

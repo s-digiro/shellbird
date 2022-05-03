@@ -19,13 +19,12 @@ along with Shellbird; see the file COPYING.  If not see
 
 use mpd::Client;
 
-pub mod mpd_sender;
 pub mod mpd_listener;
+pub mod mpd_sender;
 
-fn get_mpd_conn(ip: &str, port: &str) -> Option<Client> {
+pub fn get_mpd_conn(ip: &str, port: &str) -> Option<Client> {
     match Client::connect(format!("{}:{}", ip, port)) {
         Ok(conn) => Some(conn),
         _ => None,
     }
 }
-

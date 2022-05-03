@@ -17,14 +17,13 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use super::*;
 use super::super::Splitters;
+use super::*;
 
-use crate::GlobalState;
 use crate::components::Components;
+use crate::GlobalState;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct VerticalSplitter {
     splitter: VectorSplitter,
 }
@@ -35,11 +34,9 @@ impl VerticalSplitter {
         draw_borders: bool,
         panels: Vec<Panel>,
     ) -> Components {
-        Components::Splitter(
-            Splitters::VerticalSplitter(
-                VerticalSplitter::new(name, draw_borders, panels)
-            )
-        )
+        Components::Splitter(Splitters::VerticalSplitter(
+            VerticalSplitter::new(name, draw_borders, panels),
+        ))
     }
 
     pub fn new(
@@ -53,7 +50,7 @@ impl VerticalSplitter {
                 name: name.to_string(),
                 sel: 0,
                 panels,
-            }
+            },
         }
     }
 }
@@ -81,13 +78,15 @@ impl Splitter for VerticalSplitter {
 }
 
 impl Component for VerticalSplitter {
-    fn name(&self) -> &str { self.splitter.name() }
+    fn name(&self) -> &str {
+        self.splitter.name()
+    }
 
     fn handle(
         &mut self,
         state: &GlobalState,
         e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>,
     ) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {
@@ -114,19 +113,17 @@ impl Component for VerticalSplitter {
                         Size::Remainder => (inner_h - inner_y) + 1,
                     };
 
-                    tx.send(
-                        Event::ToComponent(
-                            panel.key.to_string(),
-                            ComponentEvent::Draw(
-                                inner_x,
-                                inner_y,
-                                inner_w,
-                                inner_h,
-                                focus.to_string(),
-                            ),
+                    tx.send(Event::ToComponent(
+                        panel.key.to_string(),
+                        ComponentEvent::Draw(
+                            inner_x,
+                            inner_y,
+                            inner_w,
+                            inner_h,
+                            focus.to_string(),
                         ),
-                    ).unwrap();
-
+                    ))
+                    .unwrap();
 
                     inner_y = inner_y + inner_h;
 

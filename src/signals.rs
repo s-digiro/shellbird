@@ -21,12 +21,9 @@ use std::sync::mpsc;
 use std::thread;
 
 use signal_hook::{
-    consts::{
-        SIGWINCH,
-        SIGINT,
-    },
+    consts::{SIGINT, SIGWINCH},
     iterator::Signals,
-    low_level
+    low_level,
 };
 
 use crate::event::*;

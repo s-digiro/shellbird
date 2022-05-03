@@ -20,15 +20,14 @@ along with Shellbird; see the file COPYING.  If not see
 use mpd::Song;
 use std::sync::mpsc;
 
-use termion::{color, cursor, style};
+use crate::color::Color;
+use crate::components::{menu::Menu, Component, Components};
 use crate::event::*;
 use crate::GlobalState;
-use crate::color::Color;
-use crate::components::{Component, Components, menu::Menu};
-use unicode_truncate::{UnicodeTruncateStr, Alignment};
+use termion::{color, cursor, style};
+use unicode_truncate::{Alignment, UnicodeTruncateStr};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Queue {
     tracks: Vec<Song>,
     menu: Menu,
@@ -44,16 +43,14 @@ impl Queue {
         title_alignment: Alignment,
         menu_alignment: Alignment,
     ) -> Components {
-        Components::Queue(
-            Queue::new(
-                name,
-                color,
-                focus_color,
-                title,
-                title_alignment,
-                menu_alignment,
-            )
-        )
+        Components::Queue(Queue::new(
+            name,
+            color,
+            focus_color,
+            title,
+            title_alignment,
+            menu_alignment,
+        ))
     }
 
     pub fn new(
@@ -93,22 +90,27 @@ impl Queue {
     }
 
     fn update_menu_items(&mut self) {
-        self.menu.items = self.tracks.iter()
+        self.menu.items = self
+            .tracks
+            .iter()
             .map(|s| match &s.title {
                 Some(title) => title.to_string(),
                 None => "<Empty>".to_string(),
-            }).collect();
+            })
+            .collect();
     }
 }
 
 impl Component for Queue {
-    fn name(&self) -> &str { &self.menu.name }
+    fn name(&self) -> &str {
+        &self.menu.name
+    }
 
     fn handle(
         &mut self,
         _state: &GlobalState,
         e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>,
     ) {
         match e {
             ComponentEvent::Start => (),
@@ -142,9 +144,8 @@ impl Component for Queue {
             },
             ComponentEvent::Select => {
                 if let Some(song) = self.tracks.get(self.menu.selection) {
-                    tx.send(Event::ToMpd(
-                        MpdEvent::PlayAt(song.clone())
-                    )).unwrap()
+                    tx.send(Event::ToMpd(MpdEvent::PlayAt(song.clone())))
+                        .unwrap()
                 }
             },
             ComponentEvent::NowPlaying(song) => {
@@ -173,17 +174,15 @@ impl Component for Queue {
         let mut buffer = String::new();
 
         if let Some(title) = &self.menu.title {
-            buffer.push_str(
-                &format!(
-                    "{}{}{}{}{}{}",
-                    color::Fg(self.menu.color(focus)),
-                    cursor::Goto(x, y),
-                    title.unicode_pad(w as usize, self.menu.title_alignment, true),
-                    cursor::Goto(x, y + 1),
-                    "─".repeat(w as usize),
-                    style::Reset,
-                )
-            );
+            buffer.push_str(&format!(
+                "{}{}{}{}{}{}",
+                color::Fg(self.menu.color(focus)),
+                cursor::Goto(x, y),
+                title.unicode_pad(w as usize, self.menu.title_alignment, true),
+                cursor::Goto(x, y + 1),
+                "─".repeat(w as usize),
+                style::Reset,
+            ));
 
             cur_y = cur_y + 2;
         }
@@ -191,7 +190,8 @@ impl Component for Queue {
         let mut i = self.menu.first_visible(h);
         for line in cur_y..(y + h) {
             if let Some(s) = self.menu.items.get(i) {
-                let s = s.unicode_pad(w as usize, self.menu.menu_alignment, true);
+                let s =
+                    s.unicode_pad(w as usize, self.menu.menu_alignment, true);
 
                 if self.menu.selection == i {
                     buffer.push_str(&format!("{}", style::Invert));
@@ -203,23 +203,19 @@ impl Component for Queue {
                     }
                 }
 
-                buffer.push_str(
-                    &format!(
-                        "{}{}{}{}",
-                        color::Fg(self.menu.color(focus)),
-                        cursor::Goto(x, line),
-                        s,
-                        style::Reset,
-                    )
-                );
+                buffer.push_str(&format!(
+                    "{}{}{}{}",
+                    color::Fg(self.menu.color(focus)),
+                    cursor::Goto(x, line),
+                    s,
+                    style::Reset,
+                ));
             } else {
-                buffer.push_str(
-                    &format!(
-                        "{}{}",
-                        cursor::Goto(x, line),
-                        " ".repeat(w as usize),
-                    ),
-                );
+                buffer.push_str(&format!(
+                    "{}{}",
+                    cursor::Goto(x, line),
+                    " ".repeat(w as usize),
+                ));
             }
 
             i = i + 1;

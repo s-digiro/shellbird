@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::collections::{VecDeque, HashMap};
+use crate::components::{Component, Components, MoveFocusResult, Splitter};
+use std::collections::{HashMap, VecDeque};
 use std::fmt;
-use crate::components::{Splitter, Components, Component, MoveFocusResult};
 
 pub struct Screen {
     name: String,
@@ -48,7 +48,7 @@ impl Screen {
 
     pub fn focus<'a>(
         &self,
-        components: &'a HashMap<String, Components>
+        components: &'a HashMap<String, Components>,
     ) -> String {
         let stack = construct_focus_stack(&self.name, components);
 
@@ -102,7 +102,7 @@ impl Screen {
     pub fn contains(
         &self,
         key: &str,
-        components: &HashMap<String, Components>
+        components: &HashMap<String, Components>,
     ) -> bool {
         if self.name == key {
             true
@@ -128,7 +128,7 @@ fn splitter_contains(
                 for child in splitter.children() {
                     if let Some(component) = components.get(child) {
                         if splitter_contains(component, key, components) {
-                            return true
+                            return true;
                         }
                     }
                 }
@@ -142,7 +142,7 @@ fn splitter_contains(
 
 fn construct_focus_stack(
     root: &str,
-    components: &HashMap<String, Components>
+    components: &HashMap<String, Components>,
 ) -> VecDeque<String> {
     let mut stack: VecDeque<String> = VecDeque::new();
     stack.push_back(root.to_string());
@@ -159,7 +159,7 @@ fn construct_focus_stack(
                 break;
             }
         } else {
-            break
+            break;
         }
     }
 

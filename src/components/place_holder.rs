@@ -18,11 +18,10 @@ along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 use crate::color::Color;
-use crate::components::{Components, Component};
+use crate::components::{Component, Components};
 use termion::color;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct PlaceHolder {
     name: String,
     color: Color,
@@ -39,17 +38,14 @@ impl PlaceHolder {
             color,
         }
     }
-
 }
 
 impl Component for PlaceHolder {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str {
+        &self.name
+    }
 
-    fn draw(
-        &self,
-        x: u16, y: u16, w: u16, h: u16,
-        _focus: bool,
-    ) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, _focus: bool) {
         print!("{}", color::Fg(self.color));
         self.border(x, y, w, h);
         self.clear(x + 1, y + 1, w - 2, h - 2);

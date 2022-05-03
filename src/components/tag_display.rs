@@ -17,16 +17,15 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::sync::mpsc;
-use termion::{cursor, color};
-use unicode_truncate::{UnicodeTruncateStr, Alignment};
-use crate::GlobalState;
 use crate::color::Color;
-use crate::event::*;
 use crate::components::{Component, Components};
+use crate::event::*;
+use crate::GlobalState;
+use std::sync::mpsc;
+use termion::{color, cursor};
+use unicode_truncate::{Alignment, UnicodeTruncateStr};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct TagDisplay {
     name: String,
     tag: String,
@@ -40,18 +39,16 @@ impl TagDisplay {
         name: &str,
         color: Color,
         alignment: Alignment,
-        tag: &str
+        tag: &str,
     ) -> Components {
-        Components::TagDisplay(
-            TagDisplay::new(name, color, alignment, tag)
-        )
+        Components::TagDisplay(TagDisplay::new(name, color, alignment, tag))
     }
 
     pub fn new(
         name: &str,
         color: Color,
         alignment: Alignment,
-        tag: &str
+        tag: &str,
     ) -> TagDisplay {
         TagDisplay {
             name: name.to_string(),
@@ -64,13 +61,15 @@ impl TagDisplay {
 }
 
 impl Component for TagDisplay {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str {
+        &self.name
+    }
 
     fn handle(
         &mut self,
         _state: &GlobalState,
         e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>,
     ) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {

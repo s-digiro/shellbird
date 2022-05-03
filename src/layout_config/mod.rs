@@ -17,17 +17,17 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use json::JsonValue;
 use json::object::Object;
+use json::JsonValue;
 
 use unicode_truncate::Alignment;
 
 use std::collections::HashMap;
-use std::fs;
 use std::error::Error;
+use std::fs;
 
-use crate::components::*;
 use crate::color::Color;
+use crate::components::*;
 
 #[cfg(test)]
 mod tests;
@@ -67,7 +67,7 @@ pub fn load(path: &str) -> Result<HashMap<String, Components>, Box<dyn Error>> {
 
 fn parse_component(
     obj: &Object,
-    map: &mut HashMap<String, Components>
+    map: &mut HashMap<String, Components>,
 ) -> (String, Option<Components>) {
     if let Some(component) = obj.get("component") {
         let c = match component.as_str() {
@@ -122,7 +122,7 @@ fn parse_style_menu(obj: &Object) -> Components {
         parse_optional_string(obj, "title"),
         parse_alignment(obj, "title_alignment"),
         parse_alignment(obj, "menu_alignment"),
-        parse_optional_string(obj, "parent")
+        parse_optional_string(obj, "parent"),
     )
 }
 
@@ -184,7 +184,7 @@ fn parse_title_display(obj: &Object) -> Components {
 
 fn parse_tag_display(obj: &Object) -> Components {
     TagDisplay::enumed(
-        parse_string(obj, "name").unwrap_or( "TagDisplay"),
+        parse_string(obj, "name").unwrap_or("TagDisplay"),
         parse_color(obj, "color"),
         parse_alignment(obj, "alignment"),
         parse_string(obj, "tag").unwrap_or("Artist"),
@@ -213,9 +213,7 @@ fn parse_place_holder(obj: &Object) -> Components {
 }
 
 fn parse_empty_space(obj: &Object) -> Components {
-    EmptySpace::enumed(
-        parse_string(obj, "name").unwrap_or("EmptySpace"),
-    )
+    EmptySpace::enumed(parse_string(obj, "name").unwrap_or("EmptySpace"))
 }
 
 fn parse_vector_splitter_children(
@@ -263,7 +261,7 @@ fn parse_vector_splitter_children(
 
 fn parse_horizontal_splitter(
     obj: &Object,
-    map: &mut HashMap<String, Components>
+    map: &mut HashMap<String, Components>,
 ) -> Components {
     HorizontalSplitter::enumed(
         parse_string(obj, "name").unwrap_or("HorizontalSplitter"),
@@ -345,7 +343,10 @@ fn parse_color(obj: &Object, key: &str) -> Color {
             "BrightWhite" => Color::BrightWhite,
             "Reset" => Color::Reset,
             bad => {
-                eprintln!("Error: parse_color: invalid color {:?}. Defaulting to Color::Reset", bad);
+                eprintln!(
+                    "Error: parse_color: invalid color {:?}. Defaulting to Color::Reset",
+                    bad
+                );
                 Color::Reset
             },
         },
@@ -368,17 +369,23 @@ fn parse_color(obj: &Object, key: &str) -> Color {
             "BrightWhite" => Color::BrightWhite,
             "Reset" => Color::Reset,
             bad => {
-                eprintln!("Error: parse_color: invalid color {:?}. Defaulting to Color::Reset", bad);
+                eprintln!(
+                    "Error: parse_color: invalid color {:?}. Defaulting to Color::Reset",
+                    bad
+                );
                 Color::Reset
             },
         },
         Some(JsonValue::Object(obj)) => match parse_color_rgb(obj) {
             Some(color) => color,
             None => {
-                eprintln!("Error: parse_color: bad rgb color '{:?}'. Defaulting to Color::Reset", obj);
+                eprintln!(
+                    "Error: parse_color: bad rgb color '{:?}'. Defaulting to Color::Reset",
+                    obj
+                );
                 Color::Reset
             },
-        }
+        },
         _ => Color::Reset,
     }
 }

@@ -23,13 +23,15 @@ use mpd::Song;
 
 use unicode_truncate::Alignment;
 
-use crate::event::*;
 use crate::color::Color;
+use crate::components::{
+    menu::{Menu, Parent},
+    Component, Components,
+};
+use crate::event::*;
 use crate::GlobalState;
-use crate::components::{Component, Components, menu::{Menu, Parent}};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct TrackMenu {
     parent: Parent,
     menu: Menu,
@@ -46,17 +48,15 @@ impl TrackMenu {
         menu_alignment: Alignment,
         parent: Option<String>,
     ) -> Components {
-        Components::TrackMenu(
-            TrackMenu::new(
-                name,
-                color,
-                focus_color,
-                title,
-                title_alignment,
-                menu_alignment,
-                parent
-            )
-        )
+        Components::TrackMenu(TrackMenu::new(
+            name,
+            color,
+            focus_color,
+            title,
+            title_alignment,
+            menu_alignment,
+            parent,
+        ))
     }
 
     pub fn new(
@@ -66,7 +66,7 @@ impl TrackMenu {
         title: Option<String>,
         title_alignment: Alignment,
         menu_alignment: Alignment,
-        parent: Option<String>
+        parent: Option<String>,
     ) -> TrackMenu {
         TrackMenu {
             parent: Parent::new(parent),
@@ -85,11 +85,14 @@ impl TrackMenu {
     }
 
     fn update_menu_items(&mut self) {
-        self.menu.items = self.tracks.iter()
+        self.menu.items = self
+            .tracks
+            .iter()
             .map(|s| match &s.title {
                 Some(title) => title.to_string(),
                 None => "<Empty>".to_string(),
-            }).collect();
+            })
+            .collect();
     }
 
     fn selected_tracks(&self) -> Vec<Song> {
@@ -102,21 +105,25 @@ impl TrackMenu {
 }
 
 impl Component for TrackMenu {
-    fn name(&self) -> &str { &self.menu.name }
+    fn name(&self) -> &str {
+        &self.menu.name
+    }
 
     fn handle(
         &mut self,
         state: &GlobalState,
         e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>,
     ) {
         match e {
+            ComponentEvent::OpenTags => tx
+                .send(Event::ToApp(AppEvent::TagUI(self.selected_tracks())))
+                .unwrap(),
             ComponentEvent::Select => {
-                tx.send(
-                    Event::ToMpd(MpdEvent::AddToQueue(
-                        self.selected_tracks()
-                    ))
-                ).unwrap();
+                tx.send(Event::ToMpd(MpdEvent::AddToQueue(
+                    self.selected_tracks(),
+                )))
+                .unwrap();
             },
             ComponentEvent::Next => {
                 self.menu.next();
@@ -146,15 +153,13 @@ impl Component for TrackMenu {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            ComponentEvent::Draw(x, y, w, h, focus) =>
-                self.draw(*x, *y, *w, *h, focus == self.name()),
+            ComponentEvent::Draw(x, y, w, h, focus) => {
+                self.draw(*x, *y, *w, *h, focus == self.name())
+            },
             ComponentEvent::Start => {
                 if let Some(track) = self.selected_tracks().first() {
-                    tx.send(
-                        Event::ToMpd(MpdEvent::PlayAt(
-                            track.clone()
-                        ))
-                    ).unwrap();
+                    tx.send(Event::ToMpd(MpdEvent::PlayAt(track.clone())))
+                        .unwrap();
                 }
             },
             ComponentEvent::LostMpdConnection => {
@@ -162,16 +167,23 @@ impl Component for TrackMenu {
                 self.update_menu_items();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            ComponentEvent::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
-                Some(pl) => {
-                    self.tracks = pl.tracks.clone();
-                    self.update_menu_items();
-                    tx.send(self.spawn_needs_draw_event()).unwrap();
-                },
-                None => (),
+            ComponentEvent::PlaylistMenuUpdated(name, pl)
+                if self.parent.is(name) =>
+            {
+                match pl {
+                    Some(pl) => {
+                        self.tracks = pl.tracks.clone();
+                        self.update_menu_items();
+                        tx.send(self.spawn_needs_draw_event()).unwrap();
+                    },
+                    None => (),
+                }
             },
-            ComponentEvent::TagMenuUpdated(name, tracks) if self.parent.is(name) => {
-                self.tracks = tracks.iter()
+            ComponentEvent::TagMenuUpdated(name, tracks)
+                if self.parent.is(name) =>
+            {
+                self.tracks = tracks
+                    .iter()
                     .filter(|id| state.library.get(**id) != None)
                     .map(|id| state.library.get(*id).unwrap().clone())
                     .collect();
@@ -179,16 +191,20 @@ impl Component for TrackMenu {
                 self.update_menu_items();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            ComponentEvent::StyleMenuUpdated(name, styles) if self.parent.is(name) => {
+            ComponentEvent::StyleMenuUpdated(name, styles)
+                if self.parent.is(name) =>
+            {
                 if let Some(tree) = &state.style_tree {
                     let genres = {
                         let mut leaves = Vec::new();
 
                         for style in styles {
                             leaves.append(
-                                &mut tree.leaf_names(*style).iter()
+                                &mut tree
+                                    .leaf_names(*style)
+                                    .iter()
                                     .map(|s| s.to_string())
-                                    .collect()
+                                    .collect(),
                             );
                         }
 

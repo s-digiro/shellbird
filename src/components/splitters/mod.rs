@@ -32,16 +32,14 @@ pub enum MoveFocusResult {
     Fail,
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Size {
     Percent(u8),
     Absolute(u16),
     Remainder,
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Panel {
     size: Size,
     key: String,
@@ -63,8 +61,7 @@ pub trait Splitter: Component {
     fn children(&self) -> Vec<&str>;
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Splitters {
     VerticalSplitter(VerticalSplitter),
     HorizontalSplitter(HorizontalSplitter),
@@ -75,7 +72,7 @@ impl Component for Splitters {
         &mut self,
         state: &GlobalState,
         e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>,
     ) {
         match self {
             Splitters::VerticalSplitter(c) => c.handle(state, e, tx),
@@ -104,7 +101,6 @@ impl Component for Splitters {
         }
     }
 }
-
 
 impl Splitter for Splitters {
     fn focus(&self) -> Option<&str> {

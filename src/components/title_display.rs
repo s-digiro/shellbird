@@ -17,16 +17,15 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::sync::mpsc;
-use termion::{color, cursor};
 use crate::color::Color;
 use crate::components::{Component, Components};
-use crate::GlobalState;
 use crate::event::*;
-use unicode_truncate::{UnicodeTruncateStr, Alignment};
+use crate::GlobalState;
+use std::sync::mpsc;
+use termion::{color, cursor};
+use unicode_truncate::{Alignment, UnicodeTruncateStr};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct TitleDisplay {
     name: String,
     contents: String,
@@ -35,7 +34,11 @@ pub struct TitleDisplay {
 }
 
 impl TitleDisplay {
-    pub fn enumed(name: &str, color: Color, alignment: Alignment) -> Components {
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        alignment: Alignment,
+    ) -> Components {
         Components::TitleDisplay(TitleDisplay::new(name, color, alignment))
     }
 
@@ -50,13 +53,15 @@ impl TitleDisplay {
 }
 
 impl Component for TitleDisplay {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str {
+        &self.name
+    }
 
     fn handle(
         &mut self,
         _state: &GlobalState,
         e: &ComponentEvent,
-        tx: mpsc::Sender<Event>
+        tx: mpsc::Sender<Event>,
     ) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {
@@ -71,7 +76,7 @@ impl Component for TitleDisplay {
                     None => "<Unavailable>".to_string(),
                 };
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::LostMpdConnection => {
                 self.contents = "<Unavailable>".to_string();
             },
@@ -80,7 +85,8 @@ impl Component for TitleDisplay {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, _h: u16, _focus: bool) {
-        print!("{}{}{}{}",
+        print!(
+            "{}{}{}{}",
             color::Fg(self.color),
             cursor::Goto(x, y),
             self.contents.unicode_pad(w as usize, self.alignment, true),

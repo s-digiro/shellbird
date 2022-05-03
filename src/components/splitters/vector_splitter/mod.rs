@@ -21,10 +21,10 @@ along with Shellbird; see the file COPYING.  If not see
 use std::sync::mpsc;
 use termion::cursor;
 
-use crate::GlobalState;
+use super::{MoveFocusResult, Panel, Size, Splitter};
 use crate::components::{Component, ErrorBox};
 use crate::event::*;
-use super::{Panel, Splitter, Size, MoveFocusResult};
+use crate::GlobalState;
 
 mod horizontal_splitter;
 mod vertical_splitter;
@@ -32,8 +32,7 @@ mod vertical_splitter;
 pub use horizontal_splitter::HorizontalSplitter;
 pub use vertical_splitter::VerticalSplitter;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 struct VectorSplitter {
     name: String,
     panels: Vec<Panel>,
@@ -43,16 +42,15 @@ struct VectorSplitter {
 
 impl Splitter for VectorSplitter {
     fn contains(&self, key: &str) -> bool {
-        self.panels.iter()
+        self.panels
+            .iter()
             .map(|p| p.key.as_str())
             .collect::<Vec<&str>>()
             .contains(&key)
     }
 
     fn children(&self) -> Vec<&str> {
-        self.panels.iter()
-            .map(|p| p.key.as_str())
-            .collect()
+        self.panels.iter().map(|p| p.key.as_str()).collect()
     }
 
     fn focus(&self) -> Option<&str> {
@@ -83,9 +81,11 @@ impl Splitter for VectorSplitter {
 }
 
 impl Component for VectorSplitter {
-    fn name(&self) -> &str { &self.name }
+    fn name(&self) -> &str {
+        &self.name
+    }
 
-    fn draw(&self,x: u16, y: u16, w: u16, h: u16, focus: bool) {
+    fn draw(&self, x: u16, y: u16, w: u16, h: u16, focus: bool) {
         ErrorBox::new().draw(x, y, w, h, focus);
     }
 }
