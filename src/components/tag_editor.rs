@@ -145,6 +145,7 @@ impl TagEditor {
 
         tx.send(Event::ToTagger(TaggerEvent::Tag(self.songs.clone(), tags)))
             .unwrap();
+        tx.send(Event::ToCommandLine(CommandLineEvent::Echo("Started tag update...".to_owned()))).unwrap();
     }
 
     pub fn next(&mut self, tx: mpsc::Sender<Event>) {

@@ -27,7 +27,7 @@ use mpd::Song;
 
 use id3::{Tag, TagLike, Version};
 
-use crate::event::{Event, MpdEvent, TaggerEvent};
+use crate::event::{Event, MpdEvent, TaggerEvent, CommandLineEvent};
 
 pub fn init_tagger_thread(
     mut tx: mpsc::Sender<Event>,
@@ -283,6 +283,7 @@ fn tag(
         }
     }
 
+    tx.send(Event::ToCommandLine(CommandLineEvent::Echo("Saved tags!".to_owned()))).unwrap();
     tx.send(Event::ToMpd(MpdEvent::Update)).unwrap();
 }
 
