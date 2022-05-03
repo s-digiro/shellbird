@@ -84,7 +84,12 @@ fn test_parse_horizontal_splitter() -> Result<(), String> {
             ),
             Panel::new(
                 Size::Percent(3),
-                TagDisplay::enumed("a name 2", Color::Reset, Align::Left, "Genre"),
+                TagDisplay::enumed(
+                    "a name 2",
+                    Color::Reset,
+                    Align::Left,
+                    "Genre",
+                ),
             ),
         ],
     ));

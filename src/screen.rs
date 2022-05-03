@@ -46,7 +46,10 @@ impl Screen {
         self.name = name.to_string();
     }
 
-    pub fn focus<'a>(&self, components: &'a HashMap<String, Components>) -> String {
+    pub fn focus<'a>(
+        &self,
+        components: &'a HashMap<String, Components>,
+    ) -> String {
         let stack = construct_focus_stack(&self.name, components);
 
         let key = stack.back().unwrap().to_string();
@@ -96,7 +99,11 @@ impl Screen {
         }
     }
 
-    pub fn contains(&self, key: &str, components: &HashMap<String, Components>) -> bool {
+    pub fn contains(
+        &self,
+        key: &str,
+        components: &HashMap<String, Components>,
+    ) -> bool {
         if self.name == key {
             true
         } else {
@@ -128,12 +135,15 @@ fn splitter_contains(
 
                 false
             }
-        }
+        },
         _ => component.name() == key,
     }
 }
 
-fn construct_focus_stack(root: &str, components: &HashMap<String, Components>) -> VecDeque<String> {
+fn construct_focus_stack(
+    root: &str,
+    components: &HashMap<String, Components>,
+) -> VecDeque<String> {
     let mut stack: VecDeque<String> = VecDeque::new();
     stack.push_back(root.to_string());
     loop {

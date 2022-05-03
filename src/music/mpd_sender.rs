@@ -24,10 +24,7 @@ use std::thread;
 use crate::event::*;
 
 use mpd::error::Error;
-use mpd::Client;
-use mpd::Query;
-use mpd::Song;
-use mpd::Term;
+use mpd::{Client, Query, Song, Term};
 
 pub fn init_mpd_sender_thread(
     ip: &str,
@@ -56,6 +53,10 @@ pub fn init_mpd_sender_thread(
 
                 let result = match request.clone() {
                     MpdEvent::TogglePause => c.toggle_pause(),
+                    MpdEvent::Update => match c.update() {
+                        Ok(_) => Ok(()),
+                        Err(_) => Ok(()),
+                    },
                     MpdEvent::Repeat => toggle_repeat(c),
                     MpdEvent::Random => toggle_random(c),
                     MpdEvent::Single => toggle_single(c),
@@ -63,18 +64,24 @@ pub fn init_mpd_sender_thread(
                     MpdEvent::ClearQueue => c.clear(),
                     MpdEvent::AddToQueue(songs) => push_all(c, songs),
                     MpdEvent::PlayAt(song) => play_at(c, song),
-                    MpdEvent::AddStyleToQueue(genres) => add_style_to_queue(c, genres),
+                    MpdEvent::AddStyleToQueue(genres) => {
+                        add_style_to_queue(c, genres)
+                    },
                     MpdEvent::Next => c.next(),
                     MpdEvent::Prev => c.prev(),
                     MpdEvent::SetVolume(vol) => c.volume(vol),
                 };
 
-                if let Err(_) = result {
+                if let Err(e) = result {
+                    tx.send(Event::ToApp(AppEvent::Error(format!("{:?}", e))))
+                        .unwrap();
+
                     tx.send(Event::ToApp(AppEvent::Error(format!(
                         "Mpd Sender Thread: Mpd Connection dropped. Resending MpdRequest {:?}",
                         request
                     ))))
                     .unwrap();
+
                     conn = None;
                     rethrow_tx.send(request).unwrap();
                 }
@@ -107,9 +114,7 @@ fn toggle_consume(conn: &mut Client) -> Result<(), Error> {
 
 fn push_all(conn: &mut Client, songs: Vec<Song>) -> Result<(), Error> {
     for song in songs {
-        if let Err(e) = conn.push(song) {
-            return Err(e);
-        }
+        conn.push(song)?;
     }
 
     Ok(())
@@ -124,11 +129,14 @@ fn play_at(conn: &mut Client, song: Song) -> Result<(), Error> {
             conn.switch(q.last().unwrap().place.unwrap().pos).unwrap();
 
             Ok(())
-        }
+        },
     }
 }
 
-fn add_style_to_queue(conn: &mut Client, genres: Vec<String>) -> Result<(), Error> {
+fn add_style_to_queue(
+    conn: &mut Client,
+    genres: Vec<String>,
+) -> Result<(), Error> {
     for genre in genres {
         let songs = conn.search(
             Query::new().and(Term::Tag(Cow::Borrowed("Genre")), genre),

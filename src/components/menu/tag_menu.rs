@@ -132,7 +132,8 @@ impl TagMenu {
         if let Some(sep) = &self.multitag_separator {
             for item in items.iter() {
                 if item.contains(sep) {
-                    let mut new_tags = item.split(sep).map(|s| s.to_string()).collect();
+                    let mut new_tags =
+                        item.split(sep).map(|s| s.to_string()).collect();
 
                     final_items.append(&mut new_tags);
                 } else {
@@ -179,10 +180,14 @@ impl TagMenu {
             .filter(|id| None != library.get(**id))
             .filter(|id| match self.menu.selection() {
                 Some(sel_tag) => match sel_tag.as_str() {
-                    "<Empty>" => library.get(**id).unwrap().tags.get(&self.tag) == None,
-                    sel_tag => match library.get(**id).unwrap().tags.get(&self.tag) {
-                        Some(tag) => self.tag_is(tag, sel_tag),
-                        None => false,
+                    "<Empty>" => {
+                        library.get(**id).unwrap().tags.get(&self.tag) == None
+                    },
+                    sel_tag => {
+                        match library.get(**id).unwrap().tags.get(&self.tag) {
+                            Some(tag) => self.tag_is(tag, sel_tag),
+                            None => false,
+                        }
                     },
                 },
                 None => false,
@@ -197,49 +202,56 @@ impl Component for TagMenu {
         &self.menu.name
     }
 
-    fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Prev => {
                 self.menu.prev();
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToTop => {
                 self.menu.to_top();
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToBottom => {
                 self.menu.to_bottom();
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoTo(i) => {
                 self.menu.to(*i);
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Search(s) => {
                 self.menu.search(s);
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::SearchPrev(s) => {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Select => tx
                 .send(Event::ToMpd(MpdEvent::AddToQueue(
                     self.selected_tracks(&state.library),
                 )))
                 .unwrap(),
-            ComponentEvent::StyleMenuUpdated(origin, styles) if self.parent.is(origin) => {
+            ComponentEvent::StyleMenuUpdated(origin, styles)
+                if self.parent.is(origin) =>
+            {
                 if let Some(style_tree) = &state.style_tree {
                     let genres: HashSet<&str> =
                         styles.iter().map(|id| style_tree.name(*id)).collect();
@@ -261,14 +273,16 @@ impl Component for TagMenu {
                     tx.send(self.spawn_update_event(&state.library)).unwrap();
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
-            }
-            ComponentEvent::TagMenuUpdated(origin, tracks) if self.parent.is(origin) => {
+            },
+            ComponentEvent::TagMenuUpdated(origin, tracks)
+                if self.parent.is(origin) =>
+            {
                 self.tracks = tracks.clone();
 
                 self.set_menu_items(&state.library);
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Database(tracks) if self.parent.is_none() => {
                 self.tracks = (0..tracks.len()).collect();
 
@@ -276,16 +290,16 @@ impl Component for TagMenu {
 
                 tx.send(self.spawn_update_event(&tracks)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::LostMpdConnection => {
                 self.tracks = Vec::new();
                 self.set_menu_items(&Vec::new());
                 tx.send(self.spawn_update_event(&Vec::new())).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            }
+            },
             _ => (),
         }
     }

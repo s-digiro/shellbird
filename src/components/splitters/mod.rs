@@ -68,7 +68,12 @@ pub enum Splitters {
 }
 
 impl Component for Splitters {
-    fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match self {
             Splitters::VerticalSplitter(c) => c.handle(state, e, tx),
             Splitters::HorizontalSplitter(c) => c.handle(state, e, tx),

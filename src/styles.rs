@@ -115,7 +115,7 @@ impl StyleTree {
                 None => {
                     self.tracks.insert(key.clone(), Vec::new());
                     self.tracks.get_mut(&key).unwrap()
-                }
+                },
             };
 
             bucket.push(track);

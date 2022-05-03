@@ -63,7 +63,8 @@ pub fn init_mpd_listener_thread(ip: &str, port: &str, tx: mpsc::Sender<Event>) {
                             }
                         }
                     } else {
-                        tx.send(Event::ToApp(AppEvent::LostMpdConnection)).unwrap();
+                        tx.send(Event::ToApp(AppEvent::LostMpdConnection))
+                            .unwrap();
 
                         tx.send(spawn_error_msg(
                             "Mpd Connection dropped. Reestablishing connection...",
@@ -131,7 +132,9 @@ fn send_database(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     let results = conn.search(Query::new().and(Term::Any, ""), None);
 
     match results {
-        Ok(results) => tx.send(Event::ToApp(AppEvent::Database(results))).unwrap(),
+        Ok(results) => {
+            tx.send(Event::ToApp(AppEvent::Database(results))).unwrap()
+        },
         _ => (),
     }
 }

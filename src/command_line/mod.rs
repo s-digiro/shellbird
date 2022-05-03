@@ -79,9 +79,9 @@ impl CommandLine {
 
         self.content = match self.mode {
             Mode::TUI => ContentType::Keys(Vec::new()),
-            Mode::Command
-            | Mode::Search
-            | Mode::GetText => ContentType::Chars(String::new()),
+            Mode::Command | Mode::Search | Mode::GetText => {
+                ContentType::Chars(String::new())
+            },
         }
     }
 
@@ -123,34 +123,31 @@ impl CommandLine {
                         self.tx.send(event.clone()).unwrap();
                         self.clear();
                     } else {
-                        let has_match = self
-                            .keybinds
-                            .keys()
-                            .any(|kb| keys.iter().zip(kb.iter()).all(|(a, b)| a == b));
+                        let has_match = self.keybinds.keys().any(|kb| {
+                            keys.iter().zip(kb.iter()).all(|(a, b)| a == b)
+                        });
 
                         if !has_match {
                             self.clear();
                         }
                     }
-                }
+                },
             },
             (Mode::Command, ContentType::Chars(s))
             | (Mode::Search, ContentType::Chars(s))
-            | (Mode::GetText, ContentType::Chars(s)) => {
-                match key {
-                    Key::Char('\n') => self.run(),
-                    Key::Esc => self.mode(Mode::TUI),
-                    Key::Backspace => {
-                        if s.is_empty() {
-                            self.mode(Mode::TUI);
-                        } else {
-                            s.pop();
-                        }
+            | (Mode::GetText, ContentType::Chars(s)) => match key {
+                Key::Char('\n') => self.run(),
+                Key::Esc => self.mode(Mode::TUI),
+                Key::Backspace => {
+                    if s.is_empty() {
+                        self.mode(Mode::TUI);
+                    } else {
+                        s.pop();
                     }
-                    Key::Char(c) => s.push(*c),
-                    _ => (),
-                }
-            }
+                },
+                Key::Char(c) => s.push(*c),
+                _ => (),
+            },
             bad => panic!("Command line reached invalid state {:?}", bad),
         }
     }
@@ -169,7 +166,8 @@ impl CommandLine {
     }
 
     pub fn run(&mut self) {
-        let content = mem::replace(&mut self.content, ContentType::Keys(Vec::new()));
+        let content =
+            mem::replace(&mut self.content, ContentType::Keys(Vec::new()));
 
         match (self.mode, content) {
             (Mode::Command, ContentType::Chars(cmd)) => {
@@ -180,19 +178,19 @@ impl CommandLine {
                         Event::ToCommandLine(CommandLineEvent::Echo(s)) => {
                             self.mode(Mode::TUI);
                             self.put_text(s.to_string());
-                        }
+                        },
                         e => {
                             self.tx.send(spawn_mode_event(Mode::TUI)).unwrap();
                             self.tx.send(e.clone()).unwrap();
                             self.tx.send(spawn_respond_event(&e)).unwrap();
-                        }
+                        },
                     },
                     None => {
                         self.mode(Mode::TUI);
                         self.tx.send(spawn_invalid_event(&cmd)).unwrap();
-                    }
+                    },
                 };
-            }
+            },
             (Mode::Search, ContentType::Chars(term)) => {
                 self.last_search = Some(term.clone());
                 self.mode(Mode::TUI);
@@ -203,13 +201,15 @@ impl CommandLine {
             },
             (Mode::GetText, ContentType::Chars(term)) => {
                 self.tx
-                    .send(
-                        Event::ToFocus(ComponentEvent::ReturnText(term.clone()))
-                    )
+                    .send(Event::ToFocus(ComponentEvent::ReturnText(
+                        term.clone(),
+                    )))
                     .unwrap();
                 self.mode(Mode::TUI);
             },
-            (Mode::TUI, _) => panic!("Invalid State: CommandLine called run while in Mode::TUI)"),
+            (Mode::TUI, _) => panic!(
+                "Invalid State: CommandLine called run while in Mode::TUI)"
+            ),
             state => panic!("Invalid State: {:?}", state),
         }
     }
@@ -217,12 +217,11 @@ impl CommandLine {
     pub fn draw(&self) {
         let (w, h) = termion::terminal_size().unwrap();
 
-        let prompt =
-            if let Some(s) = &self.prompt {
-                format!("{}: ", s)
-            } else {
-                "Text: ".to_string()
-            };
+        let prompt = if let Some(s) = &self.prompt {
+            format!("{}: ", s)
+        } else {
+            "Text: ".to_string()
+        };
 
         print!(
             "{}{}{}{}{}{}",
@@ -261,7 +260,7 @@ impl CommandLine {
             CommandLineEvent::Input(key) => self.input(&key),
             CommandLineEvent::SbrcNotFound => {
                 self.put_text("Sbrc not found. :q to quit.".to_string())
-            }
+            },
             CommandLineEvent::MpdStatus(status) => {
                 self.statusline = format!(
                     "[{}{}{}{}] Vol: {}%",
@@ -272,7 +271,7 @@ impl CommandLine {
                     status.volume,
                 );
                 self.volume = status.volume;
-            }
+            },
             CommandLineEvent::VolumeMv(by) => self.vol_mv(*by),
             CommandLineEvent::VolumeUp(by) => self.vol_mv(max(0, *by)),
             CommandLineEvent::VolumeDown(by) => self.vol_mv(-(max(0, *by))),
@@ -286,13 +285,16 @@ pub fn run_headless(cmd: &str, tx: mpsc::Sender<Event>) -> Result<(), ()> {
         Some(event) => {
             tx.send(event).unwrap();
             Ok(())
-        }
+        },
         None => Err(()),
     }
 }
 
 fn spawn_invalid_event(cmd: &str) -> Event {
-    Event::ToCommandLine(CommandLineEvent::Echo(format!("Invalid Command '{}'", cmd)))
+    Event::ToCommandLine(CommandLineEvent::Echo(format!(
+        "Invalid Command '{}'",
+        cmd
+    )))
 }
 
 fn spawn_respond_event(e: &Event) -> Event {

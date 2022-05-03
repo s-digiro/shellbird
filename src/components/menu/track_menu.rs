@@ -109,67 +109,79 @@ impl Component for TrackMenu {
         &self.menu.name
     }
 
-    fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
-            ComponentEvent::OpenTags =>
-                tx.send(
-                    Event::ToApp(AppEvent::TagUI(self.selected_tracks()))
-                ).unwrap(),
+            ComponentEvent::OpenTags => tx
+                .send(Event::ToApp(AppEvent::TagUI(self.selected_tracks())))
+                .unwrap(),
             ComponentEvent::Select => {
-                tx.send(Event::ToMpd(MpdEvent::AddToQueue(self.selected_tracks())))
-                    .unwrap();
-            }
+                tx.send(Event::ToMpd(MpdEvent::AddToQueue(
+                    self.selected_tracks(),
+                )))
+                .unwrap();
+            },
             ComponentEvent::Next => {
                 self.menu.next();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Prev => {
                 self.menu.prev();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToTop => {
                 self.menu.to_top();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToBottom => {
                 self.menu.to_bottom();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoTo(i) => {
                 self.menu.to(*i);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Search(s) => {
                 self.menu.search(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::SearchPrev(s) => {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name())
-            }
+            },
             ComponentEvent::Start => {
                 if let Some(track) = self.selected_tracks().first() {
                     tx.send(Event::ToMpd(MpdEvent::PlayAt(track.clone())))
                         .unwrap();
                 }
-            }
+            },
             ComponentEvent::LostMpdConnection => {
                 self.tracks = Vec::new();
                 self.update_menu_items();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
-            ComponentEvent::PlaylistMenuUpdated(name, pl) if self.parent.is(name) => match pl {
-                Some(pl) => {
-                    self.tracks = pl.tracks.clone();
-                    self.update_menu_items();
-                    tx.send(self.spawn_needs_draw_event()).unwrap();
-                }
-                None => (),
             },
-            ComponentEvent::TagMenuUpdated(name, tracks) if self.parent.is(name) => {
+            ComponentEvent::PlaylistMenuUpdated(name, pl)
+                if self.parent.is(name) =>
+            {
+                match pl {
+                    Some(pl) => {
+                        self.tracks = pl.tracks.clone();
+                        self.update_menu_items();
+                        tx.send(self.spawn_needs_draw_event()).unwrap();
+                    },
+                    None => (),
+                }
+            },
+            ComponentEvent::TagMenuUpdated(name, tracks)
+                if self.parent.is(name) =>
+            {
                 self.tracks = tracks
                     .iter()
                     .filter(|id| state.library.get(**id) != None)
@@ -178,8 +190,10 @@ impl Component for TrackMenu {
 
                 self.update_menu_items();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
-            ComponentEvent::StyleMenuUpdated(name, styles) if self.parent.is(name) => {
+            },
+            ComponentEvent::StyleMenuUpdated(name, styles)
+                if self.parent.is(name) =>
+            {
                 if let Some(tree) = &state.style_tree {
                     let genres = {
                         let mut leaves = Vec::new();
@@ -211,7 +225,7 @@ impl Component for TrackMenu {
                     self.update_menu_items();
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
-            }
+            },
             _ => (),
         }
     }

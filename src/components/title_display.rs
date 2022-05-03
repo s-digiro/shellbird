@@ -34,7 +34,11 @@ pub struct TitleDisplay {
 }
 
 impl TitleDisplay {
-    pub fn enumed(name: &str, color: Color, alignment: Alignment) -> Components {
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        alignment: Alignment,
+    ) -> Components {
         Components::TitleDisplay(TitleDisplay::new(name, color, alignment))
     }
 
@@ -53,11 +57,16 @@ impl Component for TitleDisplay {
         &self.name
     }
 
-    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        _state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            }
+            },
             ComponentEvent::NowPlaying(song) => {
                 self.contents = match song {
                     Some(song) => match &song.title {
@@ -67,10 +76,10 @@ impl Component for TitleDisplay {
                     None => "<Unavailable>".to_string(),
                 };
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::LostMpdConnection => {
                 self.contents = "<Unavailable>".to_string();
-            }
+            },
             _ => (),
         }
     }

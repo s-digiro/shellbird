@@ -189,7 +189,9 @@ impl Menu {
         if self.selection <= center as usize {
             0
         // If item is close to bottom
-        } else if self.selection as i32 >= self.items.len() as i32 - center as i32 {
+        } else if self.selection as i32
+            >= self.items.len() as i32 - center as i32
+        {
             // Set first drawn item to either 0 or half screen above middle
             std::cmp::max(0, self.items.len() as i32 - h as i32) as usize
         // If item is in middle

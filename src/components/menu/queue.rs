@@ -106,59 +106,64 @@ impl Component for Queue {
         &self.menu.name
     }
 
-    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        _state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Prev => {
                 self.menu.prev();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToTop => {
                 self.menu.to_top();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToBottom => {
                 self.menu.to_bottom();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoTo(i) => {
                 self.menu.to(*i);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Search(s) => {
                 self.menu.search(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::SearchPrev(s) => {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Select => {
                 if let Some(song) = self.tracks.get(self.menu.selection) {
                     tx.send(Event::ToMpd(MpdEvent::PlayAt(song.clone())))
                         .unwrap()
                 }
-            }
+            },
             ComponentEvent::NowPlaying(song) => {
                 self.set_now_playing(&song);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Queue(q) => {
                 self.update_items(q);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::LostMpdConnection => {
                 self.now_playing = None;
                 self.update_items(&Vec::new());
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            }
+            },
             _ => (),
         }
     }
@@ -185,7 +190,8 @@ impl Component for Queue {
         let mut i = self.menu.first_visible(h);
         for line in cur_y..(y + h) {
             if let Some(s) = self.menu.items.get(i) {
-                let s = s.unicode_pad(w as usize, self.menu.menu_alignment, true);
+                let s =
+                    s.unicode_pad(w as usize, self.menu.menu_alignment, true);
 
                 if self.menu.selection == i {
                     buffer.push_str(&format!("{}", style::Invert));

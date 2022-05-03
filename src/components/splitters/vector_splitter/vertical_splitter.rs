@@ -29,15 +29,21 @@ pub struct VerticalSplitter {
 }
 
 impl VerticalSplitter {
-    pub fn enumed(name: &str, draw_borders: bool, panels: Vec<Panel>) -> Components {
-        Components::Splitter(Splitters::VerticalSplitter(VerticalSplitter::new(
-            name,
-            draw_borders,
-            panels,
-        )))
+    pub fn enumed(
+        name: &str,
+        draw_borders: bool,
+        panels: Vec<Panel>,
+    ) -> Components {
+        Components::Splitter(Splitters::VerticalSplitter(
+            VerticalSplitter::new(name, draw_borders, panels),
+        ))
     }
 
-    pub fn new(name: &str, draw_borders: bool, panels: Vec<Panel>) -> VerticalSplitter {
+    pub fn new(
+        name: &str,
+        draw_borders: bool,
+        panels: Vec<Panel>,
+    ) -> VerticalSplitter {
         VerticalSplitter {
             splitter: VectorSplitter {
                 draw_borders,
@@ -76,7 +82,12 @@ impl Component for VerticalSplitter {
         self.splitter.name()
     }
 
-    fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, false);
@@ -104,7 +115,13 @@ impl Component for VerticalSplitter {
 
                     tx.send(Event::ToComponent(
                         panel.key.to_string(),
-                        ComponentEvent::Draw(inner_x, inner_y, inner_w, inner_h, focus.to_string()),
+                        ComponentEvent::Draw(
+                            inner_x,
+                            inner_y,
+                            inner_w,
+                            inner_h,
+                            focus.to_string(),
+                        ),
                     ))
                     .unwrap();
 
@@ -114,7 +131,7 @@ impl Component for VerticalSplitter {
                         inner_y = inner_y + 1;
                     }
                 }
-            }
+            },
             e => self.splitter.handle(state, e, tx),
         }
     }

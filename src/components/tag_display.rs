@@ -35,11 +35,21 @@ pub struct TagDisplay {
 }
 
 impl TagDisplay {
-    pub fn enumed(name: &str, color: Color, alignment: Alignment, tag: &str) -> Components {
+    pub fn enumed(
+        name: &str,
+        color: Color,
+        alignment: Alignment,
+        tag: &str,
+    ) -> Components {
         Components::TagDisplay(TagDisplay::new(name, color, alignment, tag))
     }
 
-    pub fn new(name: &str, color: Color, alignment: Alignment, tag: &str) -> TagDisplay {
+    pub fn new(
+        name: &str,
+        color: Color,
+        alignment: Alignment,
+        tag: &str,
+    ) -> TagDisplay {
         TagDisplay {
             name: name.to_string(),
             tag: tag.to_string(),
@@ -55,11 +65,16 @@ impl Component for TagDisplay {
         &self.name
     }
 
-    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        _state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            }
+            },
             ComponentEvent::NowPlaying(song) => {
                 self.contents = match song {
                     Some(song) => match song.tags.get(&self.tag) {
@@ -69,10 +84,10 @@ impl Component for TagDisplay {
                     None => "<Unavailable>".to_string(),
                 };
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::LostMpdConnection => {
                 self.contents = "<Unavailable>".to_string();
-            }
+            },
             _ => (),
         }
     }

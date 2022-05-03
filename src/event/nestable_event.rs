@@ -35,7 +35,9 @@ impl NestableEvent {
         match e {
             Event::ToApp(e) => Some(NestableEvent::ToApp(e)),
             Event::ToScreen(e) => Some(NestableEvent::ToScreen(e)),
-            Event::ToAllComponents(e) => Some(NestableEvent::ToAllComponents(e)),
+            Event::ToAllComponents(e) => {
+                Some(NestableEvent::ToAllComponents(e))
+            },
             Event::ToFocus(e) => Some(NestableEvent::ToFocus(e)),
             Event::ToMpd(e) => Some(NestableEvent::ToMpd(e)),
             Event::ToCommandLine(e) => Some(NestableEvent::ToCommandLine(e)),

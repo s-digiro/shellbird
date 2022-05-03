@@ -52,6 +52,20 @@ pub enum Event {
     ToFocus(ComponentEvent),
     ToAllComponents(ComponentEvent),
     ToMpd(MpdEvent),
+    ToTagger(TaggerEvent),
+}
+
+impl Event {
+    pub fn err(msg: String) -> Event {
+        Event::ToApp(AppEvent::Error(msg))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum TaggerEvent {
+    MusicDir(String),
+    TempDir(String),
+    Tag(Vec<Song>, Vec<(String, Option<String>)>),
 }
 
 #[derive(Clone)]
@@ -119,6 +133,7 @@ pub enum ScreenEvent {
 #[derive(Clone)]
 pub enum MpdEvent {
     TogglePause,
+    Update,
     ClearQueue,
     AddToQueue(Vec<Song>),
     AddStyleToQueue(Vec<String>),
@@ -135,13 +150,21 @@ pub enum MpdEvent {
 impl fmt::Debug for ComponentEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ComponentEvent::NowPlaying(i) => write!(f, "ComponentEvent::NowPlaying({:?})", i),
-            ComponentEvent::ReturnText(prompt) => write!(f, "ComponentEvent::ReturnText({:?})", prompt),
-            ComponentEvent::Queue(s) => write!(f, "ComponentEvent::Queue({} songs)", s.len()),
+            ComponentEvent::NowPlaying(i) => {
+                write!(f, "ComponentEvent::NowPlaying({:?})", i)
+            },
+            ComponentEvent::ReturnText(prompt) => {
+                write!(f, "ComponentEvent::ReturnText({:?})", prompt)
+            },
+            ComponentEvent::Queue(s) => {
+                write!(f, "ComponentEvent::Queue({} songs)", s.len())
+            },
             ComponentEvent::Playlist(pl) => {
                 write!(f, "ComponentEvent::Playlist({} playlists)", pl.len())
-            }
-            ComponentEvent::Database(s) => write!(f, "ComponentEvent::Database({} songs)", s.len()),
+            },
+            ComponentEvent::Database(s) => {
+                write!(f, "ComponentEvent::Database({} songs)", s.len())
+            },
             ComponentEvent::PlaylistMenuUpdated(t, pl) => write!(
                 f,
                 "ComponentEvent::PlaylistMenuUpdated({}, {} songs)",
@@ -157,11 +180,20 @@ impl fmt::Debug for ComponentEvent {
                 t,
                 s.len()
             ),
-            ComponentEvent::UpdateRootStyleMenu => write!(f, "ComponentEvent::UpdateRootStyleMenu"),
+            ComponentEvent::UpdateRootStyleMenu => {
+                write!(f, "ComponentEvent::UpdateRootStyleMenu")
+            },
             ComponentEvent::StyleMenuUpdated(t, s) => {
-                write!(f, "ComponentEvent::StyleMenuUpdated({}, {})", t, s.len())
-            }
-            ComponentEvent::LostMpdConnection => write!(f, "ComponentEvent::LostMpdConnection"),
+                write!(
+                    f,
+                    "ComponentEvent::StyleMenuUpdated({}, {})",
+                    t,
+                    s.len()
+                )
+            },
+            ComponentEvent::LostMpdConnection => {
+                write!(f, "ComponentEvent::LostMpdConnection")
+            },
             ComponentEvent::Draw(x, y, w, h, focus) => write!(
                 f,
                 "ComponentEvent::Draw({}, {}, {}, {}, {})",
@@ -174,9 +206,15 @@ impl fmt::Debug for ComponentEvent {
             ComponentEvent::Start => write!(f, "ComponentEvent::Start"),
             ComponentEvent::GoTo(i) => write!(f, "ComponentEvent::GoTo({})", i),
             ComponentEvent::GoToTop => write!(f, "ComponentEvent::GoToTop"),
-            ComponentEvent::GoToBottom => write!(f, "ComponentEvent::GoToBottom"),
-            ComponentEvent::Search(s) => write!(f, "ComponentEvent::Search({})", s),
-            ComponentEvent::SearchPrev(s) => write!(f, "ComponentEvent::SearchPrev({})", s),
+            ComponentEvent::GoToBottom => {
+                write!(f, "ComponentEvent::GoToBottom")
+            },
+            ComponentEvent::Search(s) => {
+                write!(f, "ComponentEvent::Search({})", s)
+            },
+            ComponentEvent::SearchPrev(s) => {
+                write!(f, "ComponentEvent::SearchPrev({})", s)
+            },
         }
     }
 }
@@ -185,11 +223,14 @@ impl fmt::Debug for MpdEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             MpdEvent::TogglePause => write!(f, "MpdEvent::TogglePause"),
+            MpdEvent::Update => write!(f, "MpdEvent::Update"),
             MpdEvent::ClearQueue => write!(f, "MpdEvent::ClearQueue"),
-            MpdEvent::AddToQueue(songs) => write!(f, "MpdEvent::AddToQueue({} songs)", songs.len()),
+            MpdEvent::AddToQueue(songs) => {
+                write!(f, "MpdEvent::AddToQueue({} songs)", songs.len())
+            },
             MpdEvent::AddStyleToQueue(genres) => {
                 write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len())
-            }
+            },
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
             MpdEvent::Repeat => write!(f, "MpdEvent::Repeat"),
             MpdEvent::Random => write!(f, "MpdEvent::Random"),
@@ -197,7 +238,9 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::Consume => write!(f, "MpdEvent::Consume"),
             MpdEvent::Next => write!(f, "MpdEvent::Next"),
             MpdEvent::Prev => write!(f, "MpdEvent::Prev"),
-            MpdEvent::SetVolume(vol) => write!(f, "MpdEvent::SetVolume({})", vol),
+            MpdEvent::SetVolume(vol) => {
+                write!(f, "MpdEvent::SetVolume({})", vol)
+            },
         }
     }
 }
@@ -206,14 +249,23 @@ impl fmt::Debug for AppEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AppEvent::Resize => write!(f, "AppEvent::Resize"),
-            AppEvent::TagUI(songs) =>
-                write!(f, "AppEvent::TagUI({} songs)", songs.len()),
+            AppEvent::TagUI(songs) => {
+                write!(f, "AppEvent::TagUI({} songs)", songs.len())
+            },
             AppEvent::Error(s) => write!(f, "AppEvent::Error({:?})", s),
             AppEvent::DrawScreen => write!(f, "AppEvent::DrawScreen"),
-            AppEvent::StyleTreeLoaded(_) => write!(f, "AppEvent::StyleTreeLoaded"),
-            AppEvent::SwitchScreen(s) => write!(f, "AppEvent::SwitchScreen({:?})", s),
-            AppEvent::Database(s) => write!(f, "AppEvent::Database({} songs)", s.len()),
-            AppEvent::LostMpdConnection => write!(f, "AppEvent::LostMpdConnection"),
+            AppEvent::StyleTreeLoaded(_) => {
+                write!(f, "AppEvent::StyleTreeLoaded")
+            },
+            AppEvent::SwitchScreen(s) => {
+                write!(f, "AppEvent::SwitchScreen({:?})", s)
+            },
+            AppEvent::Database(s) => {
+                write!(f, "AppEvent::Database({} songs)", s.len())
+            },
+            AppEvent::LostMpdConnection => {
+                write!(f, "AppEvent::LostMpdConnection")
+            },
             AppEvent::Quit => write!(f, "AppEvent::Quit"),
             AppEvent::ClearScreen => write!(f, "AppEvent::ClearScreen"),
         }

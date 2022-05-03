@@ -76,7 +76,8 @@ impl PlaylistMenu {
     }
 
     fn update_menu_items(&mut self) {
-        self.menu.items = self.playlists.iter().map(|pl| pl.name.clone()).collect();
+        self.menu.items =
+            self.playlists.iter().map(|pl| pl.name.clone()).collect();
     }
 
     fn spawn_update_event(&self) -> Event {
@@ -95,44 +96,49 @@ impl Component for PlaylistMenu {
         &self.menu.name
     }
 
-    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        _state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Prev => {
                 self.menu.prev();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToTop => {
                 self.menu.to_top();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToBottom => {
                 self.menu.to_bottom();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoTo(i) => {
                 self.menu.to(*i);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Search(s) => {
                 self.menu.search(s);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::SearchPrev(s) => {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Select => {
                 let playlists = self
                     .playlists
@@ -144,22 +150,22 @@ impl Component for PlaylistMenu {
                 let event = Event::ToMpd(MpdEvent::AddToQueue(playlists));
 
                 tx.send(event).unwrap()
-            }
+            },
             ComponentEvent::Playlist(playlists) => {
                 self.playlists = playlists.clone();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::LostMpdConnection => {
                 self.playlists = Vec::new();
                 self.update_menu_items();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            }
+            },
             _ => (),
         }
     }

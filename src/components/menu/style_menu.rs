@@ -150,44 +150,49 @@ impl Component for StyleMenu {
         &self.menu.name
     }
 
-    fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Prev => {
                 self.menu.prev();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToTop => {
                 self.menu.to_top();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoToBottom => {
                 self.menu.to_bottom();
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::GoTo(i) => {
                 self.menu.to(*i);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Search(s) => {
                 self.menu.search(s);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::SearchPrev(s) => {
                 self.menu.search_prev(s);
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Select => {
                 if let Some(tree) = &state.style_tree {
                     tx.send(Event::ToMpd(MpdEvent::AddStyleToQueue(
@@ -195,28 +200,30 @@ impl Component for StyleMenu {
                     )))
                     .unwrap();
                 }
-            }
+            },
             ComponentEvent::UpdateRootStyleMenu if self.parent.is_none() => {
                 if let Some(tree) = &state.style_tree {
                     self.set_items(tree, &vec![0]);
                     tx.send(self.spawn_update_event()).unwrap();
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
-            }
-            ComponentEvent::StyleMenuUpdated(menu, styles) if self.parent.is(menu) => {
+            },
+            ComponentEvent::StyleMenuUpdated(menu, styles)
+                if self.parent.is(menu) =>
+            {
                 if let Some(tree) = &state.style_tree {
                     self.set_items(tree, styles);
                     tx.send(self.spawn_update_event()).unwrap();
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
-            }
+            },
             ComponentEvent::Database(_tracks) => {
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
-            }
+            },
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
-            }
+            },
             _ => (),
         }
     }

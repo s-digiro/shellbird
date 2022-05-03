@@ -36,7 +36,7 @@ pub struct TagEditor {
     focus: usize,
 
     tags: Vec<(String, TagVal)>,
-    sel: usize,
+    sel: Option<usize>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -97,15 +97,71 @@ impl TagEditor {
             focus: 0,
 
             tags,
-            sel: 0,
+            sel: Some(0),
         }
     }
 
+    pub fn select(&self, tx: mpsc::Sender<Event>) {
+        if let Some(sel) = self.sel {
+            let prompt = self.tags[sel].0.to_string();
+
+            tx.send(Event::ToCommandLine(CommandLineEvent::RequestText(
+                prompt,
+            )))
+            .unwrap();
+        } else {
+            self.save_tags(tx);
+        }
+    }
+
+    fn save_tags(&self, tx: mpsc::Sender<Event>) {
+        let mut tags = Vec::new();
+
+        for (tag, val) in self.tags.iter() {
+            match val {
+                TagVal::Some(val) => {
+                    tags.push((tag.to_string(), Some(val.to_string())))
+                },
+                TagVal::None => tags.push((tag.to_string(), None)),
+                TagVal::Various => (),
+            }
+        }
+
+        tx.send(Event::ToTagger(TaggerEvent::Tag(self.songs.clone(), tags)))
+            .unwrap();
+    }
+
+    pub fn next(&mut self, tx: mpsc::Sender<Event>) {
+        self.sel = if let Some(sel) = self.sel {
+            if sel + 1 < self.tags.len() {
+                Some(sel + 1)
+            } else {
+                None
+            }
+        } else {
+            Some(0)
+        };
+
+        tx.send(self.spawn_needs_draw_event()).unwrap();
+    }
+
+    pub fn prev(&mut self, tx: mpsc::Sender<Event>) {
+        self.sel = if let Some(sel) = self.sel {
+            if sel == 0 {
+                None
+            } else {
+                Some(sel - 1)
+            }
+        } else {
+            Some(self.tags.len() - 1)
+        };
+
+        tx.send(self.spawn_needs_draw_event()).unwrap();
+    }
+
     fn header(&self, x: u16, y: u16, w: u16) -> String {
-        let mut header = self.songs.iter()
-            .map(|s| &s.file)
-            .format(", ")
-            .to_string();
+        let mut header =
+            self.songs.iter().map(|s| &s.file).format(", ").to_string();
 
         if header.len() > w.into() {
             header.truncate((w - 3).into());
@@ -118,7 +174,8 @@ impl TagEditor {
     fn tags(&self, x: u16, y: u16, w: u16, h: u16) -> String {
         let mut ret = String::new();
 
-        let max_tag_len = self.tags.iter().map(|(tag, _)| tag.len()).max().unwrap();
+        let max_tag_len =
+            self.tags.iter().map(|(tag, _)| tag.len()).max().unwrap();
 
         let max_val_len = self
             .tags
@@ -142,7 +199,21 @@ impl TagEditor {
                 break;
             }
 
-            ret.push_str(&self.tag(x, y + (i as u16), w, tag, bar_pos, val, i == self.sel));
+            let focused = if let Some(sel) = self.sel {
+                i == sel
+            } else {
+                false
+            };
+
+            ret.push_str(&self.tag(
+                x,
+                y + (i as u16),
+                w,
+                tag,
+                bar_pos,
+                val,
+                focused,
+            ));
         }
 
         ret
@@ -180,9 +251,19 @@ impl TagEditor {
         );
 
         if sel {
-            format!("{}{}", style::Invert, s)
+            format!("{}{}{}", style::Invert, s, style::NoInvert)
         } else {
-            format!("{}{}", style::NoInvert, s)
+            s
+        }
+    }
+
+    fn save_button(&self, x: u16, y: u16) -> String {
+        let s = format!("{}Save", cursor::Goto(x, y));
+
+        if let None = self.sel {
+            format!("{}{}{}", style::Invert, s, style::NoInvert,)
+        } else {
+            s
         }
     }
 }
@@ -193,28 +274,37 @@ impl Component for TagEditor {
     }
 
     fn draw(&self, x: u16, y: u16, w: u16, h: u16, _focus: bool) {
+        let tag_len: u16 = self.tags.len() as u16;
+
         self.clear(x, y, w, h);
         print!("{}", color::Fg(self.color));
         print!("{}", self.header(x, y, w));
         print!("{}{}", cursor::Goto(x, y + 1), "─".repeat((w).into()));
         print!("{}", self.tags(x, y + 2, w, h));
+        print!("{}", self.save_button(x, y + 2 + tag_len));
     }
 
-    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        _state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match e {
-            ComponentEvent::Select => {
-                let prompt = self.tags[self.sel].0.to_string();
-                tx.send(
-                    Event::ToCommandLine(CommandLineEvent::RequestText(prompt))
-                ).unwrap();
+            ComponentEvent::Next => self.next(tx),
+            ComponentEvent::Prev => self.prev(tx),
+            ComponentEvent::Select => self.select(tx),
+            ComponentEvent::Draw(x, y, w, h, focus) => {
+                self.draw(*x, *y, *w, *h, focus == self.name())
             },
-            ComponentEvent::Draw(x, y, w, h, focus) =>
-                self.draw(*x, *y, *w, *h, focus == self.name()),
             ComponentEvent::ReturnText(s) => {
-                let old_pair = &self.tags[self.sel];
-                let new_pair = (old_pair.0.clone(), TagVal::from(s, &self.songs));
+                let sel = self.sel.unwrap();
 
-                self.tags[self.sel] = new_pair;
+                let old_pair = &self.tags[sel];
+                let new_pair =
+                    (old_pair.0.clone(), TagVal::Some(s.to_string()));
+
+                self.tags[sel] = new_pair;
 
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },

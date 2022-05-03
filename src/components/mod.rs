@@ -57,11 +57,16 @@ pub trait Component: fmt::Debug + PartialEq {
         Event::ToScreen(ScreenEvent::NeedsRedraw(self.name().to_string()))
     }
 
-    fn handle(&mut self, _state: &GlobalState, e: &ComponentEvent, _tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        _state: &GlobalState,
+        e: &ComponentEvent,
+        _tx: mpsc::Sender<Event>,
+    ) {
         match e {
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus.as_str() == self.name())
-            }
+            },
             _ => (),
         }
     }
@@ -125,7 +130,12 @@ pub enum Components {
 }
 
 impl Component for Components {
-    fn handle(&mut self, state: &GlobalState, e: &ComponentEvent, tx: mpsc::Sender<Event>) {
+    fn handle(
+        &mut self,
+        state: &GlobalState,
+        e: &ComponentEvent,
+        tx: mpsc::Sender<Event>,
+    ) {
         match self {
             Components::PlaceHolder(c) => c.handle(state, e, tx),
             Components::TagEditor(c) => c.handle(state, e, tx),

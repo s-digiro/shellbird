@@ -67,7 +67,9 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
     match get_lowercase(cmd, 0) {
         Some(s) => match s.as_str() {
             "echo" => match cmd.get(1) {
-                Some(s) => Some(Event::ToCommandLine(CommandLineEvent::Echo(s.to_string()))),
+                Some(s) => Some(Event::ToCommandLine(CommandLineEvent::Echo(
+                    s.to_string(),
+                ))),
                 None => None,
             },
 
@@ -76,7 +78,9 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "quit" | "q" | "exit" => Some(Event::ToApp(AppEvent::Quit)),
 
             "switchscreen" | "screen" => match cmd.get(1) {
-                Some(s) => Some(Event::ToApp(AppEvent::SwitchScreen(s.to_string()))),
+                Some(s) => {
+                    Some(Event::ToApp(AppEvent::SwitchScreen(s.to_string())))
+                },
                 None => None,
             },
 
@@ -90,24 +94,36 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "next" => Some(Event::ToMpd(MpdEvent::Next)),
             "prev" => Some(Event::ToMpd(MpdEvent::Prev)),
 
-            "top" | "gotop" | "gototop" | "totop" => Some(Event::ToFocus(ComponentEvent::GoToTop)),
+            "top" | "gotop" | "gototop" | "totop" => {
+                Some(Event::ToFocus(ComponentEvent::GoToTop))
+            },
 
-            "bottom" | "gobottom" | "gotobottom" | "tobottom" | "bot" | "gobot" | "gotobot"
-            | "tobot" => Some(Event::ToFocus(ComponentEvent::GoToBottom)),
+            "bottom" | "gobottom" | "gotobottom" | "tobottom" | "bot"
+            | "gobot" | "gotobot" | "tobot" => {
+                Some(Event::ToFocus(ComponentEvent::GoToBottom))
+            },
 
             "search" | "s" => match get_lowercase(cmd, 1) {
-                Some(s) => Some(Event::ToFocus(ComponentEvent::Search(s.to_string()))),
+                Some(s) => {
+                    Some(Event::ToFocus(ComponentEvent::Search(s.to_string())))
+                },
                 None => None,
             },
-            "prevsearch" => Some(Event::ToCommandLine(CommandLineEvent::PrevSearch)),
-            "nextsearch" => Some(Event::ToCommandLine(CommandLineEvent::NextSearch)),
+            "prevsearch" => {
+                Some(Event::ToCommandLine(CommandLineEvent::PrevSearch))
+            },
+            "nextsearch" => {
+                Some(Event::ToCommandLine(CommandLineEvent::NextSearch))
+            },
 
             "goto" | "go" | "g" | "to" => match get_usize(cmd, 1) {
                 Some(num) => Some(Event::ToFocus(ComponentEvent::GoTo(num))),
                 None => None,
             },
 
-            "togglepause" | "pause" | "toggle" => Some(Event::ToMpd(MpdEvent::TogglePause)),
+            "togglepause" | "pause" | "toggle" => {
+                Some(Event::ToMpd(MpdEvent::TogglePause))
+            },
 
             "clear" | "clearqueue" => Some(Event::ToMpd(MpdEvent::ClearQueue)),
 
@@ -117,25 +133,46 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "consume" => Some(Event::ToMpd(MpdEvent::Consume)),
 
             "volume" => get_lowercase(cmd, 1).and_then(|s| match s.as_str() {
-                "set" => get_i8(cmd, 2)
-                    .and_then(|x| Some(Event::ToMpd(MpdEvent::SetVolume(min(100, max(0, x)))))),
-                "up" => get_i8(cmd, 2)
-                    .and_then(|x| Some(Event::ToCommandLine(CommandLineEvent::VolumeUp(x)))),
-                "down" => get_i8(cmd, 2)
-                    .and_then(|x| Some(Event::ToCommandLine(CommandLineEvent::VolumeDown(x)))),
+                "set" => get_i8(cmd, 2).and_then(|x| {
+                    Some(Event::ToMpd(MpdEvent::SetVolume(min(100, max(0, x)))))
+                }),
+                "up" => get_i8(cmd, 2).and_then(|x| {
+                    Some(Event::ToCommandLine(CommandLineEvent::VolumeUp(x)))
+                }),
+                "down" => get_i8(cmd, 2).and_then(|x| {
+                    Some(Event::ToCommandLine(CommandLineEvent::VolumeDown(x)))
+                }),
                 _ => None,
             }),
 
-            "gettext" =>
-                cmd.get(1)
-                    .map(|s| s.to_string())
-                    .and_then(
-                        |prompt| Some(
-                            Event::ToCommandLine(
-                                CommandLineEvent::RequestText(prompt)
-                            )
-                        )
-                    ),
+            "gettext" => cmd.get(1).map(|s| s.to_string()).and_then(|prompt| {
+                Some(Event::ToCommandLine(CommandLineEvent::RequestText(
+                    prompt,
+                )))
+            }),
+
+            "set" => {
+                cmd.get(1).map(|s| s.to_owned()).and_then(|var| match var {
+                    "tagdir" => {
+                        cmd.get(2).map(|s| s.to_string()).and_then(|val| {
+                            Some(Event::ToTagger(TaggerEvent::MusicDir(val)))
+                        })
+                    },
+
+                    "tagtempdir" => {
+                        cmd.get(2).map(|s| s.to_string()).and_then(|val| {
+                            Some(Event::ToTagger(TaggerEvent::TempDir(val)))
+                        })
+                    },
+
+                    other => Some(Event::err(format!(
+                        "Cannot set invalid var '{}'",
+                        other
+                    ))),
+                })
+            },
+
+            "update" => Some(Event::ToMpd(MpdEvent::Update)),
 
             "opentags" => Some(Event::ToFocus(ComponentEvent::OpenTags)),
 
