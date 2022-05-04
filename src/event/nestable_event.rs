@@ -35,6 +35,8 @@ pub enum BindableEvent {
         on_no: Option<ConfirmableEvent>,
         is_default_yes: bool,
     },
+
+    Dummy,
 }
 
 impl BindableEvent {
@@ -60,6 +62,7 @@ impl BindableEvent {
                 on_no,
                 is_default_yes,
             }),
+            Event::Dummy => Some(BindableEvent::Dummy),
             _ => None,
         }
     }
@@ -84,6 +87,7 @@ impl BindableEvent {
                 on_no,
                 is_default_yes,
             },
+            BindableEvent::Dummy => Event::Dummy,
         }
     }
 }
@@ -97,6 +101,7 @@ pub enum ConfirmableEvent {
     ToMpd(MpdEvent),
     ToCommandLine(CommandLineEvent),
     ToComponent(String, ComponentEvent),
+    Dummy,
 }
 
 impl ConfirmableEvent {
@@ -113,6 +118,7 @@ impl ConfirmableEvent {
             Event::ToComponent(s, e) => {
                 Some(ConfirmableEvent::ToComponent(s, e))
             },
+            Event::Dummy => Some(ConfirmableEvent::Dummy),
             _ => None,
         }
     }
@@ -126,6 +132,7 @@ impl ConfirmableEvent {
             ConfirmableEvent::ToMpd(e) => Event::ToMpd(e),
             ConfirmableEvent::ToCommandLine(e) => Event::ToCommandLine(e),
             ConfirmableEvent::ToComponent(s, e) => Event::ToComponent(s, e),
+            ConfirmableEvent::Dummy => Event::Dummy,
         }
     }
 }

@@ -193,6 +193,8 @@ pub fn parse(cmd: &str) -> Option<Event> {
 
             "appback" => Some(Event::ToApp(AppEvent::Back)),
 
+            "dummy" => Some(Event::Dummy),
+
             "bind" | "bindkey" => cmd.get(1).and_then(|key| {
                 let keybind = str_to_keys(key);
 
