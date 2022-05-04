@@ -160,6 +160,11 @@ impl Component for Queue {
                         .unwrap()
                 }
             },
+            ComponentEvent::Delete => {
+                if let Some(song) = self.tracks.get(self.menu.selection) {
+                    tx.send(Event::ToMpd(MpdEvent::Delete(song.clone()))).unwrap();
+                }
+            },
             ComponentEvent::NowPlaying(song) => {
                 self.set_now_playing(&song);
                 tx.send(self.spawn_needs_draw_event()).unwrap();

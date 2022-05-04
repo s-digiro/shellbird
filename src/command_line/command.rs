@@ -32,6 +32,7 @@ lazy_static! {
         m.insert("<space>", Key::Char(' '));
         m.insert("<return>", Key::Char('\n'));
         m.insert("<enter>", Key::Char('\n'));
+        m.insert("<delete>", Key::Delete);
         m.insert("<up>", Key::Up);
         m.insert("<down>", Key::Down);
         m.insert("<left>", Key::Left);
@@ -96,6 +97,7 @@ pub fn parse(cmd: &str) -> Option<Event> {
             "down" => Some(Event::ToFocus(ComponentEvent::Next)),
             "up" => Some(Event::ToFocus(ComponentEvent::Prev)),
             "select" => Some(Event::ToFocus(ComponentEvent::Select)),
+            "delete" => Some(Event::ToFocus(ComponentEvent::Delete)),
             "start" => Some(Event::ToFocus(ComponentEvent::Start)),
 
             "next" => Some(Event::ToMpd(MpdEvent::Next)),

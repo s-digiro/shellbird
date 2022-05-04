@@ -5,6 +5,8 @@ set cmdcolor brightcyan
 
 bind <space> select
 bind <return> select
+bind x delete
+bind <delete> delete
 bind j down
 bind k up
 bind gg top

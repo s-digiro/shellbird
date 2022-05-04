@@ -64,6 +64,7 @@ pub fn init_mpd_sender_thread(
                     MpdEvent::ClearQueue => c.clear(),
                     MpdEvent::AddToQueue(songs) => push_all(c, songs),
                     MpdEvent::PlayAt(song) => play_at(c, song),
+                    MpdEvent::Delete(song) => delete(c, song),
                     MpdEvent::AddStyleToQueue(genres) => {
                         add_style_to_queue(c, genres)
                     },
@@ -130,6 +131,13 @@ fn play_at(conn: &mut Client, song: Song) -> Result<(), Error> {
 
             Ok(())
         },
+    }
+}
+
+fn delete(conn: &mut Client, song: Song) -> Result<(), Error> {
+    match song.place {
+        Some(place) => conn.delete(place.pos),
+        None => Ok(()),
     }
 }
 

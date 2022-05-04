@@ -82,6 +82,7 @@ pub enum ComponentEvent {
     Next,
     Prev,
     Select,
+    Delete,
     Start,
     GoTo(usize),
     GoToTop,
@@ -145,6 +146,7 @@ pub enum MpdEvent {
     AddToQueue(Vec<Song>),
     AddStyleToQueue(Vec<String>),
     PlayAt(Song),
+    Delete(Song),
     Repeat,
     Random,
     Single,
@@ -201,6 +203,7 @@ impl fmt::Debug for ComponentEvent {
             ComponentEvent::LostMpdConnection => {
                 write!(f, "ComponentEvent::LostMpdConnection")
             },
+            ComponentEvent::Delete => write!(f, "ComponentEvent::Delete"),
             ComponentEvent::Draw(x, y, w, h, focus) => write!(
                 f,
                 "ComponentEvent::Draw({}, {}, {}, {}, {})",
@@ -238,6 +241,7 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::AddStyleToQueue(genres) => {
                 write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len())
             },
+            MpdEvent::Delete(song) => write!(f, "MpdEvent::Delete({:?})", song),
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),
             MpdEvent::Repeat => write!(f, "MpdEvent::Repeat"),
             MpdEvent::Random => write!(f, "MpdEvent::Random"),
