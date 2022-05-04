@@ -23,26 +23,46 @@ use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::mem;
 use std::sync::mpsc;
-use termion::{clear, cursor, event::Key};
+use termion::{clear, color, cursor, event::Key};
 
+use crate::color::Color;
 use crate::event::*;
-use crate::mode::Mode;
 
 #[derive(Debug)]
-enum ContentType {
-    Chars(String),
-    Keys(Vec<Key>),
+enum Mode {
+    TUI {
+        text: String,
+        keys: Vec<Key>,
+    },
+
+    Command {
+        text: String,
+    },
+
+    Search {
+        text: String,
+    },
+
+    GetText {
+        prompt: String,
+        text: String,
+    },
+
+    Confirm {
+        prompt: String,
+        on_yes: Option<ConfirmableEvent>,
+        on_no: Option<ConfirmableEvent>,
+        is_default_yes: bool,
+    },
 }
 
 pub struct CommandLine {
-    content: ContentType,
-    statusline: String,
-    text: String,
     mode: Mode,
+    statusline: String,
     keybinds: HashMap<Vec<Key>, Event>,
     tx: mpsc::Sender<Event>,
 
-    prompt: Option<String>,
+    color: Color,
 
     last_search: Option<String>,
     volume: i8,
@@ -51,37 +71,73 @@ pub struct CommandLine {
 impl CommandLine {
     pub fn new(tx: mpsc::Sender<Event>) -> CommandLine {
         CommandLine {
-            content: ContentType::Keys(Vec::new()),
+            mode: Mode::TUI {
+                text: String::new(),
+                keys: Vec::new(),
+            },
             statusline: "[----] Vol: %".into(),
-            text: String::new(),
-            mode: Mode::TUI,
             keybinds: HashMap::new(),
             tx,
 
-            prompt: None,
+            color: Color::Reset,
 
             last_search: None,
             volume: -1,
         }
     }
 
-    pub fn put_text(&mut self, text: String) {
-        self.text = text;
+    pub fn set_color(&mut self, color: Color) {
+        self.color = color;
     }
 
-    pub fn clear_text(&mut self) {
-        self.text = "".to_string();
+    pub fn echo(&mut self, new_text: String) {
+        if let Mode::TUI { ref mut text, .. } = &mut self.mode {
+            *text = new_text;
+        }
     }
 
-    pub fn mode(&mut self, m: Mode) {
-        self.clear();
-        self.mode = m;
+    pub fn tui_mode(&mut self) {
+        self.mode = Mode::TUI {
+            text: String::new(),
+            keys: Vec::new(),
+        };
+    }
 
-        self.content = match self.mode {
-            Mode::TUI => ContentType::Keys(Vec::new()),
-            Mode::Command | Mode::Search | Mode::GetText => {
-                ContentType::Chars(String::new())
-            },
+    pub fn command_mode(&mut self) {
+        self.mode = Mode::Command {
+            text: String::new(),
+        };
+    }
+
+    pub fn search_mode(&mut self) {
+        self.mode = Mode::Search {
+            text: String::new(),
+        };
+    }
+
+    pub fn get_text_mode(
+        &mut self,
+        prompt: String,
+        placeholder: Option<String>,
+    ) {
+        self.mode = Mode::GetText {
+            prompt,
+            text: placeholder.unwrap_or(String::new()),
+        };
+    }
+
+    pub fn confirm_mode(
+        &mut self,
+        prompt: String,
+        on_yes: Option<ConfirmableEvent>,
+        on_no: Option<ConfirmableEvent>,
+        is_default_yes: bool,
+    ) {
+        self.mode = Mode::Confirm {
+            prompt,
+            on_yes,
+            on_no,
+            is_default_yes,
         }
     }
 
@@ -111,63 +167,102 @@ impl CommandLine {
     }
 
     pub fn input(&mut self, key: &Key) {
-        self.clear_text();
-        match (self.mode, &mut self.content) {
-            (Mode::TUI, ContentType::Keys(keys)) => match key {
-                Key::Char(':') => self.mode(Mode::Command),
-                Key::Char('/') => self.mode(Mode::Search),
-                Key::Esc => self.clear(),
+        match &mut self.mode {
+            Mode::TUI { keys, text } => match key {
+                Key::Char(':') => self.command_mode(),
+                Key::Char('/') => self.search_mode(),
+                Key::Esc => {
+                    text.clear();
+                    keys.clear();
+                },
                 key => {
+                    text.clear();
+
                     keys.push(key.clone());
+
                     if let Some(event) = self.keybinds.get(keys) {
                         self.tx.send(event.clone()).unwrap();
-                        self.clear();
+
+                        keys.clear();
                     } else {
                         let has_match = self.keybinds.keys().any(|kb| {
                             keys.iter().zip(kb.iter()).all(|(a, b)| a == b)
                         });
 
                         if !has_match {
-                            self.clear();
+                            keys.clear();
                         }
                     }
                 },
             },
-            (Mode::GetText, ContentType::Chars(s)) => match key {
+            Mode::GetText { text, .. } => match key {
                 Key::Char('\n') => self.run(),
-                Key::Esc => self.mode(Mode::TUI),
+                Key::Esc => self.tui_mode(),
                 Key::Backspace => {
-                    if !s.is_empty() {
-                        s.pop();
+                    if !text.is_empty() {
+                        text.pop();
                     }
                 },
-                Key::Char(c) => s.push(*c),
+                Key::Char(c) => text.push(*c),
                 _ => (),
             },
-            (Mode::Command, ContentType::Chars(s))
-            | (Mode::Search, ContentType::Chars(s)) => match key {
+            Mode::Search { text } | Mode::Command { text } => match key {
                 Key::Char('\n') => self.run(),
-                Key::Esc => self.mode(Mode::TUI),
+                Key::Esc => self.tui_mode(),
                 Key::Backspace => {
-                    if s.is_empty() {
-                        self.mode(Mode::TUI);
+                    if text.is_empty() {
+                        self.tui_mode();
                     } else {
-                        s.pop();
+                        text.pop();
                     }
                 },
-                Key::Char(c) => s.push(*c),
+                Key::Char(c) => text.push(*c),
                 _ => (),
             },
-            bad => panic!("Command line reached invalid state {:?}", bad),
-        }
-    }
 
-    pub fn clear(&mut self) {
-        self.prompt = None;
+            Mode::Confirm {
+                on_yes,
+                on_no,
+                is_default_yes,
+                ..
+            } => match key {
+                Key::Char('\n') => {
+                    match (&on_yes, &on_no, is_default_yes) {
+                        (Some(_), _, true) => self
+                            .tx
+                            .send(on_yes.take().unwrap().to_event())
+                            .unwrap(),
+                        (_, Some(_), false) => self
+                            .tx
+                            .send(on_no.take().unwrap().to_event())
+                            .unwrap(),
+                        _ => (),
+                    }
 
-        self.content = match self.content {
-            ContentType::Chars(_) => ContentType::Chars(String::new()),
-            ContentType::Keys(_) => ContentType::Keys(Vec::new()),
+                    self.tui_mode();
+                },
+
+                Key::Esc => self.tui_mode(),
+
+                Key::Char('y') | Key::Char('Y') => {
+                    if let Some(_) = on_yes {
+                        self.tx
+                            .send(on_yes.take().unwrap().to_event())
+                            .unwrap();
+                    }
+
+                    self.tui_mode();
+                },
+
+                Key::Char('n') | Key::Char('N') => {
+                    if let Some(_) = on_no {
+                        self.tx.send(on_no.take().unwrap().to_event()).unwrap();
+                    }
+
+                    self.tui_mode();
+                },
+                _ => (),
+            },
         }
     }
 
@@ -176,120 +271,114 @@ impl CommandLine {
     }
 
     pub fn run(&mut self) {
-        let content =
-            mem::replace(&mut self.content, ContentType::Keys(Vec::new()));
+        let mode = mem::replace(
+            &mut self.mode,
+            Mode::TUI {
+                text: String::new(),
+                keys: Vec::new(),
+            },
+        );
 
-        match (self.mode, content) {
-            (Mode::Command, ContentType::Chars(cmd)) => {
-                let args: Vec<&str> = cmd.split(" ").collect();
-
-                match command::parse(&args) {
+        match mode {
+            Mode::Command { text } => {
+                match command::parse(&text) {
                     Some(e) => match e {
                         Event::ToCommandLine(CommandLineEvent::Echo(s)) => {
-                            self.mode(Mode::TUI);
-                            self.put_text(s.to_string());
+                            self.echo(s.to_owned())
                         },
                         e => {
-                            self.tx.send(spawn_mode_event(Mode::TUI)).unwrap();
                             self.tx.send(e.clone()).unwrap();
-                            self.tx.send(spawn_respond_event(&e)).unwrap();
+                            self.tx
+                                .send(Event::ToCommandLine(
+                                    CommandLineEvent::Echo(format!(
+                                        "Ran: {:?}",
+                                        e
+                                    )),
+                                ))
+                                .unwrap();
                         },
                     },
-                    None => {
-                        self.mode(Mode::TUI);
-                        self.tx.send(spawn_invalid_event(&cmd)).unwrap();
-                    },
+                    None => self
+                        .tx
+                        .send(Event::ToCommandLine(CommandLineEvent::Echo(
+                            format!("Invalid Command '{}'", text),
+                        )))
+                        .unwrap(),
                 };
             },
-            (Mode::Search, ContentType::Chars(term)) => {
-                self.last_search = Some(term.clone());
-                self.mode(Mode::TUI);
+
+            Mode::Search { text } => {
+                self.last_search = Some(text.clone());
 
                 self.tx
-                    .send(Event::ToFocus(ComponentEvent::Search(term.clone())))
+                    .send(Event::ToFocus(ComponentEvent::Search(text)))
                     .unwrap();
             },
-            (Mode::GetText, ContentType::Chars(term)) => {
-                self.tx
-                    .send(Event::ToFocus(ComponentEvent::ReturnText(
-                        term.clone(),
-                    )))
-                    .unwrap();
-                self.mode(Mode::TUI);
-            },
-            (Mode::TUI, _) => panic!(
-                "Invalid State: CommandLine called run while in Mode::TUI)"
+
+            Mode::GetText { text, .. } => self
+                .tx
+                .send(Event::ToFocus(ComponentEvent::ReturnText(text)))
+                .unwrap(),
+
+            Mode::Confirm { .. } => panic!(
+                "Invalid State: CommandLine called run while in Mode::Confirm"
             ),
-            state => panic!("Invalid State: {:?}", state),
+
+            Mode::TUI { .. } => panic!(
+                "Invalid State: CommandLine called run while in Mode::TUI"
+            ),
         }
     }
 
     pub fn draw(&self) {
         let (w, h) = termion::terminal_size().unwrap();
 
-        let prompt = if let Some(s) = &self.prompt {
-            format!("{}: ", s)
-        } else {
-            "Text: ".to_string()
-        };
-
         print!(
-            "{}{}{}{}{}{}",
+            "{}{}{}",
+            color::Fg(self.color),
             cursor::Goto(1, h),
-            clear::CurrentLine,
-            match self.mode {
-                Mode::Command => ":",
-                Mode::Search => "/",
-                Mode::TUI => "",
-                Mode::GetText => &prompt,
-            },
-            match &self.content {
-                ContentType::Chars(cmd) => &cmd,
-                ContentType::Keys(_) => &self.text,
-            },
-            cursor::Goto(w - (self.statusline.len() as u16), h),
-            self.statusline,
+            clear::CurrentLine
         );
 
-        let content_len = match &self.content {
-            ContentType::Chars(s) => s.len(),
-            ContentType::Keys(_) => 0,
-        };
-
-        match self.mode {
-            Mode::Command | Mode::Search => {
-                print!("{}🭰", cursor::Goto(1 + content_len as u16 + 1, h),)
-            },
-
-            Mode::GetText => print!(
-                "{}🭰",
-                cursor::Goto(prompt.len() as u16 + content_len as u16 + 1, h),
+        match &self.mode {
+            Mode::TUI { text, .. } => print!("{}", text),
+            Mode::Command { text } => print!(":{}🭰", text),
+            Mode::Search { text } => print!("/{}🭰", text),
+            Mode::GetText { prompt, text } => print!("{}: {}🭰", prompt, text),
+            Mode::Confirm {
+                prompt,
+                is_default_yes,
+                ..
+            } => print!(
+                "{} ({})",
+                prompt,
+                if *is_default_yes { "Y/n" } else { "y/N" }
             ),
-
-            _ => print!("{}", cursor::Hide),
         }
+
+        print!(
+            "{}{}",
+            cursor::Goto(w - (self.statusline.len() as u16), h),
+            self.statusline
+        );
     }
 
     pub fn handle(&mut self, e: &CommandLineEvent, _tx: mpsc::Sender<Event>) {
         match e {
-            CommandLineEvent::Echo(s) => self.put_text(s.to_string()),
-            CommandLineEvent::RequestText(prompt, def) => {
-                self.mode(Mode::GetText);
-                self.prompt = Some(prompt.to_string());
-                self.content =
-                    ContentType::Chars(def.clone().unwrap_or("".to_owned()));
+            CommandLineEvent::Echo(s) => self.echo(s.to_owned()),
+            CommandLineEvent::SetColor(c) => self.color = *c,
+            CommandLineEvent::RequestText(prompt, placeholder) => {
+                self.get_text_mode(prompt.to_owned(), placeholder.to_owned())
             },
             CommandLineEvent::NextSearch => self.next_search(),
             CommandLineEvent::PrevSearch => self.prev_search(),
-            CommandLineEvent::Mode(m) => self.mode(*m),
-            CommandLineEvent::SbrcError(line, msg) => self.put_text(format!(
+            CommandLineEvent::SbrcError(line, msg) => self.echo(format!(
                 "sbrc: Invalid command at line {} '{}'",
-                line,
-                msg.to_string()
+                line, msg
             )),
             CommandLineEvent::Input(key) => self.input(&key),
             CommandLineEvent::SbrcNotFound => {
-                self.put_text("Sbrc not found. :q to quit.".to_string())
+                self.echo("Sbrc not found. :q to quit.".to_owned())
             },
             CommandLineEvent::MpdStatus(status) => {
                 self.statusline = format!(
@@ -300,6 +389,7 @@ impl CommandLine {
                     if status.consume { "c" } else { "-" },
                     status.volume,
                 );
+
                 self.volume = status.volume;
             },
             CommandLineEvent::VolumeMv(by) => self.vol_mv(*by),
@@ -310,27 +400,11 @@ impl CommandLine {
 }
 
 pub fn run_headless(cmd: &str, tx: mpsc::Sender<Event>) -> Result<(), ()> {
-    let cmd = cmd.split(" ").collect();
-    match command::parse(&cmd) {
+    match command::parse(cmd) {
         Some(event) => {
             tx.send(event).unwrap();
             Ok(())
         },
         None => Err(()),
     }
-}
-
-fn spawn_invalid_event(cmd: &str) -> Event {
-    Event::ToCommandLine(CommandLineEvent::Echo(format!(
-        "Invalid Command '{}'",
-        cmd
-    )))
-}
-
-fn spawn_respond_event(e: &Event) -> Event {
-    Event::ToCommandLine(CommandLineEvent::Echo(format!("Ran: {:?}", e)))
-}
-
-fn spawn_mode_event(mode: Mode) -> Event {
-    Event::ToCommandLine(CommandLineEvent::Mode(mode))
 }

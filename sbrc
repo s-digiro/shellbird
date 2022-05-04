@@ -1,6 +1,8 @@
 set tagdir ~/music/
 set tagtempdir /tmp/shellbird/tagger
 
+set cmdcolor brightcyan
+
 bind <space> select
 bind <return> select
 bind j down
@@ -14,7 +16,7 @@ bind or repeat
 bind oz random
 bind os single
 bind oc consume
-bind c clear
+bind c confirm "Are you sure you want to clear the queue?" clear
 bind <up> volume up 5
 bind <down> volume down 5
 bind 1 switchscreen NowPlayingScreen

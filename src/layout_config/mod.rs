@@ -23,6 +23,7 @@ use json::JsonValue;
 use unicode_truncate::Alignment;
 
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::error::Error;
 use std::fs;
 
@@ -324,54 +325,22 @@ fn parse_size(obj: &Object) -> Size {
 
 fn parse_color(obj: &Object, key: &str) -> Color {
     match obj.get(key) {
-        Some(JsonValue::Short(s)) => match s.as_str() {
-            "Black" => Color::Black,
-            "Red" => Color::Red,
-            "Green" => Color::Green,
-            "Yellow" => Color::Yellow,
-            "Blue" => Color::Blue,
-            "Magenta" => Color::Magenta,
-            "Cyan" => Color::Cyan,
-            "White" => Color::White,
-            "BrightBlack" => Color::BrightBlack,
-            "BrightRed" => Color::BrightRed,
-            "BrightGreen" => Color::BrightGreen,
-            "BrightYellow" => Color::BrightYellow,
-            "BrightBlue" => Color::BrightBlue,
-            "BrightMagenta" => Color::BrightMagenta,
-            "BrightCyan" => Color::BrightCyan,
-            "BrightWhite" => Color::BrightWhite,
-            "Reset" => Color::Reset,
-            bad => {
+        Some(JsonValue::Short(s)) => match Color::try_from(s.as_str()) {
+            Ok(c) => c,
+            Err(_) => {
                 eprintln!(
                     "Error: parse_color: invalid color {:?}. Defaulting to Color::Reset",
-                    bad
+                    s
                 );
                 Color::Reset
             },
         },
-        Some(JsonValue::String(s)) => match s.as_str() {
-            "Black" => Color::Black,
-            "Red" => Color::Red,
-            "Green" => Color::Green,
-            "Yellow" => Color::Yellow,
-            "Blue" => Color::Blue,
-            "Magenta" => Color::Magenta,
-            "Cyan" => Color::Cyan,
-            "White" => Color::White,
-            "BrightBlack" => Color::BrightBlack,
-            "BrightRed" => Color::BrightRed,
-            "BrightGreen" => Color::BrightGreen,
-            "BrightYellow" => Color::BrightYellow,
-            "BrightBlue" => Color::BrightBlue,
-            "BrightMagenta" => Color::BrightMagenta,
-            "BrightCyan" => Color::BrightCyan,
-            "BrightWhite" => Color::BrightWhite,
-            "Reset" => Color::Reset,
-            bad => {
+        Some(JsonValue::String(s)) => match Color::try_from(s.as_str()) {
+            Ok(c) => c,
+            Err(_) => {
                 eprintln!(
                     "Error: parse_color: invalid color {:?}. Defaulting to Color::Reset",
-                    bad
+                    s
                 );
                 Color::Reset
             },

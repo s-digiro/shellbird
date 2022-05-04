@@ -158,6 +158,17 @@ impl<'a> Shellbird<'a> {
 
             match e {
                 Event::BindKey(key, e) => command_line.bind(key, e.to_event()),
+                Event::Confirm {
+                    prompt,
+                    on_yes,
+                    on_no,
+                    is_default_yes,
+                } => command_line.confirm_mode(
+                    prompt,
+                    on_yes,
+                    on_no,
+                    is_default_yes,
+                ),
                 Event::ToComponent(name, e) => {
                     if let Some(c) = components.get_mut(&name) {
                         c.handle(&state, &e, tx.clone());
@@ -180,8 +191,8 @@ impl<'a> Shellbird<'a> {
                         .unwrap();
                     },
                     AppEvent::Database(tracks) => {
-                        command_line
-                            .put_text("Updating Database...".to_owned());
+                        command_line.echo("Updating Database...".to_owned());
+
                         if let Some(tree) = &mut state.style_tree {
                             tree.set_tracks(tracks.clone());
                         }
@@ -199,6 +210,7 @@ impl<'a> Shellbird<'a> {
                     },
                     AppEvent::StyleTreeLoaded(tree) => {
                         state.style_tree = tree;
+
                         tx.send(Event::ToAllComponents(
                             ComponentEvent::UpdateRootStyleMenu,
                         ))

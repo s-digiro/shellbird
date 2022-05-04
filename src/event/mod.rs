@@ -20,13 +20,13 @@ along with Shellbird; see the file COPYING.  If not see
 
 mod nestable_event;
 
-pub use nestable_event::NestableEvent;
+pub use nestable_event::*;
 
 use mpd::Song;
 use std::fmt;
 use termion::event::Key;
 
-use crate::mode::Mode;
+use crate::color::Color;
 use crate::playlist::Playlist;
 use crate::styles::StyleTree;
 
@@ -43,7 +43,13 @@ use crate::styles::StyleTree;
 pub enum Event {
     Dummy,
 
-    BindKey(Vec<Key>, NestableEvent),
+    BindKey(Vec<Key>, BindableEvent),
+    Confirm {
+        prompt: String,
+        on_yes: Option<ConfirmableEvent>,
+        on_no: Option<ConfirmableEvent>,
+        is_default_yes: bool,
+    },
 
     ToApp(AppEvent),
     ToCommandLine(CommandLineEvent),
@@ -112,7 +118,7 @@ pub enum AppEvent {
 pub enum CommandLineEvent {
     Echo(String),
     RequestText(String, Option<String>),
-    Mode(Mode),
+    SetColor(Color),
     Input(Key),
     PrevSearch,
     NextSearch,

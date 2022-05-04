@@ -20,7 +20,76 @@ along with Shellbird; see the file COPYING.  If not see
 use super::*;
 
 #[derive(Debug, Clone)]
-pub enum NestableEvent {
+pub enum BindableEvent {
+    ToApp(AppEvent),
+    ToScreen(ScreenEvent),
+    ToAllComponents(ComponentEvent),
+    ToFocus(ComponentEvent),
+    ToMpd(MpdEvent),
+    ToCommandLine(CommandLineEvent),
+    ToComponent(String, ComponentEvent),
+
+    Confirm {
+        prompt: String,
+        on_yes: Option<ConfirmableEvent>,
+        on_no: Option<ConfirmableEvent>,
+        is_default_yes: bool,
+    },
+}
+
+impl BindableEvent {
+    pub fn from_event(e: Event) -> Option<BindableEvent> {
+        match e {
+            Event::ToApp(e) => Some(BindableEvent::ToApp(e)),
+            Event::ToScreen(e) => Some(BindableEvent::ToScreen(e)),
+            Event::ToAllComponents(e) => {
+                Some(BindableEvent::ToAllComponents(e))
+            },
+            Event::ToFocus(e) => Some(BindableEvent::ToFocus(e)),
+            Event::ToMpd(e) => Some(BindableEvent::ToMpd(e)),
+            Event::ToCommandLine(e) => Some(BindableEvent::ToCommandLine(e)),
+            Event::ToComponent(s, e) => Some(BindableEvent::ToComponent(s, e)),
+            Event::Confirm {
+                prompt,
+                on_yes,
+                on_no,
+                is_default_yes,
+            } => Some(BindableEvent::Confirm {
+                prompt,
+                on_yes,
+                on_no,
+                is_default_yes,
+            }),
+            _ => None,
+        }
+    }
+
+    pub fn to_event(self) -> Event {
+        match self {
+            BindableEvent::ToApp(e) => Event::ToApp(e),
+            BindableEvent::ToScreen(e) => Event::ToScreen(e),
+            BindableEvent::ToAllComponents(e) => Event::ToAllComponents(e),
+            BindableEvent::ToFocus(e) => Event::ToFocus(e),
+            BindableEvent::ToMpd(e) => Event::ToMpd(e),
+            BindableEvent::ToCommandLine(e) => Event::ToCommandLine(e),
+            BindableEvent::ToComponent(s, e) => Event::ToComponent(s, e),
+            BindableEvent::Confirm {
+                prompt,
+                on_yes,
+                on_no,
+                is_default_yes,
+            } => Event::Confirm {
+                prompt,
+                on_yes,
+                on_no,
+                is_default_yes,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum ConfirmableEvent {
     ToApp(AppEvent),
     ToScreen(ScreenEvent),
     ToAllComponents(ComponentEvent),
@@ -30,31 +99,33 @@ pub enum NestableEvent {
     ToComponent(String, ComponentEvent),
 }
 
-impl NestableEvent {
-    pub fn from_event(e: Event) -> Option<NestableEvent> {
+impl ConfirmableEvent {
+    pub fn from_event(e: Event) -> Option<ConfirmableEvent> {
         match e {
-            Event::ToApp(e) => Some(NestableEvent::ToApp(e)),
-            Event::ToScreen(e) => Some(NestableEvent::ToScreen(e)),
+            Event::ToApp(e) => Some(ConfirmableEvent::ToApp(e)),
+            Event::ToScreen(e) => Some(ConfirmableEvent::ToScreen(e)),
             Event::ToAllComponents(e) => {
-                Some(NestableEvent::ToAllComponents(e))
+                Some(ConfirmableEvent::ToAllComponents(e))
             },
-            Event::ToFocus(e) => Some(NestableEvent::ToFocus(e)),
-            Event::ToMpd(e) => Some(NestableEvent::ToMpd(e)),
-            Event::ToCommandLine(e) => Some(NestableEvent::ToCommandLine(e)),
-            Event::ToComponent(s, e) => Some(NestableEvent::ToComponent(s, e)),
+            Event::ToFocus(e) => Some(ConfirmableEvent::ToFocus(e)),
+            Event::ToMpd(e) => Some(ConfirmableEvent::ToMpd(e)),
+            Event::ToCommandLine(e) => Some(ConfirmableEvent::ToCommandLine(e)),
+            Event::ToComponent(s, e) => {
+                Some(ConfirmableEvent::ToComponent(s, e))
+            },
             _ => None,
         }
     }
 
     pub fn to_event(self) -> Event {
         match self {
-            NestableEvent::ToApp(e) => Event::ToApp(e),
-            NestableEvent::ToScreen(e) => Event::ToScreen(e),
-            NestableEvent::ToAllComponents(e) => Event::ToAllComponents(e),
-            NestableEvent::ToFocus(e) => Event::ToFocus(e),
-            NestableEvent::ToMpd(e) => Event::ToMpd(e),
-            NestableEvent::ToCommandLine(e) => Event::ToCommandLine(e),
-            NestableEvent::ToComponent(s, e) => Event::ToComponent(s, e),
+            ConfirmableEvent::ToApp(e) => Event::ToApp(e),
+            ConfirmableEvent::ToScreen(e) => Event::ToScreen(e),
+            ConfirmableEvent::ToAllComponents(e) => Event::ToAllComponents(e),
+            ConfirmableEvent::ToFocus(e) => Event::ToFocus(e),
+            ConfirmableEvent::ToMpd(e) => Event::ToMpd(e),
+            ConfirmableEvent::ToCommandLine(e) => Event::ToCommandLine(e),
+            ConfirmableEvent::ToComponent(s, e) => Event::ToComponent(s, e),
         }
     }
 }

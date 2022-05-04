@@ -19,7 +19,9 @@ along with Shellbird; see the file COPYING.  If not see
 
 use std::cmp::{max, min};
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
+use crate::color::Color;
 use crate::event::*;
 
 use termion::event::Key;
@@ -63,8 +65,13 @@ pub fn str_to_keys(s: &str) -> Vec<Key> {
     ret
 }
 
-pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
-    match get_lowercase(cmd, 0) {
+pub fn parse(cmd: &str) -> Option<Event> {
+    let cmd = match shell_words::split(cmd) {
+        Ok(args) => args,
+        Err(_) => return None,
+    };
+
+    match get_lowercase(&cmd, 0) {
         Some(s) => match s.as_str() {
             "echo" => match cmd.get(1) {
                 Some(s) => Some(Event::ToCommandLine(CommandLineEvent::Echo(
@@ -103,7 +110,7 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
                 Some(Event::ToFocus(ComponentEvent::GoToBottom))
             },
 
-            "search" | "s" => match get_lowercase(cmd, 1) {
+            "search" | "s" => match get_lowercase(&cmd, 1) {
                 Some(s) => {
                     Some(Event::ToFocus(ComponentEvent::Search(s.to_string())))
                 },
@@ -116,7 +123,7 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
                 Some(Event::ToCommandLine(CommandLineEvent::NextSearch))
             },
 
-            "goto" | "go" | "g" | "to" => match get_usize(cmd, 1) {
+            "goto" | "go" | "g" | "to" => match get_usize(&cmd, 1) {
                 Some(num) => Some(Event::ToFocus(ComponentEvent::GoTo(num))),
                 None => None,
             },
@@ -132,14 +139,14 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "single" => Some(Event::ToMpd(MpdEvent::Single)),
             "consume" => Some(Event::ToMpd(MpdEvent::Consume)),
 
-            "volume" => get_lowercase(cmd, 1).and_then(|s| match s.as_str() {
-                "set" => get_i8(cmd, 2).and_then(|x| {
+            "volume" => get_lowercase(&cmd, 1).and_then(|s| match s.as_str() {
+                "set" => get_i8(&cmd, 2).and_then(|x| {
                     Some(Event::ToMpd(MpdEvent::SetVolume(min(100, max(0, x)))))
                 }),
-                "up" => get_i8(cmd, 2).and_then(|x| {
+                "up" => get_i8(&cmd, 2).and_then(|x| {
                     Some(Event::ToCommandLine(CommandLineEvent::VolumeUp(x)))
                 }),
-                "down" => get_i8(cmd, 2).and_then(|x| {
+                "down" => get_i8(&cmd, 2).and_then(|x| {
                     Some(Event::ToCommandLine(CommandLineEvent::VolumeDown(x)))
                 }),
                 _ => None,
@@ -152,26 +159,33 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
                 )))
             }),
 
-            "set" => {
-                cmd.get(1).map(|s| s.to_owned()).and_then(|var| match var {
-                    "tagdir" => {
-                        cmd.get(2).map(|s| s.to_string()).and_then(|val| {
-                            Some(Event::ToTagger(TaggerEvent::MusicDir(val)))
-                        })
-                    },
+            "set" => cmd.get(1).map(|s| s.to_owned()).and_then(|var| match var
+                .as_str()
+            {
+                "tagdir" => cmd.get(2).map(|s| s.to_string()).and_then(|val| {
+                    Some(Event::ToTagger(TaggerEvent::MusicDir(val)))
+                }),
 
-                    "tagtempdir" => {
-                        cmd.get(2).map(|s| s.to_string()).and_then(|val| {
-                            Some(Event::ToTagger(TaggerEvent::TempDir(val)))
-                        })
-                    },
+                "tagtempdir" => {
+                    cmd.get(2).map(|s| s.to_string()).and_then(|val| {
+                        Some(Event::ToTagger(TaggerEvent::TempDir(val)))
+                    })
+                },
 
-                    other => Some(Event::err(format!(
-                        "Cannot set invalid var '{}'",
-                        other
-                    ))),
-                })
-            },
+                "cmdcolor" => cmd
+                    .get(2)
+                    .and_then(|s| Color::try_from(s.as_ref()).ok())
+                    .and_then(|c| {
+                        Some(Event::ToCommandLine(CommandLineEvent::SetColor(
+                            c,
+                        )))
+                    }),
+
+                other => Some(Event::err(format!(
+                    "Cannot set invalid var '{}'",
+                    other
+                ))),
+            }),
 
             "update" => Some(Event::ToMpd(MpdEvent::Update)),
 
@@ -182,11 +196,35 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
             "bind" | "bindkey" => cmd.get(1).and_then(|key| {
                 let keybind = str_to_keys(key);
 
-                let cmd = cmd.iter().skip(2).map(|s| *s).collect();
+                let cmd = cmd
+                    .iter()
+                    .skip(2)
+                    .map(|s| s.to_owned())
+                    .collect::<Vec<String>>()
+                    .join("\" \"");
+                let cmd = format!("\"{}\"", cmd);
 
                 parse(&cmd)
-                    .and_then(|e| NestableEvent::from_event(e))
+                    .and_then(|e| BindableEvent::from_event(e))
                     .and_then(|ne| Some(Event::BindKey(keybind, ne)))
+            }),
+
+            "confirm" => cmd.get(1).and_then(|s| {
+                let prompt = s.to_owned();
+                let on_yes = cmd.get(2).and_then(|s| {
+                    parse(s).and_then(|e| ConfirmableEvent::from_event(e))
+                });
+                let on_no = cmd.get(3).and_then(|s| {
+                    parse(s).and_then(|e| ConfirmableEvent::from_event(e))
+                });
+                let is_default_yes = get_boolean(&cmd, 4).unwrap_or(true);
+
+                Some(Event::Confirm {
+                    prompt,
+                    on_yes,
+                    on_no,
+                    is_default_yes,
+                })
             }),
 
             _ => None,
@@ -195,22 +233,22 @@ pub fn parse(cmd: &Vec<&str>) -> Option<Event> {
     }
 }
 
-fn get_lowercase(cmd: &Vec<&str>, i: usize) -> Option<String> {
+fn get_lowercase(cmd: &Vec<String>, i: usize) -> Option<String> {
     match cmd.get(i) {
         Some(s) => Some(s.to_string().to_lowercase()),
         None => None,
     }
 }
 
-fn get_usize(cmd: &Vec<&str>, i: usize) -> Option<usize> {
+fn get_usize(cmd: &Vec<String>, i: usize) -> Option<usize> {
     cmd.get(i).and_then(|s| s.parse::<usize>().ok())
 }
 
-fn get_i8(cmd: &Vec<&str>, i: usize) -> Option<i8> {
+fn get_i8(cmd: &Vec<String>, i: usize) -> Option<i8> {
     cmd.get(i).and_then(|s| s.parse::<i8>().ok())
 }
 
-fn _get_boolean(cmd: &Vec<&str>, i: usize) -> Option<bool> {
+fn get_boolean(cmd: &Vec<String>, i: usize) -> Option<bool> {
     match cmd.get(i) {
         Some(s) => match s.to_lowercase().as_str() {
             "0" | "false" => Some(false),
@@ -220,16 +258,16 @@ fn _get_boolean(cmd: &Vec<&str>, i: usize) -> Option<bool> {
     }
 }
 
-fn draw(cmd: &Vec<&str>) -> Option<Event> {
+fn draw(cmd: Vec<String>) -> Option<Event> {
     if let Some(component) = cmd.get(1) {
         let (max_w, max_h) = termion::terminal_size().unwrap();
 
         let max_h = max_h - 1;
 
-        let x = get_usize(cmd, 2).unwrap_or(1) as u16;
-        let y = get_usize(cmd, 3).unwrap_or(1) as u16;
-        let w = get_usize(cmd, 4).unwrap_or(max_w as usize) as u16;
-        let h = get_usize(cmd, 5).unwrap_or(max_h as usize) as u16;
+        let x = get_usize(&cmd, 2).unwrap_or(1) as u16;
+        let y = get_usize(&cmd, 3).unwrap_or(1) as u16;
+        let w = get_usize(&cmd, 4).unwrap_or(max_w as usize) as u16;
+        let h = get_usize(&cmd, 5).unwrap_or(max_h as usize) as u16;
         let focus = match cmd.get(6) {
             Some(s) => s.to_string(),
             None => "<None>".to_string(),

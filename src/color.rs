@@ -17,7 +17,9 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::fmt::{Formatter, Result};
+use std::convert::TryFrom;
+use std::fmt;
+
 use termion::color as termionColor;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -42,8 +44,35 @@ pub enum Color {
     Reset,
 }
 
+impl TryFrom<&str> for Color {
+    type Error = &'static str;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        match s.to_lowercase().as_str() {
+            "black" => Ok(Color::Black),
+            "red" => Ok(Color::Red),
+            "green" => Ok(Color::Green),
+            "yellow" => Ok(Color::Yellow),
+            "blue" => Ok(Color::Blue),
+            "magenta" => Ok(Color::Magenta),
+            "cyan" => Ok(Color::Cyan),
+            "white" => Ok(Color::White),
+            "brightblack" => Ok(Color::BrightBlack),
+            "brightred" => Ok(Color::BrightRed),
+            "brightgreen" => Ok(Color::BrightGreen),
+            "brightyellow" => Ok(Color::BrightYellow),
+            "brightblue" => Ok(Color::BrightBlue),
+            "brightmagenta" => Ok(Color::BrightMagenta),
+            "brightcyan" => Ok(Color::BrightCyan),
+            "brightwhite" => Ok(Color::BrightWhite),
+            "reset" => Ok(Color::Reset),
+            _ => Err("Could not parse color"),
+        }
+    }
+}
+
 impl termionColor::Color for Color {
-    fn write_fg(&self, f: &mut Formatter) -> Result {
+    fn write_fg(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Color::Black => {
                 write!(f, "{}", termionColor::Fg(termionColor::Black))
@@ -102,7 +131,7 @@ impl termionColor::Color for Color {
         }
     }
 
-    fn write_bg(&self, f: &mut Formatter) -> Result {
+    fn write_bg(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Color::Black => {
                 write!(f, "{}", termionColor::Bg(termionColor::Black))
