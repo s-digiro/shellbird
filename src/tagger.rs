@@ -227,9 +227,13 @@ fn tag(
                     None => tag.remove_album(),
                 },
                 "Date" => match val {
-                    Some(val) => tag.set_text("TYER", val),
+                    Some(val) => {
+                        tag.set_text("TYER", val);
+                        tag.set_text("TDRC", val);
+                    },
                     None => {
                         tag.remove("TYER");
+                        tag.remove("TDRC");
                     },
                 },
                 "Track" => match val {
