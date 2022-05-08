@@ -92,7 +92,7 @@ pub enum ComponentEvent {
     NowPlaying(Option<Song>),
     Queue(Vec<Song>),
     Playlist(Vec<Playlist>),
-    Database(Vec<Song>),
+    Database,
     PlaylistMenuUpdated(String, Option<Playlist>),
     TagMenuUpdated(String, Vec<usize>),
     StyleMenuUpdated(String, Vec<usize>),
@@ -171,8 +171,8 @@ impl fmt::Debug for ComponentEvent {
             ComponentEvent::Playlist(pl) => {
                 write!(f, "ComponentEvent::Playlist({} playlists)", pl.len())
             },
-            ComponentEvent::Database(s) => {
-                write!(f, "ComponentEvent::Database({} songs)", s.len())
+            ComponentEvent::Database => {
+                write!(f, "ComponentEvent::Database")
             },
             ComponentEvent::PlaylistMenuUpdated(t, pl) => write!(
                 f,

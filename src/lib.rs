@@ -200,7 +200,7 @@ impl<'a> Shellbird<'a> {
                         state.library = tracks.clone();
 
                         tx.send(Event::ToAllComponents(
-                            ComponentEvent::Database(tracks),
+                            ComponentEvent::Database,
                         ))
                         .unwrap();
                     },
@@ -263,7 +263,7 @@ impl<'a> Shellbird<'a> {
                         c.handle(&state, &e, tx.clone())
                     }
 
-                    if let ComponentEvent::Database(_) = e {
+                    if let ComponentEvent::Database = e {
                         tx.send(Event::ToCommandLine(CommandLineEvent::Echo(
                             "Update Finished!".to_owned(),
                         )))

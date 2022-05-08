@@ -283,12 +283,14 @@ impl Component for TagMenu {
                 tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
-            ComponentEvent::Database(tracks) if self.parent.is_none() => {
-                self.tracks = (0..tracks.len()).collect();
+            ComponentEvent::Database if self.parent.is_none() => {
+                let lib = &state.library;
 
-                self.set_menu_items(&tracks);
+                self.tracks = (0..lib.len()).collect();
 
-                tx.send(self.spawn_update_event(&tracks)).unwrap();
+                self.set_menu_items(lib);
+
+                tx.send(self.spawn_update_event(lib)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::LostMpdConnection => {

@@ -217,7 +217,7 @@ impl Component for StyleMenu {
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
             },
-            ComponentEvent::Database(_tracks) => {
+            ComponentEvent::Database => {
                 tx.send(self.spawn_update_event()).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
