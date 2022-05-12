@@ -202,9 +202,7 @@ impl Component for StyleMenu {
                     let ids: Vec<usize> = genres
                         .iter()
                         .map(|g| {
-                            let key = &Some(g.to_owned());
-                            eprintln!("{:?}", key);
-                            tree.tracks(key).unwrap_or(&empty)
+                            tree.tracks(&Some(g.to_owned())).unwrap_or(&empty)
                         })
                         .flatten()
                         .map(|id| *id)
@@ -217,6 +215,24 @@ impl Component for StyleMenu {
 
                     tx.send(Event::ToMpd(MpdEvent::AddToQueue(tracks)))
                         .unwrap();
+                }
+            },
+            ComponentEvent::OpenTags => {
+                let empty = Vec::new();
+
+                if let Some(tree) = &state.style_tree {
+                    let genres: Vec<String> = self.selection_leaf_names(tree);
+
+                    let ids: Vec<usize> = genres
+                        .iter()
+                        .map(|g| {
+                            tree.tracks(&Some(g.to_owned())).unwrap_or(&empty)
+                        })
+                        .flatten()
+                        .map(|id| *id)
+                        .collect();
+
+                    tx.send(Event::ToApp(AppEvent::TagUI(ids))).unwrap();
                 }
             },
             ComponentEvent::UpdateRootStyleMenu if self.parent.is_none() => {

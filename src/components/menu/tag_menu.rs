@@ -249,6 +249,11 @@ impl Component for TagMenu {
                     self.selected_tracks(&state.library),
                 )))
                 .unwrap(),
+            ComponentEvent::OpenTags => tx
+                .send(Event::ToApp(AppEvent::TagUI(
+                    self.selection(&state.library),
+                )))
+                .unwrap(),
             ComponentEvent::StyleMenuUpdated(origin, styles)
                 if self.parent.is(origin) =>
             {

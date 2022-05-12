@@ -112,6 +112,24 @@ impl Component for PlaylistMenu {
         tx: mpsc::Sender<Event>,
     ) {
         match e {
+            ComponentEvent::OpenTags => {
+                let files: Vec<&str> = self
+                    .playlists
+                    .get(self.menu.selection)
+                    .unwrap()
+                    .tracks
+                    .iter()
+                    .map(|s| s.file.as_str())
+                    .collect();
+                let ids: Vec<usize> = state
+                    .library
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, s)| files.contains(&s.file.as_str()))
+                    .map(|(i, _)| i)
+                    .collect();
+                tx.send(Event::ToApp(AppEvent::TagUI(ids))).unwrap();
+            },
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
