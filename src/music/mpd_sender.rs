@@ -17,14 +17,13 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::borrow::Cow;
 use std::sync::mpsc;
 use std::thread;
 
 use crate::event::*;
 
-use mpd::error::Error;
-use mpd::{Client, Query, Song, Term};
+use mpd::error::{Error, ParseError};
+use mpd::{Client, Song};
 
 pub fn init_mpd_sender_thread(
     ip: &str,
@@ -65,16 +64,13 @@ pub fn init_mpd_sender_thread(
                     MpdEvent::AddToQueue(songs) => push_all(c, songs),
                     MpdEvent::PlayAt(song) => play_at(c, song),
                     MpdEvent::Delete(song) => delete(c, song),
-                    MpdEvent::AddStyleToQueue(genres) => {
-                        add_style_to_queue(c, genres)
-                    },
                     MpdEvent::Next => c.next(),
                     MpdEvent::Prev => c.prev(),
                     MpdEvent::SetVolume(vol) => c.volume(vol),
                 };
 
                 match result {
-                    Err(Error::Parse(BadPair)) => {
+                    Err(Error::Parse(ParseError::BadPair)) => {
                         // Connection dropped, reestablish and retry
                         conn = None;
                     },
@@ -140,20 +136,4 @@ fn delete(conn: &mut Client, song: Song) -> Result<(), Error> {
         Some(place) => conn.delete(place.pos),
         None => Ok(()),
     }
-}
-
-fn add_style_to_queue(
-    conn: &mut Client,
-    genres: Vec<String>,
-) -> Result<(), Error> {
-    for genre in genres {
-        let songs = conn.search(
-            Query::new().and(Term::Tag(Cow::Borrowed("Genre")), genre),
-            None,
-        )?;
-
-        push_all(conn, songs)?;
-    }
-
-    Ok(())
 }

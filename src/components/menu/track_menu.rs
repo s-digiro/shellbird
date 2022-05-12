@@ -84,10 +84,11 @@ impl TrackMenu {
         }
     }
 
-    fn update_menu_items(&mut self) {
+    fn update_menu_items(&mut self, library: &Vec<Song>) {
         self.menu.items = self
             .tracks
             .iter()
+            .map(|id| library.get(*id).unwrap())
             .map(|s| match &s.title {
                 Some(title) => title.to_string(),
                 None => "<Empty>".to_string(),
@@ -162,14 +163,14 @@ impl Component for TrackMenu {
             },
             ComponentEvent::LostMpdConnection => {
                 self.tracks = Vec::new();
-                self.update_menu_items();
+                self.update_menu_items(&state.library);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::PlaylistMenuUpdated(name, pl)
                 if self.parent.is(name) =>
             {
                 self.tracks = pl.clone();
-                self.update_menu_items();
+                self.update_menu_items(&state.library);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::TagMenuUpdated(name, tracks)
@@ -177,7 +178,7 @@ impl Component for TrackMenu {
             {
                 self.tracks = tracks.clone();
 
-                self.update_menu_items();
+                self.update_menu_items(&state.library);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::StyleMenuUpdated(name, styles)
@@ -211,7 +212,7 @@ impl Component for TrackMenu {
                     };
 
                     self.tracks = tracks;
-                    self.update_menu_items();
+                    self.update_menu_items(&state.library);
                     tx.send(self.spawn_needs_draw_event()).unwrap();
                 }
             },

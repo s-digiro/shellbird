@@ -146,7 +146,6 @@ pub enum MpdEvent {
     Update,
     ClearQueue,
     AddToQueue(Vec<Song>),
-    AddStyleToQueue(Vec<String>),
     PlayAt(Song),
     Delete(Song),
     Repeat,
@@ -236,9 +235,6 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::ClearQueue => write!(f, "MpdEvent::ClearQueue"),
             MpdEvent::AddToQueue(songs) => {
                 write!(f, "MpdEvent::AddToQueue({} songs)", songs.len())
-            },
-            MpdEvent::AddStyleToQueue(genres) => {
-                write!(f, "MpdEvent::AddStyleToQueue({} genres)", genres.len())
             },
             MpdEvent::Delete(song) => write!(f, "MpdEvent::Delete({:?})", song),
             MpdEvent::PlayAt(song) => write!(f, "MpdEvent::PlayAt({:?})", song),

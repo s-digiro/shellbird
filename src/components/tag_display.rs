@@ -67,7 +67,7 @@ impl Component for TagDisplay {
 
     fn handle(
         &mut self,
-        _state: &GlobalState,
+        state: &GlobalState,
         e: &ComponentEvent,
         tx: mpsc::Sender<Event>,
     ) {
@@ -75,7 +75,8 @@ impl Component for TagDisplay {
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
             },
-            ComponentEvent::NowPlaying(song) => {
+            ComponentEvent::NowPlaying(id) => {
+                let song = id.map(|id| state.library.get(id)).flatten();
                 self.contents = match song {
                     Some(song) => match song.tags.get(&self.tag) {
                         Some(title) => title.to_string(),

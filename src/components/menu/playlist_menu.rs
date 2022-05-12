@@ -21,6 +21,8 @@ use std::sync::mpsc;
 
 use unicode_truncate::Alignment;
 
+use mpd::Song;
+
 use crate::color::Color;
 use crate::components::{menu::Menu, Component, Components};
 use crate::event::*;
@@ -80,13 +82,14 @@ impl PlaylistMenu {
             self.playlists.iter().map(|pl| pl.name.clone()).collect();
     }
 
-    fn spawn_update_event(&self) -> Event {
+    fn spawn_update_event(&self, library: &Vec<Song>) -> Event {
+        let name = self.name().to_owned();
+        let tracks = self.playlists.get(self.menu.selection).map(|pl| pl.tracks.clone()).unwrap_or(Vec::new());
+        let ids = library.iter().enumerate().filter(|(_, song)| tracks.contains(song)).map(|(i, _)| i).collect();
+
         Event::ToAllComponents(ComponentEvent::PlaylistMenuUpdated(
-            self.name().to_string(),
-            match self.playlists.get(self.menu.selection) {
-                Some(pl) => Some(pl.clone()),
-                None => None,
-            },
+            name,
+            ids,
         ))
     }
 }
@@ -98,7 +101,7 @@ impl Component for PlaylistMenu {
 
     fn handle(
         &mut self,
-        _state: &GlobalState,
+        state: &GlobalState,
         e: &ComponentEvent,
         tx: mpsc::Sender<Event>,
     ) {
@@ -106,37 +109,37 @@ impl Component for PlaylistMenu {
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
                 self.menu.next();
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Prev => {
                 self.menu.prev();
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::GoToTop => {
                 self.menu.to_top();
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::GoToBottom => {
                 self.menu.to_bottom();
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::GoTo(i) => {
                 self.menu.to(*i);
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Search(s) => {
                 self.menu.search(s);
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::SearchPrev(s) => {
                 self.menu.search_prev(s);
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Select => {
@@ -154,13 +157,13 @@ impl Component for PlaylistMenu {
             ComponentEvent::Playlist(playlists) => {
                 self.playlists = playlists.clone();
                 self.update_menu_items();
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::LostMpdConnection => {
                 self.playlists = Vec::new();
                 self.update_menu_items();
-                tx.send(self.spawn_update_event()).unwrap();
+                tx.send(self.spawn_update_event(&state.library)).unwrap();
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Draw(x, y, w, h, focus) => {
