@@ -89,11 +89,11 @@ pub enum ComponentEvent {
     GoToBottom,
     Search(String),
     SearchPrev(String),
-    NowPlaying(Option<Song>),
-    Queue(Vec<Song>),
+    NowPlaying(Option<usize>),
+    Queue(Vec<usize>),
     Playlist(Vec<Playlist>),
     Database,
-    PlaylistMenuUpdated(String, Option<Playlist>),
+    PlaylistMenuUpdated(String, Vec<usize>),
     TagMenuUpdated(String, Vec<usize>),
     StyleMenuUpdated(String, Vec<usize>),
     UpdateRootStyleMenu,
@@ -102,13 +102,15 @@ pub enum ComponentEvent {
 
 #[derive(Clone)]
 pub enum AppEvent {
-    TagUI(Vec<Song>),
+    TagUI(Vec<usize>),
+    NowPlaying(Option<Song>),
     Back,
     ClearScreen,
     Resize,
     StyleTreeLoaded(Option<StyleTree>),
     SwitchScreen(String),
     Database(Vec<Song>),
+    Queue(Vec<Song>),
     LostMpdConnection,
     DrawScreen,
     Error(String),
@@ -166,7 +168,7 @@ impl fmt::Debug for ComponentEvent {
                 write!(f, "ComponentEvent::ReturnText({:?})", prompt)
             },
             ComponentEvent::Queue(s) => {
-                write!(f, "ComponentEvent::Queue({} songs)", s.len())
+                write!(f, "ComponentEvent::Queue({} ids)", s.len())
             },
             ComponentEvent::Playlist(pl) => {
                 write!(f, "ComponentEvent::Playlist({} playlists)", pl.len())
@@ -178,10 +180,7 @@ impl fmt::Debug for ComponentEvent {
                 f,
                 "ComponentEvent::PlaylistMenuUpdated({}, {} songs)",
                 t,
-                match pl {
-                    Some(_) => "Some",
-                    None => "None",
-                }
+                pl.len()
             ),
             ComponentEvent::TagMenuUpdated(t, s) => write!(
                 f,
@@ -260,6 +259,7 @@ impl fmt::Debug for AppEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AppEvent::Resize => write!(f, "AppEvent::Resize"),
+            AppEvent::NowPlaying(song) => write!(f, "AppEvent::NowPlaying({:?})", song),
             AppEvent::Back => write!(f, "AppEvent::Back"),
             AppEvent::TagUI(songs) => {
                 write!(f, "AppEvent::TagUI({} songs)", songs.len())
@@ -280,6 +280,7 @@ impl fmt::Debug for AppEvent {
             },
             AppEvent::Quit => write!(f, "AppEvent::Quit"),
             AppEvent::ClearScreen => write!(f, "AppEvent::ClearScreen"),
+            AppEvent::Queue(s) => write!(f, "AppEvent::Queue({} songs)", s.len()),
         }
     }
 }

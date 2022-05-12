@@ -59,7 +59,7 @@ impl Component for TitleDisplay {
 
     fn handle(
         &mut self,
-        _state: &GlobalState,
+        state: &GlobalState,
         e: &ComponentEvent,
         tx: mpsc::Sender<Event>,
     ) {
@@ -67,9 +67,9 @@ impl Component for TitleDisplay {
             ComponentEvent::Draw(x, y, w, h, focus) => {
                 self.draw(*x, *y, *w, *h, focus == self.name());
             },
-            ComponentEvent::NowPlaying(song) => {
-                self.contents = match song {
-                    Some(song) => match &song.title {
+            ComponentEvent::NowPlaying(id) => {
+                self.contents = match id {
+                    Some(id) => match &state.library.get(*id).unwrap().title {
                         Some(title) => title.to_string(),
                         None => "<Empty>".to_string(),
                     },

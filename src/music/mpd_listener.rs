@@ -88,10 +88,10 @@ fn spawn_error_msg(msg: &str) -> Event {
 fn send_now_playing(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.currentsong() {
         Ok(song) => tx
-            .send(Event::ToAllComponents(ComponentEvent::NowPlaying(song)))
+            .send(Event::ToApp(AppEvent::NowPlaying(song)))
             .unwrap(),
         _ => tx
-            .send(Event::ToAllComponents(ComponentEvent::NowPlaying(None)))
+            .send(Event::ToApp(AppEvent::NowPlaying(None)))
             .unwrap(),
     }
 }
@@ -99,10 +99,10 @@ fn send_now_playing(conn: &mut Client, tx: &mpsc::Sender<Event>) {
 fn send_queue(conn: &mut Client, tx: &mpsc::Sender<Event>) {
     match conn.queue() {
         Ok(q) => tx
-            .send(Event::ToAllComponents(ComponentEvent::Queue(q)))
+            .send(Event::ToApp(AppEvent::Queue(q)))
             .unwrap(),
         _ => tx
-            .send(Event::ToAllComponents(ComponentEvent::Queue(Vec::new())))
+            .send(Event::ToApp(AppEvent::Queue(Vec::new())))
             .unwrap(),
     }
 }

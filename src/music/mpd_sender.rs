@@ -73,18 +73,19 @@ pub fn init_mpd_sender_thread(
                     MpdEvent::SetVolume(vol) => c.volume(vol),
                 };
 
-                if let Err(e) = result {
-                    tx.send(Event::ToApp(AppEvent::Error(format!("{:?}", e))))
-                        .unwrap();
+                match result {
+                    Err(Error::Parse(BadPair)) => {
+                        // Connection dropped, reestablish and retry
+                        conn = None;
+                    },
+                    Err(e) => {
+                        tx.send(Event::ToApp(AppEvent::Error(format!("{:?}", e))))
+                            .unwrap();
 
-                    tx.send(Event::ToApp(AppEvent::Error(format!(
-                        "Mpd Sender Thread: Mpd Connection dropped. Resending MpdRequest {:?}",
-                        request
-                    ))))
-                    .unwrap();
-
-                    conn = None;
-                    rethrow_tx.send(request).unwrap();
+                        conn = None;
+                        rethrow_tx.send(request).unwrap();
+                    },
+                    _ => (),
                 }
             }
         }

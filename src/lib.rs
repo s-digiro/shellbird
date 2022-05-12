@@ -176,6 +176,24 @@ impl<'a> Shellbird<'a> {
                 },
                 Event::ToApp(e) => match e {
                     AppEvent::Quit => break,
+                    AppEvent::Queue(songs) => {
+                        let ids = state.library.iter()
+                            .enumerate()
+                            .filter(|(_, song)| songs.contains(song))
+                            .map(|(i, _)| i)
+                            .collect();
+
+                        tx.send(Event::ToAllComponents(ComponentEvent::Queue(ids))).unwrap()
+                    },
+                    AppEvent::NowPlaying(song) => {
+                        let id = if let None = song {
+                            None
+                        } else {
+                            state.library.iter().map(|s| Some(s.clone())).enumerate().find(|(i, s)| s == &song).map(|(i, _)| i)
+                        };
+
+                        tx.send(Event::ToAllComponents(ComponentEvent::NowPlaying(id))).unwrap()
+                    },
                     AppEvent::Error(s) => tx
                         .send(Event::ToCommandLine(CommandLineEvent::Echo(s)))
                         .unwrap(),
@@ -224,8 +242,19 @@ impl<'a> Shellbird<'a> {
                             .unwrap();
                         }
                     },
-                    AppEvent::TagUI(songs) => {
-                        let cname = "TagEditor".to_string();
+                    AppEvent::TagUI(ids) => {
+                        let songs = ids.iter()
+                            .map(|i| state.library.get(*i))
+                            .collect::<Vec<Option<&Song>>>();
+
+                        if songs.contains(&None) {
+                            tx.send(Event::err("Requst for TagUI contains outdated ids".to_owned())).unwrap();
+                            continue;
+                        }
+
+                        let songs = songs.iter().map(|o| o.unwrap().clone()).collect();
+
+                        let cname = "TagEditor".to_owned();
 
                         components.insert(
                             cname.clone(),

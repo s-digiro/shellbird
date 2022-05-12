@@ -35,7 +35,7 @@ use crate::GlobalState;
 pub struct TrackMenu {
     parent: Parent,
     menu: Menu,
-    tracks: Vec<Song>,
+    tracks: Vec<usize>,
 }
 
 impl TrackMenu {
@@ -95,9 +95,9 @@ impl TrackMenu {
             .collect();
     }
 
-    fn selected_tracks(&self) -> Vec<Song> {
-        if let Some(track) = self.tracks.get(self.menu.selection) {
-            vec![track.clone()]
+    fn selection(&self) -> Vec<usize> {
+        if let Some(id) = self.tracks.get(self.menu.selection) {
+            vec![*id]
         } else {
             Vec::new()
         }
@@ -117,13 +117,11 @@ impl Component for TrackMenu {
     ) {
         match e {
             ComponentEvent::OpenTags => tx
-                .send(Event::ToApp(AppEvent::TagUI(self.selected_tracks())))
+                .send(Event::ToApp(AppEvent::TagUI(self.selection())))
                 .unwrap(),
             ComponentEvent::Select => {
-                tx.send(Event::ToMpd(MpdEvent::AddToQueue(
-                    self.selected_tracks(),
-                )))
-                .unwrap();
+                let tracks = self.selection().iter().map(|i| state.library.get(*i).unwrap().clone()).collect();
+                tx.send(Event::ToMpd(MpdEvent::AddToQueue(tracks))).unwrap();
             },
             ComponentEvent::Next => {
                 self.menu.next();
@@ -157,9 +155,9 @@ impl Component for TrackMenu {
                 self.draw(*x, *y, *w, *h, focus == self.name())
             },
             ComponentEvent::Start => {
-                if let Some(track) = self.selected_tracks().first() {
-                    tx.send(Event::ToMpd(MpdEvent::PlayAt(track.clone())))
-                        .unwrap();
+                if let Some(id) = self.selection().first() {
+                    let track = state.library.get(*id).unwrap().clone();
+                    tx.send(Event::ToMpd(MpdEvent::PlayAt(track))).unwrap();
                 }
             },
             ComponentEvent::LostMpdConnection => {
@@ -170,23 +168,14 @@ impl Component for TrackMenu {
             ComponentEvent::PlaylistMenuUpdated(name, pl)
                 if self.parent.is(name) =>
             {
-                match pl {
-                    Some(pl) => {
-                        self.tracks = pl.tracks.clone();
-                        self.update_menu_items();
-                        tx.send(self.spawn_needs_draw_event()).unwrap();
-                    },
-                    None => (),
-                }
+                self.tracks = pl.clone();
+                self.update_menu_items();
+                tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::TagMenuUpdated(name, tracks)
                 if self.parent.is(name) =>
             {
-                self.tracks = tracks
-                    .iter()
-                    .filter(|id| state.library.get(**id) != None)
-                    .map(|id| state.library.get(*id).unwrap().clone())
-                    .collect();
+                self.tracks = tracks.clone();
 
                 self.update_menu_items();
                 tx.send(self.spawn_needs_draw_event()).unwrap();

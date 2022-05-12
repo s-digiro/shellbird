@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use mpd::Song;
 use std::sync::mpsc;
+use mpd::Song;
 
 use crate::color::Color;
 use crate::components::{menu::Menu, Component, Components};
@@ -29,9 +29,9 @@ use unicode_truncate::{Alignment, UnicodeTruncateStr};
 
 #[derive(Debug, PartialEq)]
 pub struct Queue {
-    tracks: Vec<Song>,
+    tracks: Vec<usize>,
     menu: Menu,
-    now_playing: Option<Song>,
+    now_playing: Option<usize>,
 }
 
 impl Queue {
@@ -77,35 +77,21 @@ impl Queue {
         }
     }
 
-    fn set_now_playing(&mut self, target: &Option<Song>) {
-        match target {
-            Some(target) => self.now_playing = Some(target.clone()),
-            None => self.now_playing = None,
-        }
-    }
-
-    fn update_items(&mut self, tracks: &Vec<Song>) {
-        self.tracks = tracks.clone();
-        self.update_menu_items();
-    }
-
-    fn update_menu_items(&mut self) {
-        self.menu.items = self
-            .tracks
-            .iter()
+    fn update_items(&mut self, tracks: Vec<usize>, library: &Vec<Song>) {
+        self.menu.items = tracks.iter()
+            .map(|i| library.get(*i).unwrap())
             .map(|s| match &s.title {
-                Some(title) => title.to_string(),
-                None => "<Empty>".to_string(),
-            })
-            .collect();
+                Some(title) => title.to_owned(),
+                None => "<Empty>".to_owned(),
+            }).collect();
+
+        self.tracks = tracks;
     }
 
-    fn selected_tracks(&self) -> Vec<Song> {
-        if let Some(track) = self.tracks.get(self.menu.selection) {
-            vec![track.clone()]
-        } else {
-            Vec::new()
-        }
+    fn selection(&self) -> Vec<usize> {
+        self.tracks.get(self.menu.selection)
+            .map(|s| vec![*s])
+            .unwrap_or(Vec::new())
     }
 }
 
@@ -116,13 +102,13 @@ impl Component for Queue {
 
     fn handle(
         &mut self,
-        _state: &GlobalState,
+        state: &GlobalState,
         e: &ComponentEvent,
         tx: mpsc::Sender<Event>,
     ) {
         match e {
             ComponentEvent::OpenTags => {
-                tx.send(Event::ToApp(AppEvent::TagUI(self.selected_tracks())))
+                tx.send(Event::ToApp(AppEvent::TagUI(self.selection())))
                     .unwrap();
             },
             ComponentEvent::Start => (),
@@ -155,27 +141,30 @@ impl Component for Queue {
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Select => {
-                if let Some(song) = self.tracks.get(self.menu.selection) {
-                    tx.send(Event::ToMpd(MpdEvent::PlayAt(song.clone())))
-                        .unwrap()
+                if let Some(id) = self.selection().get(0) {
+                    if let Some(song) = state.library.get(*id) {
+                        tx.send(Event::ToMpd(MpdEvent::PlayAt(song.clone()))).unwrap();
+                    }
                 }
             },
             ComponentEvent::Delete => {
-                if let Some(song) = self.tracks.get(self.menu.selection) {
-                    tx.send(Event::ToMpd(MpdEvent::Delete(song.clone()))).unwrap();
+                if let Some(id) = self.selection().get(0) {
+                    if let Some(song) = state.library.get(*id) {
+                        tx.send(Event::ToMpd(MpdEvent::Delete(song.clone()))).unwrap();
+                    }
                 }
             },
-            ComponentEvent::NowPlaying(song) => {
-                self.set_now_playing(&song);
+            ComponentEvent::NowPlaying(id) => {
+                self.now_playing = *id;
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Queue(q) => {
-                self.update_items(q);
+                self.update_items(q.to_vec(), &state.library);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::LostMpdConnection => {
                 self.now_playing = None;
-                self.update_items(&Vec::new());
+                self.update_items(Vec::new(), &state.library);
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Draw(x, y, w, h, focus) => {

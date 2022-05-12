@@ -58,7 +58,7 @@ impl Style {
 #[derive(Clone, Debug)]
 pub struct StyleTree {
     styles: Vec<Style>,
-    tracks: HashMap<Option<String>, Vec<Song>>,
+    tracks: HashMap<Option<String>, Vec<usize>>,
 }
 
 impl StyleTree {
@@ -104,7 +104,7 @@ impl StyleTree {
     pub fn set_tracks(&mut self, tracks: Vec<Song>) {
         self.tracks.clear();
 
-        for track in tracks {
+        for (i, track) in tracks.iter().enumerate() {
             let key = match track.tags.get("Genre") {
                 Some(s) => Some(s.to_string()),
                 None => None,
@@ -118,11 +118,11 @@ impl StyleTree {
                 },
             };
 
-            bucket.push(track);
+            bucket.push(i);
         }
     }
 
-    pub fn tracks(&self, key: &Option<String>) -> Option<&Vec<Song>> {
+    pub fn tracks(&self, key: &Option<String>) -> Option<&Vec<usize>> {
         self.tracks.get(key)
     }
 }
