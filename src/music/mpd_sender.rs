@@ -75,8 +75,11 @@ pub fn init_mpd_sender_thread(
                         conn = None;
                     },
                     Err(e) => {
-                        tx.send(Event::ToApp(AppEvent::Error(format!("{:?}", e))))
-                            .unwrap();
+                        tx.send(Event::ToApp(AppEvent::Error(format!(
+                            "{:?}",
+                            e
+                        ))))
+                        .unwrap();
 
                         conn = None;
                         rethrow_tx.send(request).unwrap();

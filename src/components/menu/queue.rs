@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-use std::sync::mpsc;
 use mpd::Song;
+use std::sync::mpsc;
 
 use crate::color::Color;
 use crate::components::{menu::Menu, Component, Components};
@@ -78,18 +78,21 @@ impl Queue {
     }
 
     fn update_items(&mut self, tracks: Vec<usize>, library: &Vec<Song>) {
-        self.menu.items = tracks.iter()
+        self.menu.items = tracks
+            .iter()
             .map(|i| library.get(*i).unwrap())
             .map(|s| match &s.title {
                 Some(title) => title.to_owned(),
                 None => "<Empty>".to_owned(),
-            }).collect();
+            })
+            .collect();
 
         self.tracks = tracks;
     }
 
     fn selection(&self) -> Vec<usize> {
-        self.tracks.get(self.menu.selection)
+        self.tracks
+            .get(self.menu.selection)
             .map(|s| vec![*s])
             .unwrap_or(Vec::new())
     }
@@ -143,14 +146,16 @@ impl Component for Queue {
             ComponentEvent::Select => {
                 if let Some(id) = self.selection().get(0) {
                     if let Some(song) = state.library.get(*id) {
-                        tx.send(Event::ToMpd(MpdEvent::PlayAt(song.clone()))).unwrap();
+                        tx.send(Event::ToMpd(MpdEvent::PlayAt(song.clone())))
+                            .unwrap();
                     }
                 }
             },
             ComponentEvent::Delete => {
                 if let Some(id) = self.selection().get(0) {
                     if let Some(song) = state.library.get(*id) {
-                        tx.send(Event::ToMpd(MpdEvent::Delete(song.clone()))).unwrap();
+                        tx.send(Event::ToMpd(MpdEvent::Delete(song.clone())))
+                            .unwrap();
                     }
                 }
             },

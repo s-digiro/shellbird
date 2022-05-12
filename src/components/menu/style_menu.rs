@@ -199,14 +199,24 @@ impl Component for StyleMenu {
                 let empty = Vec::new();
                 if let Some(tree) = &state.style_tree {
                     let genres: Vec<String> = self.selection_leaf_names(tree);
-                    let ids: Vec<usize> = genres.iter().map(|g| {
-                        let key = &Some(g.to_owned());
-                        eprintln!("{:?}", key);
-                        tree.tracks(key).unwrap_or(&empty)
-                    }).flatten().map(|id| *id).collect();
-                    let tracks: Vec<Song> = ids.iter().map(|id| state.library.get(*id).unwrap()).map(|s| s.to_owned()).collect();
+                    let ids: Vec<usize> = genres
+                        .iter()
+                        .map(|g| {
+                            let key = &Some(g.to_owned());
+                            eprintln!("{:?}", key);
+                            tree.tracks(key).unwrap_or(&empty)
+                        })
+                        .flatten()
+                        .map(|id| *id)
+                        .collect();
+                    let tracks: Vec<Song> = ids
+                        .iter()
+                        .map(|id| state.library.get(*id).unwrap())
+                        .map(|s| s.to_owned())
+                        .collect();
 
-                    tx.send(Event::ToMpd(MpdEvent::AddToQueue(tracks))).unwrap();
+                    tx.send(Event::ToMpd(MpdEvent::AddToQueue(tracks)))
+                        .unwrap();
                 }
             },
             ComponentEvent::UpdateRootStyleMenu if self.parent.is_none() => {

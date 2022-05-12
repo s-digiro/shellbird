@@ -121,7 +121,11 @@ impl Component for TrackMenu {
                 .send(Event::ToApp(AppEvent::TagUI(self.selection())))
                 .unwrap(),
             ComponentEvent::Select => {
-                let tracks = self.selection().iter().map(|i| state.library.get(*i).unwrap().clone()).collect();
+                let tracks = self
+                    .selection()
+                    .iter()
+                    .map(|i| state.library.get(*i).unwrap().clone())
+                    .collect();
                 tx.send(Event::ToMpd(MpdEvent::AddToQueue(tracks))).unwrap();
             },
             ComponentEvent::Next => {

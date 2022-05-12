@@ -255,7 +255,9 @@ impl fmt::Debug for AppEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AppEvent::Resize => write!(f, "AppEvent::Resize"),
-            AppEvent::NowPlaying(song) => write!(f, "AppEvent::NowPlaying({:?})", song),
+            AppEvent::NowPlaying(song) => {
+                write!(f, "AppEvent::NowPlaying({:?})", song)
+            },
             AppEvent::Back => write!(f, "AppEvent::Back"),
             AppEvent::TagUI(songs) => {
                 write!(f, "AppEvent::TagUI({} songs)", songs.len())
@@ -276,7 +278,9 @@ impl fmt::Debug for AppEvent {
             },
             AppEvent::Quit => write!(f, "AppEvent::Quit"),
             AppEvent::ClearScreen => write!(f, "AppEvent::ClearScreen"),
-            AppEvent::Queue(s) => write!(f, "AppEvent::Queue({} songs)", s.len()),
+            AppEvent::Queue(s) => {
+                write!(f, "AppEvent::Queue({} songs)", s.len())
+            },
         }
     }
 }

@@ -84,13 +84,19 @@ impl PlaylistMenu {
 
     fn spawn_update_event(&self, library: &Vec<Song>) -> Event {
         let name = self.name().to_owned();
-        let tracks = self.playlists.get(self.menu.selection).map(|pl| pl.tracks.clone()).unwrap_or(Vec::new());
-        let ids = library.iter().enumerate().filter(|(_, song)| tracks.contains(song)).map(|(i, _)| i).collect();
+        let tracks = self
+            .playlists
+            .get(self.menu.selection)
+            .map(|pl| pl.tracks.clone())
+            .unwrap_or(Vec::new());
+        let ids = library
+            .iter()
+            .enumerate()
+            .filter(|(_, song)| tracks.contains(song))
+            .map(|(i, _)| i)
+            .collect();
 
-        Event::ToAllComponents(ComponentEvent::PlaylistMenuUpdated(
-            name,
-            ids,
-        ))
+        Event::ToAllComponents(ComponentEvent::PlaylistMenuUpdated(name, ids))
     }
 }
 
