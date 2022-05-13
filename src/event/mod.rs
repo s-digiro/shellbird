@@ -18,20 +18,22 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+mod app_event;
 mod component_event;
 mod nestable_event;
 mod tagger_event;
 
+pub use app_event::*;
 pub use component_event::*;
 pub use nestable_event::*;
 pub use tagger_event::*;
 
-use mpd::Song;
 use std::fmt;
+
+use mpd::Song;
 use termion::event::Key;
 
 use crate::color::Color;
-use crate::styles::StyleTree;
 
 /* Events are sorted into different enums based on their destination
  *
@@ -68,23 +70,6 @@ impl Event {
     pub fn err(msg: String) -> Event {
         Event::ToApp(AppEvent::Error(msg))
     }
-}
-
-#[derive(Clone)]
-pub enum AppEvent {
-    TagUI(Vec<usize>),
-    NowPlaying(Option<Song>),
-    Back,
-    ClearScreen,
-    Resize,
-    StyleTreeLoaded(Option<StyleTree>),
-    SwitchScreen(String),
-    Database(Vec<Song>),
-    Queue(Vec<Song>),
-    LostMpdConnection,
-    DrawScreen,
-    Error(String),
-    Quit,
 }
 
 #[derive(Debug, Clone)]
@@ -146,40 +131,6 @@ impl fmt::Debug for MpdEvent {
             MpdEvent::Prev => write!(f, "MpdEvent::Prev"),
             MpdEvent::SetVolume(vol) => {
                 write!(f, "MpdEvent::SetVolume({})", vol)
-            },
-        }
-    }
-}
-
-impl fmt::Debug for AppEvent {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            AppEvent::Resize => write!(f, "AppEvent::Resize"),
-            AppEvent::NowPlaying(song) => {
-                write!(f, "AppEvent::NowPlaying({:?})", song)
-            },
-            AppEvent::Back => write!(f, "AppEvent::Back"),
-            AppEvent::TagUI(songs) => {
-                write!(f, "AppEvent::TagUI({} songs)", songs.len())
-            },
-            AppEvent::Error(s) => write!(f, "AppEvent::Error({:?})", s),
-            AppEvent::DrawScreen => write!(f, "AppEvent::DrawScreen"),
-            AppEvent::StyleTreeLoaded(_) => {
-                write!(f, "AppEvent::StyleTreeLoaded")
-            },
-            AppEvent::SwitchScreen(s) => {
-                write!(f, "AppEvent::SwitchScreen({:?})", s)
-            },
-            AppEvent::Database(s) => {
-                write!(f, "AppEvent::Database({} songs)", s.len())
-            },
-            AppEvent::LostMpdConnection => {
-                write!(f, "AppEvent::LostMpdConnection")
-            },
-            AppEvent::Quit => write!(f, "AppEvent::Quit"),
-            AppEvent::ClearScreen => write!(f, "AppEvent::ClearScreen"),
-            AppEvent::Queue(s) => {
-                write!(f, "AppEvent::Queue({} songs)", s.len())
             },
         }
     }
