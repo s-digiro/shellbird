@@ -1,6 +1,6 @@
 /* Generic representation of something happening in application.
    Used for message passing between objects
-   Copyright (C) 2020-2021 Sean DiGirolamo
+   Copyright (C) 2020-2022 Sean DiGirolamo
 
 This file is part of Shellbird.
 

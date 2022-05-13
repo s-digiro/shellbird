@@ -1,4 +1,4 @@
-/* Functionality related to mpd
+/* Version of events that can be bound to a keybind
    Copyright (C) 2020-2022 Sean DiGirolamo
 
 This file is part of Shellbird.
@@ -16,15 +16,3 @@ General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
-
-use mpd::Client;
-
-pub mod mpd_listener;
-pub mod mpd_sender;
-
-pub fn get_mpd_conn(ip: &str, port: &str) -> Option<Client> {
-    match Client::connect(format!("{}:{}", ip, port)) {
-        Ok(conn) => Some(conn),
-        _ => None,
-    }
-}

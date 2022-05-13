@@ -1,5 +1,5 @@
 /* TUI Component for displaying a tag on the currently playing track
-   Copyright (C) 2020-2021 Sean DiGirolamo
+   Copyright (C) 2020-2022 Sean DiGirolamo
 
 This file is part of Shellbird.
 

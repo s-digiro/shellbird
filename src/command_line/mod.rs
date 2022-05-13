@@ -1,5 +1,5 @@
 /* Contains functionality related to in application command line
-   Copyright (C) 2020-2021 Sean DiGirolamo
+   Copyright (C) 2020-2022 Sean DiGirolamo
 
 This file is part of Shellbird.
 
