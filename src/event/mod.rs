@@ -19,21 +19,20 @@ along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 mod app_event;
+mod command_line_event;
 mod component_event;
 mod nestable_event;
 mod tagger_event;
 
 pub use app_event::*;
+pub use command_line_event::*;
 pub use component_event::*;
 pub use nestable_event::*;
 pub use tagger_event::*;
 
-use std::fmt;
-
 use mpd::Song;
+use std::fmt;
 use termion::event::Key;
-
-use crate::color::Color;
 
 /* Events are sorted into different enums based on their destination
  *
@@ -70,22 +69,6 @@ impl Event {
     pub fn err(msg: String) -> Event {
         Event::ToApp(AppEvent::Error(msg))
     }
-}
-
-#[derive(Debug, Clone)]
-pub enum CommandLineEvent {
-    Echo(String),
-    RequestText(String, Option<String>),
-    SetColor(Color),
-    Input(Key),
-    PrevSearch,
-    NextSearch,
-    SbrcError(usize, String),
-    SbrcNotFound,
-    MpdStatus(mpd::status::Status),
-    VolumeMv(i8),
-    VolumeUp(i8),
-    VolumeDown(i8),
 }
 
 #[derive(Debug, Clone)]
