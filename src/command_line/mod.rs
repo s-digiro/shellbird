@@ -320,9 +320,9 @@ impl CommandLine {
                 .send(Event::ToFocus(ComponentEvent::ReturnText(text)))
                 .unwrap(),
 
-            Mode::Confirm { .. } => panic!(
-                "Invalid State: CommandLine called run while in Mode::Confirm"
-            ),
+            Mode::Confirm { .. } => {
+                panic!("Invalid State: CommandLine called run while in Mode::Confirm")
+            },
 
             Mode::TUI { .. } => panic!(
                 "Invalid State: CommandLine called run while in Mode::TUI"

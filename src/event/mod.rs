@@ -18,16 +18,19 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+mod component_event;
 mod nestable_event;
+mod tagger_event;
 
+pub use component_event::*;
 pub use nestable_event::*;
+pub use tagger_event::*;
 
 use mpd::Song;
 use std::fmt;
 use termion::event::Key;
 
 use crate::color::Color;
-use crate::playlist::Playlist;
 use crate::styles::StyleTree;
 
 /* Events are sorted into different enums based on their destination
@@ -65,39 +68,6 @@ impl Event {
     pub fn err(msg: String) -> Event {
         Event::ToApp(AppEvent::Error(msg))
     }
-}
-
-#[derive(Debug, Clone)]
-pub enum TaggerEvent {
-    MusicDir(String),
-    TempDir(String),
-    Tag(Vec<Song>, Vec<(String, Option<String>)>),
-}
-
-#[derive(Clone)]
-pub enum ComponentEvent {
-    ReturnText(String),
-    Draw(u16, u16, u16, u16, String),
-    OpenTags,
-    Next,
-    Prev,
-    Select,
-    Delete,
-    Start,
-    GoTo(usize),
-    GoToTop,
-    GoToBottom,
-    Search(String),
-    SearchPrev(String),
-    NowPlaying(Option<usize>),
-    Queue(Vec<usize>),
-    Playlist(Vec<Playlist>),
-    Database,
-    PlaylistMenuUpdated(String, Vec<usize>),
-    TagMenuUpdated(String, Vec<usize>),
-    StyleMenuUpdated(String, Vec<usize>),
-    UpdateRootStyleMenu,
-    LostMpdConnection,
 }
 
 #[derive(Clone)]
@@ -155,76 +125,6 @@ pub enum MpdEvent {
     Next,
     Prev,
     SetVolume(i8),
-}
-
-impl fmt::Debug for ComponentEvent {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ComponentEvent::NowPlaying(i) => {
-                write!(f, "ComponentEvent::NowPlaying({:?})", i)
-            },
-            ComponentEvent::ReturnText(prompt) => {
-                write!(f, "ComponentEvent::ReturnText({:?})", prompt)
-            },
-            ComponentEvent::Queue(s) => {
-                write!(f, "ComponentEvent::Queue({} ids)", s.len())
-            },
-            ComponentEvent::Playlist(pl) => {
-                write!(f, "ComponentEvent::Playlist({} playlists)", pl.len())
-            },
-            ComponentEvent::Database => {
-                write!(f, "ComponentEvent::Database")
-            },
-            ComponentEvent::PlaylistMenuUpdated(t, pl) => write!(
-                f,
-                "ComponentEvent::PlaylistMenuUpdated({}, {} songs)",
-                t,
-                pl.len()
-            ),
-            ComponentEvent::TagMenuUpdated(t, s) => write!(
-                f,
-                "ComponentEvent::TagMenuUpdated({}, {} songs)",
-                t,
-                s.len()
-            ),
-            ComponentEvent::UpdateRootStyleMenu => {
-                write!(f, "ComponentEvent::UpdateRootStyleMenu")
-            },
-            ComponentEvent::StyleMenuUpdated(t, s) => {
-                write!(
-                    f,
-                    "ComponentEvent::StyleMenuUpdated({}, {})",
-                    t,
-                    s.len()
-                )
-            },
-            ComponentEvent::LostMpdConnection => {
-                write!(f, "ComponentEvent::LostMpdConnection")
-            },
-            ComponentEvent::Delete => write!(f, "ComponentEvent::Delete"),
-            ComponentEvent::Draw(x, y, w, h, focus) => write!(
-                f,
-                "ComponentEvent::Draw({}, {}, {}, {}, {})",
-                x, y, w, h, focus,
-            ),
-            ComponentEvent::Next => write!(f, "ComponentEvent::Next"),
-            ComponentEvent::OpenTags => write!(f, "ComponentEvent::OpenTags"),
-            ComponentEvent::Prev => write!(f, "ComponentEvent::Prev"),
-            ComponentEvent::Select => write!(f, "ComponentEvent::Select"),
-            ComponentEvent::Start => write!(f, "ComponentEvent::Start"),
-            ComponentEvent::GoTo(i) => write!(f, "ComponentEvent::GoTo({})", i),
-            ComponentEvent::GoToTop => write!(f, "ComponentEvent::GoToTop"),
-            ComponentEvent::GoToBottom => {
-                write!(f, "ComponentEvent::GoToBottom")
-            },
-            ComponentEvent::Search(s) => {
-                write!(f, "ComponentEvent::Search({})", s)
-            },
-            ComponentEvent::SearchPrev(s) => {
-                write!(f, "ComponentEvent::SearchPrev({})", s)
-            },
-        }
-    }
 }
 
 impl fmt::Debug for MpdEvent {
