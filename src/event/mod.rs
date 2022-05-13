@@ -22,12 +22,14 @@ mod app_event;
 mod command_line_event;
 mod component_event;
 mod nestable_event;
+mod screen_event;
 mod tagger_event;
 
 pub use app_event::*;
 pub use command_line_event::*;
 pub use component_event::*;
 pub use nestable_event::*;
+pub use screen_event::*;
 pub use tagger_event::*;
 
 use mpd::Song;
@@ -69,13 +71,6 @@ impl Event {
     pub fn err(msg: String) -> Event {
         Event::ToApp(AppEvent::Error(msg))
     }
-}
-
-#[derive(Debug, Clone)]
-pub enum ScreenEvent {
-    FocusNext,
-    FocusPrev,
-    NeedsRedraw(String),
 }
 
 #[derive(Clone)]
