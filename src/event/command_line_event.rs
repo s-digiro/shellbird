@@ -18,7 +18,7 @@ along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 use crate::color::Color;
-use crate::event::Key;
+use termion::event::Key;
 
 #[derive(Debug, Clone)]
 pub enum CommandLineEvent {
