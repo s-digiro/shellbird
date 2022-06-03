@@ -19,6 +19,7 @@ along with Shellbird; see the file COPYING.  If not see
 
 use std::sync::mpsc;
 use std::thread;
+use std::io::ErrorKind as IoErrorKind;
 
 use crate::event::*;
 
@@ -54,7 +55,7 @@ pub fn init_mpd_sender_thread(
                     MpdEvent::TogglePause => c.toggle_pause(),
                     MpdEvent::Update => match c.update() {
                         Ok(_) => Ok(()),
-                        Err(_) => Ok(()),
+                        Err(e) => Err(e),
                     },
                     MpdEvent::Repeat => toggle_repeat(c),
                     MpdEvent::Random => toggle_random(c),
@@ -69,22 +70,28 @@ pub fn init_mpd_sender_thread(
                     MpdEvent::SetVolume(vol) => c.volume(vol),
                 };
 
-                match result {
-                    Err(Error::Parse(ParseError::BadPair)) => {
+                if let Err(e) = result {
+                    let retry = match &e {
+                        Error::Parse(ParseError::BadPair) => true,
+                        Error::Io(e) => match e.kind() {
+                            IoErrorKind::BrokenPipe => true,
+                            _ => false,
+                        },
+                        _ => false,
+                    };
+
+                    if retry {
                         // Connection dropped, reestablish and retry
-                        conn = None;
-                    },
-                    Err(e) => {
+                        rethrow_tx.send(request).unwrap();
+                    } else {
                         tx.send(Event::ToApp(AppEvent::Error(format!(
                             "{:?}",
                             e
                         ))))
                         .unwrap();
+                    }
 
-                        conn = None;
-                        rethrow_tx.send(request).unwrap();
-                    },
-                    _ => (),
+                    conn = None;
                 }
             }
         }
