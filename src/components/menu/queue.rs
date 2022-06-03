@@ -29,9 +29,9 @@ use unicode_truncate::{Alignment, UnicodeTruncateStr};
 
 #[derive(Debug, PartialEq)]
 pub struct Queue {
-    tracks: Vec<usize>,
+    tracks: Vec<Song>,
     menu: Menu,
-    now_playing: Option<usize>,
+    now_playing: Option<Song>,
 }
 
 impl Queue {
@@ -77,10 +77,9 @@ impl Queue {
         }
     }
 
-    fn update_items(&mut self, tracks: Vec<usize>, library: &Vec<Song>) {
+    fn update_items(&mut self, tracks: Vec<Song>) {
         self.menu.items = tracks
             .iter()
-            .map(|i| library.get(*i).unwrap())
             .map(|s| match &s.title {
                 Some(title) => title.to_owned(),
                 None => "<Empty>".to_owned(),
@@ -90,10 +89,10 @@ impl Queue {
         self.tracks = tracks;
     }
 
-    fn selection(&self) -> Vec<usize> {
+    fn selection(&self) -> Vec<Song> {
         self.tracks
             .get(self.menu.selection)
-            .map(|s| vec![*s])
+            .map(|s| vec![s.to_owned()])
             .unwrap_or(Vec::new())
     }
 }
@@ -111,8 +110,16 @@ impl Component for Queue {
     ) {
         match e {
             ComponentEvent::OpenTags => {
-                tx.send(Event::ToApp(AppEvent::TagUI(self.selection())))
-                    .unwrap();
+                let ids = state
+                    .library
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, s)| {
+                        self.selection().iter().any(|sel| s.file == sel.file)
+                    })
+                    .map(|(i, _)| i)
+                    .collect();
+                tx.send(Event::ToApp(AppEvent::TagUI(ids))).unwrap();
             },
             ComponentEvent::Start => (),
             ComponentEvent::Next => {
@@ -144,32 +151,30 @@ impl Component for Queue {
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Select => {
-                if let Some(id) = self.selection().get(0) {
-                    if let Some(song) = state.library.get(*id) {
-                        tx.send(Event::ToMpd(MpdEvent::PlayAt(song.clone())))
-                            .unwrap();
-                    }
+                if let Some(song) = self.selection().get(0) {
+                    tx.send(Event::ToMpd(MpdEvent::PlayAt(song.clone())))
+                        .unwrap();
                 }
             },
             ComponentEvent::Delete => {
-                if let Some(id) = self.selection().get(0) {
-                    if let Some(song) = state.library.get(*id) {
-                        tx.send(Event::ToMpd(MpdEvent::Delete(song.clone())))
-                            .unwrap();
-                    }
+                if let Some(song) = self.selection().get(0) {
+                    tx.send(Event::ToMpd(MpdEvent::Delete(song.clone())))
+                        .unwrap();
                 }
             },
             ComponentEvent::NowPlaying(id) => {
-                self.now_playing = *id;
+                self.now_playing = id
+                    .and_then(|id| state.library.get(id))
+                    .map(|s| s.to_owned());
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Queue(q) => {
-                self.update_items(q.to_vec(), &state.library);
+                self.update_items(q.to_vec());
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::LostMpdConnection => {
                 self.now_playing = None;
-                self.update_items(Vec::new(), &state.library);
+                self.update_items(Vec::new());
                 tx.send(self.spawn_needs_draw_event()).unwrap();
             },
             ComponentEvent::Draw(x, y, w, h, focus) => {

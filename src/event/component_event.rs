@@ -19,6 +19,8 @@ along with Shellbird; see the file COPYING.  If not see
 
 use std::fmt;
 
+use mpd::Song;
+
 use crate::playlist::Playlist;
 
 /* TODO: There seems to be two categories of events. Events that are sent by
@@ -81,7 +83,7 @@ pub enum ComponentEvent {
 
     // Instructs Component to update internal state to reflect a change in the
     // MPD track queue
-    Queue(Vec<usize>),
+    Queue(Vec<Song>),
 
     // Return text to a component (Used exclusively by CommandLine after a
     // Component Requests text from it)

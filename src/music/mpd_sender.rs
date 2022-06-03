@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with Shellbird; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+use std::io::ErrorKind as IoErrorKind;
 use std::sync::mpsc;
 use std::thread;
-use std::io::ErrorKind as IoErrorKind;
 
 use crate::event::*;
 

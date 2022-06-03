@@ -176,26 +176,11 @@ impl<'a> Shellbird<'a> {
                 },
                 Event::ToApp(e) => match e {
                     AppEvent::Quit => break,
-                    AppEvent::Queue(songs) => {
-                        let queue_files = songs
-                            .iter()
-                            .map(|s| s.file.as_str())
-                            .collect::<Vec<&str>>();
-
-                        let ids = state
-                            .library
-                            .iter()
-                            .map(|s| s.file.as_str())
-                            .enumerate()
-                            .filter(|(_, s)| queue_files.contains(s))
-                            .map(|(i, _)| i)
-                            .collect();
-
-                        tx.send(Event::ToAllComponents(ComponentEvent::Queue(
-                            ids,
+                    AppEvent::Queue(songs) => tx
+                        .send(Event::ToAllComponents(ComponentEvent::Queue(
+                            songs,
                         )))
-                        .unwrap()
-                    },
+                        .unwrap(),
                     AppEvent::NowPlaying(song) => {
                         let id = if let None = song {
                             None
