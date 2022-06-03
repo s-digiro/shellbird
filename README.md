@@ -124,6 +124,9 @@ A commandline can be brought up with the ':' key. Some available commands are:
 - [ ] Better splitter borders
 - [ ] Track display formatting in menus
 - [ ] statusline
+- [ ] Nested events should be boxed events, not a whole separate struct
+- [ ] Parent should be a tuple struct
+- [ ] Menus should remember location better after a database update
 
 ### To Do Components
 - [ ] SearchResultsMenu
